@@ -1414,6 +1414,28 @@ function calcWorksItem(pricing, input){
   };
 }
 
+/* Works + catálogo X2D: mantém a fórmula financeira centralizada e usa o
+   preço/refugo do filamento realmente selecionado. */
+function calcWorksCatalogItem(pricing, input, material){
+  const peso = Number(input.peso)||0, tempo = hmmToDecimalHours(input.tempo), pos = Number(input.pos)||0;
+  const horasNRE = Number(input.horasNRE)||0;
+  const repeticao = !!input.repeticao;
+  const precoG = material ? materialPriceG(material) : Number(input.manualPrice)||0;
+  const custoMaterial = peso * precoG * (1 + (Number(pricing.taxaRefugoGeral)||0));
+  const custoMaquina = tempo * (Number(pricing.taxaMaquina)||0);
+  const custoMaoObra = (pos/60) * (Number(pricing.taxaMaoObra)||0);
+  const custoPeca = custoMaterial + custoMaquina + custoMaoObra;
+  const precoPeca = custoPeca * (Number(pricing.markupDireto)||0);
+  const nreCheio = horasNRE * (Number(pricing.taxaNRE)||0);
+  const precoNRE = repeticao ? nreCheio * (Number(pricing.royaltyRepeticao)||0) : nreCheio;
+  const deposito = precoNRE * (Number(pricing.depositoNRE)||0);
+  const saldo = precoNRE - deposito;
+  const totalPedido = precoPeca + precoNRE;
+  return {custoMaterial, custoMaquina, custoMaoObra, custoPeca, precoPeca,
+    lucroPeca:precoPeca-custoPeca, nreCheio, precoNRE, deposito, saldo,
+    totalPedido, abaixoDoMinimo:totalPedido < (Number(pricing.pedidoMinimo)||0)};
+}
+
 let toastTimer = null;
 function showToast(msg){
   const el = document.getElementById("toast");
@@ -4161,59 +4183,95 @@ function renderStudioCalculator(main){
 function renderWorksCalculator(main){
   const pricing = state.settings.pricing;
   const form = {
-    nome: "",
-    material: pricing.materiais[0] ? pricing.materiais[0].nome : "__manual__",
-    manualPrice: "",
-    peso: "", tempo: "", pos: "",
-    horasNRE: "", repeticao: false
+    nome:"", descricao:"", temp:50, pico:60, externo:false, agua:false, oleo:false,
+    quimica:"nenhuma", funcao:"geral", rigidez:"media", resistencia:"media", impacto:"media",
+    flexibilidade:false, tamanho:"media", dimensional:"moderado", zload:false, anisotropia:false,
+    criticidade:"funcional", nozzle:300, mesa:120, camara:"enclausurada", umidade:"secador",
+    materialId:"petg-hf", recomendacao:null, peso:"", tempo:"", pos:"", horasNRE:"", repeticao:false
   };
   const list = [];
 
+  const engineering = {
+    "pla-basic":{stiff:5,strength:4,impact:3,uv:1,chem:2,flex:1,warp:1},
+    "pla-matte":{stiff:5,strength:4,impact:3,uv:1,chem:2,flex:1,warp:1},
+    "petg-hf":{stiff:4,strength:5,impact:6,uv:3,chem:5,flex:2,warp:2},
+    "abs":{stiff:4,strength:5,impact:7,uv:1,chem:5,flex:2,warp:7},
+    "asa":{stiff:4,strength:5,impact:7,uv:10,chem:5,flex:2,warp:7},
+    "tpu-95a-hf":{stiff:1,strength:3,impact:9,uv:5,chem:6,flex:10,warp:1},
+    "pc":{stiff:6,strength:8,impact:8,uv:3,chem:6,flex:1,warp:8},
+    "pa6-cf":{stiff:9,strength:9,impact:7,uv:4,chem:8,flex:1,warp:5},
+    "pla-cf":{stiff:7,strength:6,impact:3,uv:2,chem:3,flex:1,warp:1},
+    "petg-cf":{stiff:7,strength:6,impact:5,uv:4,chem:7,flex:1,warp:2}
+  };
+  const reqLevel = x=>({baixa:1,media:2,alta:3,extrema:4}[x]||2);
+  function selectMaterial(){
+    const service = Math.max(Number(form.temp)||0, Number(form.pico)||0);
+    const rejected=[], eligible=[];
+    if(form.criticidade==="seguranca") return {winner:null, ranked:[], rejected:[], message:"Peças de segurança não devem ser selecionadas por esta ferramenta: exija especificação, validação e ensaio."};
+    if(form.funcao==="chama") return {winner:null, ranked:[], rejected:[], message:"O catálogo atual não tem um filamento com certificação de retardância de chama. Não há recomendação automática."};
+    MATERIALS_CATALOG.forEach(m=>{
+      const p=engineering[m.id]||engineering["petg-hf"], why=[];
+      if(service>m.maxServiceTemp) why.push("temperatura de serviço/pico excede o limite do catálogo");
+      if(Number(form.nozzle)<m.nozzleMax) why.push("nozzle disponível insuficiente");
+      if(Number(form.mesa)<m.bedMax) why.push("mesa disponível insuficiente");
+      if(form.flexibilidade && p.flex<8) why.push("não é elastomérico");
+      if(!form.flexibilidade && form.funcao==="flexivel" && p.flex<8) why.push("flexibilidade é função principal");
+      if(form.quimica==="severa" && p.chem<7) why.push("resistência química insuficiente para ambiente severo");
+      if(why.length){ rejected.push({m,why}); return; }
+      let score=0, reasons=[];
+      const stiff=reqLevel(form.rigidez), strength=reqLevel(form.resistencia), impact=reqLevel(form.impacto);
+      score += p.stiff*stiff*4 + p.strength*strength*4 + p.impact*impact*3;
+      if(form.funcao==="rigidez") score+=p.stiff*16;
+      if(form.funcao==="estrutural") score+=p.strength*16;
+      if(form.funcao==="impacto") score+=p.impact*16;
+      if(form.funcao==="flexivel") score+=p.flex*18;
+      if(form.externo) score+=p.uv*12;
+      if(form.agua) score+=p.chem*2;
+      if(form.oleo || form.quimica!=="nenhuma") score+=p.chem*8;
+      if(form.tamanho==="grande") score+=(10-p.warp)*8;
+      if(form.dimensional==="critico") score+=(10-p.warp)*6+p.stiff*2;
+      if(form.zload || form.anisotropia) score-=m.id.includes("-cf")?8:0;
+      if(form.umidade==="minima" && ["pc","pa6-cf","tpu-95a-hf"].includes(m.id)) score-=12;
+      if(m.maxServiceTemp>=service+20){score+=12; reasons.push("margem térmica adequada");}
+      if(form.externo && p.uv>=8){reasons.push("adequado para UV/intempéries");}
+      if(stiff>=3 && p.stiff>=7) reasons.push("rigidez atende ao requisito");
+      if(strength>=3 && p.strength>=7) reasons.push("resistência atende ao requisito");
+      if(impact>=3 && p.impact>=7) reasons.push("tenacidade/impacto atende ao requisito");
+      eligible.push({m,p,score,reasons});
+    });
+    eligible.sort((a,b)=>b.score-a.score);
+    return {winner:eligible[0]||null, ranked:eligible, rejected, message:eligible.length?"":"Nenhum material atende simultaneamente aos requisitos e recursos informados."};
+  }
+  function option(value,label,current){return `<option value="${value}" ${value===current?"selected":""}>${label}</option>`;}
+  function input(id,label,value,type="number",extra=""){return `<div class="field"><label>${label}</label><input id="${id}" type="${type}" value="${escapeHTML(String(value))}" ${extra}></div>`;}
+
   function draw(){
-    const result = calcWorksItem(pricing, form);
+    const selection = form.recomendacao || selectMaterial();
+    if(!form.recomendacao && selection.winner) form.materialId = selection.winner.m.id;
+    const selected = materialById(form.materialId) || selection.winner?.m || MATERIALS_CATALOG[0];
+    const result = calcWorksCatalogItem(pricing, form, selected);
     const listTotal = list.reduce((s,it)=> s + it.totalPedido, 0);
 
     main.innerHTML = `
       <div class="view-header">
         <div>
           <div class="view-title">Calculadora Works</div>
-          <div class="view-sub">Reposição e customização sob medida — peça + NRE com depósito</div>
+          <div class="view-sub">Seleção técnica de filamento X2D, custo da peça e engenharia em uma cotação.</div>
         </div>
       </div>
 
-      <div class="calc-grid">
-        <div class="card">
-          <div class="section-title">Peça</div>
-          <div class="field" style="margin-bottom:12px;">
-            <label>Nome da peça / cliente</label>
-            <input id="c-nome" value="${escapeHTML(form.nome)}" placeholder="Ex.: Maçaneta de trator antigo">
-          </div>
-          <div class="field" style="margin-bottom:12px;">
-            <label>Material</label>
-            <select id="c-material">
-              ${pricing.materiais.map(m=>`<option value="${escapeHTML(m.nome)}" ${m.nome===form.material?"selected":""}>${escapeHTML(m.nome)}</option>`).join("")}
-              <option value="__manual__" ${form.material==="__manual__"?"selected":""}>Outro (preço manual)</option>
-            </select>
-          </div>
-          ${form.material==="__manual__" ? `
-          <div class="field" style="margin-bottom:12px;">
-            <label>Preço manual ($/g)</label>
-            <input type="number" step="0.001" id="c-manualprice" value="${form.manualPrice}">
-          </div>` : ""}
-          <div class="field-stack">
-            <div class="field"><label>Peso (g)</label><input type="number" inputmode="decimal" id="c-peso" value="${form.peso}" placeholder="0"></div>
-            <div class="field"><label>Tempo de impressão (h.mm — ex.: 2.30 = 2h30min)</label><input type="number" inputmode="decimal" step="0.01" id="c-tempo" value="${form.tempo}" placeholder="2.30"></div>
-            <div class="field"><label>Pós-processo (min)</label><input type="number" inputmode="decimal" id="c-pos" value="${form.pos}" placeholder="0"></div>
-            <div class="field"><label>Horas escaneamento+CAD</label><input type="number" inputmode="decimal" step="0.1" id="c-horasnre" value="${form.horasNRE}" placeholder="0.0"></div>
-          </div>
-          <div class="checkbox-field" style="margin-top:14px;">
-            <input type="checkbox" id="c-repeticao" ${form.repeticao?"checked":""}>
-            <label style="font-size:12.5px; font-weight:500; text-transform:none;">Reimpressão da mesma peça (cobra royalty em vez do NRE cheio)</label>
-          </div>
-          <button class="btn btn-primary btn-sm" id="calc-run" type="button" style="width:100%; justify-content:center; margin-top:16px;">Calcular</button>
-        </div>
-
-        <div class="card">
+      <div class="card"><div class="section-title">1. Identificação do serviço</div><div class="form-grid">${input("w-nome","Nome da peça / cliente",form.nome,"text","placeholder=\"Ex.: Maçaneta de trator antigo\"")}<div class="field"><label>Descrição / aplicação</label><input id="w-desc" value="${escapeHTML(form.descricao)}" placeholder="Onde e como a peça será usada"></div></div></div>
+      <div class="card"><div class="section-title">2. Ambiente de serviço</div><div class="form-grid">${input("w-temp","Temperatura contínua (°C)",form.temp)}${input("w-pico","Pico de temperatura (°C)",form.pico)}<div class="checkbox-field"><input id="w-externo" type="checkbox" ${form.externo?"checked":""}><label>Exposição externa / UV / chuva</label></div><div class="checkbox-field"><input id="w-agua" type="checkbox" ${form.agua?"checked":""}><label>Contato frequente com água ou umidade</label></div><div class="checkbox-field"><input id="w-oleo" type="checkbox" ${form.oleo?"checked":""}><label>Óleo, graxa ou combustível</label></div><div class="field"><label>Severidade química</label><select id="w-quimica">${option("nenhuma","Nenhuma",form.quimica)}${option("leve","Leve",form.quimica)}${option("severa","Severa",form.quimica)}</select></div></div></div>
+      <div class="card"><div class="section-title">3. Função mecânica</div><div class="form-grid"><div class="field"><label>Função dominante</label><select id="w-funcao">${option("geral","Uso funcional geral",form.funcao)}${option("rigidez","Máxima rigidez",form.funcao)}${option("estrutural","Resistência estrutural",form.funcao)}${option("impacto","Impacto / absorção",form.funcao)}${option("flexivel","Flexibilidade",form.funcao)}${option("chama","Retardância de chama",form.funcao)}</select></div><div class="checkbox-field"><input id="w-flex" type="checkbox" ${form.flexibilidade?"checked":""}><label>A peça flexiona deliberadamente</label></div></div></div>
+      <div class="card"><div class="section-title">4. Requisitos mecânicos</div><div class="form-grid"><div class="field"><label>Rigidez</label><select id="w-rigidez">${["baixa","media","alta","extrema"].map(x=>option(x,x[0].toUpperCase()+x.slice(1),form.rigidez)).join("")}</select></div><div class="field"><label>Resistência</label><select id="w-resistencia">${["baixa","media","alta","extrema"].map(x=>option(x,x[0].toUpperCase()+x.slice(1),form.resistencia)).join("")}</select></div><div class="field"><label>Tenacidade / impacto</label><select id="w-impacto">${["baixa","media","alta","extrema"].map(x=>option(x,x[0].toUpperCase()+x.slice(1),form.impacto)).join("")}</select></div></div></div>
+      <div class="card"><div class="section-title">5. Geometria e anisotropia</div><div class="form-grid"><div class="field"><label>Tamanho</label><select id="w-tamanho">${option("pequena","Pequena",form.tamanho)}${option("media","Média",form.tamanho)}${option("grande","Grande",form.tamanho)}</select></div><div class="field"><label>Controle dimensional</label><select id="w-dimensional">${option("baixo","Pouco crítico",form.dimensional)}${option("moderado","Moderado",form.dimensional)}${option("critico","Crítico",form.dimensional)}</select></div><div class="checkbox-field"><input id="w-zload" type="checkbox" ${form.zload?"checked":""}><label>Carga inevitável no eixo Z</label></div><div class="checkbox-field"><input id="w-aniso" type="checkbox" ${form.anisotropia?"checked":""}><label>Anisotropia deve ser minimizada</label></div></div></div>
+      <div class="card"><div class="section-title">6. Criticidade e risco</div><div class="field"><label>Criticidade</label><select id="w-crit">${option("prototipo","Protótipo / visual",form.criticidade)}${option("funcional","Funcional",form.criticidade)}${option("seguranca","Segurança / alto risco",form.criticidade)}</select></div></div>
+      <div class="card"><div class="section-title">7. Recursos da oficina — Bambu Lab X2D</div><div class="form-grid"><div class="field"><label>Nozzle disponível</label><select id="w-nozzle">${option("250","250 °C",String(form.nozzle))}${option("300","300 °C",String(form.nozzle))}</select></div><div class="field"><label>Mesa disponível</label><select id="w-mesa">${option("80","80 °C",String(form.mesa))}${option("100","100 °C",String(form.mesa))}${option("120","120 °C",String(form.mesa))}</select></div><div class="field"><label>Câmara</label><select id="w-camara">${option("aberta","Aberta",form.camara)}${option("enclausurada","Enclausurada",form.camara)}</select></div><div class="field"><label>Controle de umidade</label><select id="w-umidade">${option("minima","Mínimo",form.umidade)}${option("secador","Secador / caixa seca",form.umidade)}</select></div></div></div>
+      <div class="card"><div class="section-title">8. Calcular</div><div class="modal-actions"><button class="btn btn-primary" id="calc-run" type="button">Calcular recomendação</button><button class="btn btn-ghost" id="calc-clear" type="button">Limpar</button></div></div>
+      <div class="card"><div class="section-title">9. Recomendação do material</div>${selection.winner?`<div class="calc-list-row"><div><div class="li-desc">${escapeHTML(selection.winner.m.name)}</div><div class="li-meta">${escapeHTML(selection.winner.reasons.join(" · ")||"Melhor equilíbrio para os requisitos informados.")}</div></div><span class="pill pill-ok">Score ${Math.round(selection.winner.score)}</span></div><div class="field" style="margin-top:12px;"><label>Material para a peça</label><select id="w-material">${MATERIALS_CATALOG.map(m=>`<option value="${m.id}" ${m.id===form.materialId?"selected":""}>${escapeHTML(m.name)} — ${fmtMoney(materialPriceG(m))}/g</option>`).join("")}</select></div><p style="font-size:12px;color:var(--color-platinum);">${escapeHTML(selected.safety)}</p>`:`<div class="calc-empty-hint">${escapeHTML(selection.message)}</div>`}</div>
+      <div class="card"><div class="section-title">10. Relatório de decisão</div>${selection.winner?`<p style="font-size:13px;color:var(--color-platinum);">Recomendação preliminar: <strong style="color:var(--color-frost-white);">${escapeHTML(selection.winner.m.name)}</strong>. Serviço até ${Math.max(form.temp,form.pico)} °C; nozzle ${form.nozzle} °C; mesa ${form.mesa} °C. ${form.zload||form.anisotropia?"Oriente a carga principal no plano XY e valide a adesão entre camadas.":"Priorize a carga principal no plano XY."}</p><p style="font-size:12px;color:var(--color-platinum);">Alternativas: ${selection.ranked.slice(1,4).map(x=>escapeHTML(x.m.name)).join(" · ")||"—"}. Materiais eliminados: ${selection.rejected.length}.</p>`:`<div class="calc-empty-hint">Calcule uma recomendação para gerar o relatório.</div>`}</div>
+      <div class="card"><div class="section-title">11. Configuração da peça</div><div class="form-grid">${input("c-peso","Peso (g)",form.peso,"number","inputmode=\"decimal\" placeholder=\"0\"")}${input("c-tempo","Tempo de impressão (h.mm)",form.tempo,"number","step=\"0.01\" placeholder=\"2.30\"")}${input("c-pos","Pós-processamento (min)",form.pos,"number","placeholder=\"0\"")}${input("c-horasnre","Escaneamento + CAD (h)",form.horasNRE,"number","step=\"0.1\" placeholder=\"0\"")}<div class="checkbox-field"><input id="c-repeticao" type="checkbox" ${form.repeticao?"checked":""}><label>Reimpressão — cobrar royalty</label></div></div></div>
+      <div class="card"><div class="section-title">12. Precificação</div><div class="calc-grid"><div class="card">
           <div class="section-title">Peça</div>
           <div class="calc-cost-line"><span>Material</span><span>${fmtMoney(result.custoMaterial)}</span></div>
           <div class="calc-cost-line"><span>Máquina</span><span>${fmtMoney(result.custoMaquina)}</span></div>
@@ -4221,7 +4279,8 @@ function renderWorksCalculator(main){
           <div class="calc-cost-line"><span>Custo da peça</span><span>${fmtMoney(result.custoPeca)}</span></div>
           <div class="calc-cost-line total"><span>Preço da peça</span><span>${fmtMoney(result.precoPeca)}</span></div>
 
-          <div class="section-title" style="margin-top:22px;">NRE / engenharia</div>
+        </div><div class="card">
+          <div class="section-title">NRE / engenharia</div>
           <div class="calc-cost-line"><span>${form.repeticao ? "NRE cheio (referência)" : "Horas × taxa"}</span><span>${fmtMoney(result.nreCheio)}</span></div>
           <div class="calc-cost-line"><span>${form.repeticao ? "Royalty cobrado" : "Preço do NRE"}</span><span>${fmtMoney(result.precoNRE)}</span></div>
           <div class="calc-cost-line"><span>Depósito (${(pricing.depositoNRE*100).toFixed(0)}%)</span><span>${fmtMoney(result.deposito)}</span></div>
@@ -4235,7 +4294,7 @@ function renderWorksCalculator(main){
 
           <button class="btn btn-amber btn-sm" id="add-to-list" style="margin-top:18px;">+ Adicionar à cotação</button>
         </div>
-      </div>
+      </div></div>
 
       <div class="card" style="margin-top:16px;">
         <div class="section-title">Itens desta cotação<span class="hint">${list.length} peça(s) · total ${fmtMoney(listTotal)}</span></div>
@@ -4259,21 +4318,21 @@ function renderWorksCalculator(main){
       </div>
     `;
 
-    document.getElementById("c-nome").oninput = e=>{ form.nome = e.target.value; };
-    document.getElementById("c-material").onchange = e=>{ form.material = e.target.value; draw(); };
-    const mp = document.getElementById("c-manualprice");
-    if(mp) mp.oninput = e=>{ form.manualPrice = e.target.value; };
+    const bind=(id,key,event="input")=>document.getElementById(id)["on"+event]=e=>{form[key]=e.target.type==="checkbox"?e.target.checked:e.target.value; form.recomendacao=null;};
+    [["w-nome","nome"],["w-desc","descricao"],["w-temp","temp"],["w-pico","pico"],["w-externo","externo","change"],["w-agua","agua","change"],["w-oleo","oleo","change"],["w-quimica","quimica","change"],["w-funcao","funcao","change"],["w-flex","flexibilidade","change"],["w-rigidez","rigidez","change"],["w-resistencia","resistencia","change"],["w-impacto","impacto","change"],["w-tamanho","tamanho","change"],["w-dimensional","dimensional","change"],["w-zload","zload","change"],["w-aniso","anisotropia","change"],["w-crit","criticidade","change"],["w-nozzle","nozzle","change"],["w-mesa","mesa","change"],["w-camara","camara","change"],["w-umidade","umidade","change"],["c-peso","peso"],["c-tempo","tempo"],["c-pos","pos"],["c-horasnre","horasNRE"],["c-repeticao","repeticao","change"]].forEach(x=>bind(...x));
+    const materialControl=document.getElementById("w-material"); if(materialControl) materialControl.onchange=e=>{form.materialId=e.target.value; draw();};
     document.getElementById("c-peso").oninput = e=>{ form.peso = e.target.value; };
     document.getElementById("c-tempo").oninput = e=>{ form.tempo = e.target.value; };
     document.getElementById("c-pos").oninput = e=>{ form.pos = e.target.value; };
     document.getElementById("c-horasnre").oninput = e=>{ form.horasNRE = e.target.value; };
-    document.getElementById("c-repeticao").onchange = e=>{ form.repeticao = e.target.checked; draw(); };
-    document.getElementById("calc-run").onclick = ()=> draw();
+    document.getElementById("c-repeticao").onchange = e=>{ form.repeticao = e.target.checked; };
+    document.getElementById("calc-run").onclick = ()=>{ form.recomendacao=selectMaterial(); if(form.recomendacao.winner) form.materialId=form.recomendacao.winner.m.id; draw(); };
+    document.getElementById("calc-clear").onclick = ()=>{ Object.assign(form,{nome:"",descricao:"",temp:50,pico:60,externo:false,agua:false,oleo:false,quimica:"nenhuma",funcao:"geral",rigidez:"media",resistencia:"media",impacto:"media",flexibilidade:false,tamanho:"media",dimensional:"moderado",zload:false,anisotropia:false,criticidade:"funcional",nozzle:300,mesa:120,camara:"enclausurada",umidade:"secador",materialId:"petg-hf",recomendacao:null,peso:"",tempo:"",pos:"",horasNRE:"",repeticao:false}); draw(); };
 
     document.getElementById("add-to-list").onclick = ()=>{
       if(!form.nome.trim()){ showToast("Dê um nome pra peça antes de adicionar."); return; }
-      list.push(Object.assign({nome: form.nome.trim()}, result));
-      form.nome=""; form.peso=""; form.tempo=""; form.pos=""; form.horasNRE=""; form.manualPrice=""; form.repeticao=false;
+      list.push(Object.assign({nome: form.nome.trim(), materialNome:selected.name}, result));
+      form.nome=""; form.peso=""; form.tempo=""; form.pos=""; form.horasNRE=""; form.repeticao=false;
       draw();
       showToast("Peça adicionada.");
     };
@@ -4286,7 +4345,7 @@ function renderWorksCalculator(main){
       handoffBtn.onclick = ()=>{
         const items = [];
         list.forEach(it=>{
-          items.push({desc: it.nome + " — peça", qty:1, rate: it.precoPeca, taxable:true});
+          items.push({desc: it.nome + " — peça ("+it.materialNome+")", qty:1, rate: it.precoPeca, taxable:true});
           if(it.precoNRE > 0){
             items.push({desc: it.nome + " — NRE (escaneamento/CAD)", qty:1, rate: it.precoNRE, taxable:false});
           }
