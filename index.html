@@ -236,10 +236,15 @@
 
   .stat-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px;}
   .stat-card{
-    background:var(--color-carbon); border:1px solid var(--color-smoke); border-radius:var(--radius-cards);
-    padding:16px 18px;
+    background:var(--color-obsidian);
+    border:1px solid var(--color-smoke);
+    border-radius:var(--radius-cards);
+    padding:20px;
   }
-  .stat-label{font-size:10px; text-transform:uppercase; letter-spacing:-0.37px; color:var(--color-platinum); font-weight:600;}
+  .stat-grid.cols-2{grid-template-columns:repeat(2,1fr);}
+  .stat-grid.cols-3{grid-template-columns:repeat(3,1fr);}
+  .stat-label{font-size:11px; text-transform:uppercase; letter-spacing:-0.37px; color:var(--color-platinum); font-weight:600;}
+  .card-danger{border-color:rgba(255,69,58,0.35); background:var(--status-danger-bg);}
   .stat-value{font-family:var(--font-display); font-size:24px; font-weight:700; letter-spacing:-0.24px; color:var(--color-frost-white); margin-top:6px;}
   .stat-value.amber{color:var(--color-signal-orange);}
   .stat-value.blueprint{color:var(--color-halo-blue);}
@@ -955,9 +960,11 @@ async function loadAll(){
   if(!Array.isArray(state.settings.pricing.materiais) || state.settings.pricing.materiais.length===0){
     state.settings.pricing.materiais = JSON.parse(JSON.stringify(DEFAULT_PRICING.materiais));
   }
-  for(const name of COLLECTION_NAMES){
-    state[name] = await loadCollection(name);
-  }
+  const results = await Promise.all(COLLECTION_NAMES.map(n => loadCollection(n)));
+  COLLECTION_NAMES.forEach((n,i) => {
+    state[n] = results[i];
+    _persistedIds[n] = new Set(state[n].map(x => String(x.id)));
+  });
   state.clients = state.clients.map(normalizeClient);
   if(seedDefaultCatalog()){ await persist("catalog"); }
   ready = true;
@@ -973,24 +980,46 @@ async function loadCollection(name){
   }
 }
 
+const _persistedIds = Object.create(null);
+
 /* Grava cada item atual e apaga do Firestore qualquer doc que não exista mais localmente (foi removido). */
-async function persist(collectionKey){
+async function persist(collectionKey, touchedIds){
   try{
     if(collectionKey === "settings"){
       await userDocRef().set(state.settings, {merge:false});
       return true;
     }
+
     const col = userColRef(collectionKey);
-    const existingSnap = await col.get();
-    const existingIds = new Set(existingSnap.docs.map(d=>d.id));
-    const currentIds = new Set(state[collectionKey].map(x=>x.id));
-    const batch = db.batch();
-    state[collectionKey].forEach(item => batch.set(col.doc(String(item.id)), item));
-    existingIds.forEach(id => { if(!currentIds.has(id)) batch.delete(col.doc(id)); });
-    await batch.commit();
+    const known = _persistedIds[collectionKey] || (_persistedIds[collectionKey] = new Set());
+    const currentIds = new Set((state[collectionKey] || []).map(x => String(x.id)));
+
+    let toWrite = state[collectionKey] || [];
+    if(touchedIds != null){
+      const set = new Set([].concat(touchedIds).map(String));
+      toWrite = toWrite.filter(x => set.has(String(x.id)));
+    }
+    const toDelete = [...known].filter(id => !currentIds.has(id));
+
+    const ops = [
+      ...toWrite.map(item => ({t:"set", item})),
+      ...toDelete.map(id => ({t:"del", id}))
+    ];
+
+    for(let i = 0; i < ops.length; i += 450){
+      const batch = db.batch();
+      ops.slice(i, i + 450).forEach(op => {
+        if(op.t === "set") batch.set(col.doc(String(op.item.id)), op.item);
+        else batch.delete(col.doc(op.id));
+      });
+      if(ops.length) await batch.commit();
+    }
+
+    toWrite.forEach(x => known.add(String(x.id)));
+    toDelete.forEach(id => known.delete(id));
     return true;
   }catch(e){
-    showToast("Erro ao salvar. Verifique sua conexão e tente novamente.");
+    showToast("Erro ao salvar (" + ((e && e.code) || "desconhecido") + "). Tente novamente.");
     return false;
   }
 }
@@ -1017,7 +1046,9 @@ function fmtDate(iso){
   return d.toLocaleDateString("pt-BR", {day:"2-digit", month:"2-digit", year:"numeric"});
 }
 function todayISO(){
-  return new Date().toISOString().slice(0,10);
+  const d = new Date();
+  const pad = n => String(n).padStart(2,"0");
+  return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate());
 }
 function addDays(iso, days){
   const d = new Date(iso + "T00:00:00");
@@ -1225,18 +1256,20 @@ function newPipelineSkeleton(){
     horasMaquina: 0,
     notes: "",
     createdAt: todayISO(),
+    printedAt: null,
     completedAt: null
   };
 }
 /* Soma as horas de máquina de cards concluídos/entregues desde a última limpeza registrada. */
+const PRINTED_STAGES = new Set(["pos_processamento","qualidade","pronto","entregue"]);
+
 function machineHoursSinceLastCleaning(){
   const since = state.settings.lastCleaningDate;
   return state.pipeline
-    .filter(c => Number(c.horasMaquina) > 0)
+    .filter(c => PRINTED_STAGES.has(c.stage) && Number(c.horasMaquina) > 0)
     .filter(c => {
-      const ref = c.completedAt || c.forecastDate || c.createdAt;
-      if(!since) return true;
-      return ref && ref >= since;
+      const ref = c.printedAt || c.completedAt || c.createdAt;
+      return !since || (ref && ref >= since);
     })
     .reduce((s,c)=> s + (Number(c.horasMaquina)||0), 0);
 }
@@ -1326,7 +1359,7 @@ function materialCost(pricing, nome, manualPriceG, peso){
 
 /* Studio: one product priced across venda direta + Etsy + eBay + Amazon. */
 function calcStudioItem(pricing, input){
-  const peso = Number(input.peso)||0, tempo = Number(input.tempo)||0, pos = Number(input.pos)||0;
+  const peso = Number(input.peso)||0, tempo = hmmToDecimalHours(input.tempo), pos = Number(input.pos)||0;
   const custoMaterial = materialCost(pricing, input.material, input.manualPrice, peso);
   const custoMaquina = tempo * (Number(pricing.taxaMaquina)||0);
   const custoMaoObra = (pos/60) * (Number(pricing.taxaMaoObra)||0);
@@ -1354,7 +1387,7 @@ function calcStudioItem(pricing, input){
 
 /* Works: one part priced with peça + NRE (with deposit/balance and repetition royalty). */
 function calcWorksItem(pricing, input){
-  const peso = Number(input.peso)||0, tempo = Number(input.tempo)||0, pos = Number(input.pos)||0;
+  const peso = Number(input.peso)||0, tempo = hmmToDecimalHours(input.tempo), pos = Number(input.pos)||0;
   const horasNRE = Number(input.horasNRE)||0;
   const repeticao = !!input.repeticao;
 
@@ -1922,7 +1955,7 @@ function renderDashboard(main){
     </div>
 
     ${overdue.length ? `
-    <div class="card" style="border-color:rgba(255,69,58,0.35); background:var(--status-danger-bg);">
+    <div class="card card-danger">
       <strong style="color:var(--status-danger);">Faturas atrasadas (${overdue.length})</strong>
       <table style="margin-top:10px;">
         <tbody>
@@ -2069,7 +2102,7 @@ function renderDashboard(main){
   });
   main.querySelectorAll("[data-mark-contacted]").forEach(b=> b.onclick = async ()=>{
     const e = state.estimates.find(x=>x.id===b.dataset.markContacted);
-    if(e){ e.lastFollowUpAt = todayISO(); await persist("estimates"); showToast("Marcado como contatado."); render(); }
+    if(e){ e.lastFollowUpAt = todayISO(); await persist("estimates", e.id); showToast("Marcado como contatado."); render(); }
   });
 }
 
@@ -2150,8 +2183,9 @@ function renderPipeline(main){
       const c = state.pipeline.find(x=>x.id===sel.dataset.move);
       if(!c) return;
       c.stage = sel.value;
+      if(PRINTED_STAGES.has(sel.value) && !c.printedAt) c.printedAt = todayISO();
       if(sel.value === "entregue" && !c.completedAt) c.completedAt = todayISO();
-      await persist("pipeline");
+      await persist("pipeline", c.id);
       showToast("Etapa atualizada.");
       draw();
     });
@@ -2255,11 +2289,12 @@ function renderPipelineEditor(main){
     data.forecastDate = document.getElementById("c-forecast").value || null;
     data.horasMaquina = Number(document.getElementById("c-hours").value) || 0;
     data.notes = document.getElementById("c-notes").value;
+    if(PRINTED_STAGES.has(data.stage) && !data.printedAt) data.printedAt = todayISO();
     if(data.stage === "entregue" && !data.completedAt) data.completedAt = todayISO();
 
     const idx = state.pipeline.findIndex(x=>x.id===data.id);
     if(idx>=0) state.pipeline[idx] = data; else state.pipeline.push(data);
-    await persist("pipeline");
+    await persist("pipeline", data.id);
     editingPipelineCard = null;
     showToast("Processo salvo.");
     render();
@@ -2273,13 +2308,12 @@ function renderMaintenance(main){
   const info = maintenanceStatus();
   const s = state.settings;
   const contributingCards = state.pipeline
-    .filter(c => Number(c.horasMaquina) > 0)
+    .filter(c => PRINTED_STAGES.has(c.stage) && Number(c.horasMaquina) > 0)
     .filter(c => {
-      const ref = c.completedAt || c.forecastDate || c.createdAt;
-      if(!s.lastCleaningDate) return true;
-      return ref && ref >= s.lastCleaningDate;
+      const ref = c.printedAt || c.completedAt || c.createdAt;
+      return !s.lastCleaningDate || (ref && ref >= s.lastCleaningDate);
     })
-    .sort((a,b)=> (b.completedAt||b.forecastDate||b.createdAt||"").localeCompare(a.completedAt||a.forecastDate||a.createdAt||""));
+    .sort((a,b)=> (b.printedAt||b.completedAt||b.createdAt||"").localeCompare(a.printedAt||a.completedAt||a.createdAt||""));
 
   const dayPct = Math.max(0, Math.min(100, 100 - (info.daysLeft / (Number(s.cleaningIntervalDays)||14) * 100)));
   const hourPct = Math.max(0, Math.min(100, 100 - (info.hoursLeft / (Number(s.cleaningIntervalHours)||150) * 100)));
@@ -2294,9 +2328,9 @@ function renderMaintenance(main){
       <button class="btn btn-primary" id="log-cleaning">Registrar limpeza hoje</button>
     </div>
 
-    ${overdueStatus ? `<div class="card" style="border-color:rgba(255,69,58,0.35); background:var(--status-danger-bg); margin-bottom:16px;"><strong style="color:var(--status-danger);">Limpeza atrasada</strong> — registre a limpeza assim que possível.</div>` : ""}
+    ${overdueStatus ? `<div class="card card-danger" style="margin-bottom:16px;"><strong style="color:var(--status-danger);">Limpeza atrasada</strong> — registre a limpeza assim que possível.</div>` : ""}
 
-    <div class="stat-grid" style="grid-template-columns:1fr 1fr;">
+    <div class="stat-grid cols-2">
       <div class="stat-card">
         <div class="stat-label">Dias desde a última limpeza</div>
         <div class="stat-value">${info.daysSince===null ? "—" : info.daysSince}</div>
@@ -2535,7 +2569,7 @@ function renderClientEditor(main){
     };
     const idx = state.clients.findIndex(x=>x.id===data.id);
     if(idx>=0) state.clients[idx] = data; else state.clients.push(data);
-    await persist("clients");
+    await persist("clients", data.id);
     editingClient = null;
     showToast("Cliente salvo.");
     render();
@@ -2654,7 +2688,7 @@ function renderClientProfile(main){
     client.address = normalizeClient(client).address;
     client.type = normalizeClient(client).type;
     client.categories = normalizeClient(client).categories;
-    await persist("clients");
+    await persist("clients", client.id);
     showToast("Rastreio adicionado.");
     render();
   };
@@ -2663,7 +2697,7 @@ function renderClientProfile(main){
     const norm = normalizeClient(client);
     norm.tracking = norm.tracking.filter(t=>t.id!==b.dataset.trackDel);
     Object.assign(client, norm);
-    await persist("clients");
+    await persist("clients", client.id);
     showToast("Rastreio excluído.");
     render();
   });
@@ -2759,9 +2793,20 @@ function renderDocList(main, type){
   draw();
 }
 
+function nextDocNumber(type){
+  const s = state.settings;
+  const col = type==="estimate" ? "estimates" : "invoices";
+  const prefix = prefixFor(type);
+  const used = new Set((state[col] || []).map(d => d.number));
+  let n = Number(type==="estimate" ? s.nextEstimateNumber : s.nextInvoiceNumber) || 1;
+  while(used.has(prefix + "-" + String(n).padStart(4,"0"))) n++;
+  return {number: prefix + "-" + String(n).padStart(4,"0"), next: n + 1};
+}
+
 function newDocSkeleton(type){
   const settings = state.settings;
-  const number = prefixFor(type) + "-" + String(type==="estimate" ? settings.nextEstimateNumber : settings.nextInvoiceNumber).padStart(4,"0");
+  const next = Number(type==="estimate" ? settings.nextEstimateNumber : settings.nextInvoiceNumber) || 1;
+  const number = prefixFor(type) + "-" + String(next).padStart(4,"0");
   const date = todayISO();
   return {
     id: uid(),
@@ -2815,7 +2860,7 @@ function renderDocEditor(main){
   main.innerHTML = `
     <div class="view-header">
       <div>
-        <div class="view-title">${escapeHTML(data.number)}</div>
+        <div class="view-title">${escapeHTML(data.number)}${isNew ? ' <span class="stat-hint">(provisório)</span>' : ""}</div>
         <div class="view-sub">${isEstimate ? "Orçamento" : "Fatura"}${!isEstimate && data.status ? " — "+statusLabel(type, data.status) : ""}${isEstimate && !isNew ? " — "+statusLabel(type, effectiveEstimateStatus(data)) : ""}</div>
       </div>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -3186,13 +3231,14 @@ function renderDocEditor(main){
   function syncStatusFromPayments(){
     const t = calcDocTotals(data);
     const paid = sumPaymentsLocal();
-    const statusSel = document.getElementById("f-status");
-    if(!statusSel || paid <= 0) return; // leave whatever the user had set (draft/sent/overdue)
-    if(paid >= t.total - 0.005){
-      statusSel.value = "paid";
-    } else {
-      statusSel.value = "partial";
+    const sel = document.getElementById("f-status");
+    if(!sel) return;
+    if(paid <= 0){
+      if(sel.value === "paid" || sel.value === "partial")
+        sel.value = data.sentDate ? "sent" : "draft";
+      return;
     }
+    sel.value = paid >= t.total - 0.005 ? "paid" : "partial";
   }
 
   /* ---- Cliente: busca com autocomplete + criação rápida via popup ---- */
@@ -3320,12 +3366,10 @@ function renderDocEditor(main){
       invSkeleton.requiresShipping = data.requiresShipping;
       invSkeleton.shippingAddress = JSON.parse(JSON.stringify(data.shippingAddress));
       invSkeleton.materialsUsed = JSON.parse(JSON.stringify(data.materialsUsed||[]));
-      state.settings.nextInvoiceNumber++;
-      await persist("settings");
       // Marca o orçamento de origem como aceito (não é mais editável manualmente).
       data.status = "accepted";
       const idxEst = state.estimates.findIndex(x=>x.id===data.id);
-      if(idxEst>=0){ state.estimates[idxEst] = data; await persist("estimates"); }
+      if(idxEst>=0){ state.estimates[idxEst] = data; await persist("estimates", data.id); }
       openDocEditor("invoice", invSkeleton);
       showToast("Orçamento convertido em fatura — revise e salve.");
     }
@@ -3350,10 +3394,13 @@ function renderDocEditor(main){
     if(idx>=0) state[col][idx] = data; else state[col].push(data);
 
     if(isNew){
-      if(isEstimate) state.settings.nextEstimateNumber++; else state.settings.nextInvoiceNumber++;
+      const {number, next} = nextDocNumber(type);
+      data.number = number;
+      if(isEstimate) state.settings.nextEstimateNumber = next;
+      else state.settings.nextInvoiceNumber = next;
       await persist("settings");
     }
-    await persist(col);
+    await persist(col, data.id);
     editingDoc.isNew = false;
     showToast("Salvo com sucesso.");
     editingDoc = null;
@@ -3562,7 +3609,14 @@ Lembretes fiscais (sole proprietorship, Schedule C + Schedule SE):
    MARKETPLACE SALES
 ========================================================= */
 function netSale(sale){
-  return (Number(sale.grossAmount)||0) - (Number(sale.feesAmount)||0);
+  return (Number(sale.grossAmount)||0)
+    - (Number(sale.feesAmount)||0)
+    - (Number(sale.shippingCost)||0)
+    - (Number(sale.cogsAmount)||0);
+}
+function marketplaceMargin(sale){
+  const gross = Number(sale.grossAmount)||0;
+  return gross > 0 ? netSale(sale) / gross : 0;
 }
 
 function renderMarketplace(main){
@@ -3595,15 +3649,19 @@ function renderMarketplace(main){
       <div class="card" style="padding:0;">
         ${list.length===0 ? `<div class="empty-state"><div class="big">Nenhuma venda registrada</div>Registre a primeira venda da Reverso Studio.</div>` : `
         <table>
-          <thead><tr><th>Data</th><th>Plataforma</th><th>Produto</th><th class="num">Bruto</th><th class="num">Taxas</th><th class="num">Líquido</th><th></th></tr></thead>
+          <thead><tr><th>Data</th><th>Plataforma</th><th>Order ID</th><th>Produto</th><th class="num">Bruto</th><th class="num">Taxas</th><th class="num">Frete</th><th class="num">COGS</th><th class="num">Margem</th><th class="num">Líquido</th><th></th></tr></thead>
           <tbody>
             ${list.map(s=>`
               <tr>
                 <td>${fmtDate(s.date)}</td>
                 <td><span class="badge badge-platform">${escapeHTML(s.platform)}</span></td>
+                <td>${escapeHTML(s.orderId||"—")}</td>
                 <td>${escapeHTML(s.description)}</td>
                 <td class="num">${fmtMoney(s.grossAmount)}</td>
                 <td class="num">${fmtMoney(s.feesAmount)}</td>
+                <td class="num">${fmtMoney(s.shippingCost)}</td>
+                <td class="num">${fmtMoney(s.cogsAmount)}</td>
+                <td class="num">${(marketplaceMargin(s)*100).toFixed(1)}%</td>
                 <td class="num"><strong>${fmtMoney(netSale(s))}</strong></td>
                 <td class="row-actions">
                   <button class="btn btn-sm btn-ghost" data-edit="${s.id}">Editar</button>
@@ -3633,7 +3691,7 @@ function renderMarketplace(main){
 function renderSaleEditor(main){
   const s = editingSale.id ? editingSale : {
     id:null, date: todayISO(), platform: MARKETPLACE_PLATFORMS[0], description:"",
-    businessLine: "Reverso Studio", grossAmount:"", feesAmount:"", notes:""
+    businessLine: "Reverso Studio", orderId:"", grossAmount:"", feesAmount:"", shippingCost:"", cogsAmount:"", notes:""
   };
   main.innerHTML = `
     <div class="view-header"><div><div class="view-title">${s.id ? "Editar venda":"Nova venda"}</div></div></div>
@@ -3652,9 +3710,13 @@ function renderSaleEditor(main){
           </select>
         </div>
         <div class="field full"><label>Produto / descrição *</label><input id="f-desc" value="${escapeHTML(s.description)}"></div>
+        <div class="field"><label>Order ID</label><input id="f-orderid" value="${escapeHTML(s.orderId||"")}" placeholder="ID da plataforma"></div>
         <div class="field"><label>Valor bruto *</label><input type="number" step="0.01" id="f-gross" value="${s.grossAmount}"></div>
         <div class="field"><label>Taxas da plataforma</label><input type="number" step="0.01" id="f-fees" value="${s.feesAmount}"></div>
-        <div class="field"><label>Valor líquido</label><input id="f-net" value="${fmtMoney(netSale({grossAmount:s.grossAmount, feesAmount:s.feesAmount}))}" disabled></div>
+        <div class="field"><label>Frete / shipping</label><input type="number" step="0.01" id="f-shipping" value="${s.shippingCost||0}"></div>
+        <div class="field"><label>COGS / custo do produto</label><input type="number" step="0.01" id="f-cogs" value="${s.cogsAmount||0}"></div>
+        <div class="field"><label>Margem real</label><input id="f-margin" value="${(marketplaceMargin({grossAmount:s.grossAmount, feesAmount:s.feesAmount, shippingCost:s.shippingCost, cogsAmount:s.cogsAmount})*100).toFixed(1)}%" disabled></div>
+        <div class="field"><label>Valor líquido</label><input id="f-net" value="${fmtMoney(netSale({grossAmount:s.grossAmount, feesAmount:s.feesAmount, shippingCost:s.shippingCost, cogsAmount:s.cogsAmount}))}" disabled></div>
         <div class="field full"><label>Notas</label><textarea id="f-notes">${escapeHTML(s.notes)}</textarea></div>
       </div>
       <div class="modal-actions" style="margin-top:20px;">
@@ -3666,10 +3728,16 @@ function renderSaleEditor(main){
   function refreshNet(){
     const gross = Number(document.getElementById("f-gross").value)||0;
     const fees = Number(document.getElementById("f-fees").value)||0;
-    document.getElementById("f-net").value = fmtMoney(gross-fees);
+    const shipping = Number(document.getElementById("f-shipping").value)||0;
+    const cogs = Number(document.getElementById("f-cogs").value)||0;
+    const net = gross-fees-shipping-cogs;
+    document.getElementById("f-net").value = fmtMoney(net);
+    document.getElementById("f-margin").value = (gross>0 ? (net/gross)*100 : 0).toFixed(1) + "%";
   }
   document.getElementById("f-gross").oninput = refreshNet;
   document.getElementById("f-fees").oninput = refreshNet;
+  document.getElementById("f-shipping").oninput = refreshNet;
+  document.getElementById("f-cogs").oninput = refreshNet;
   document.getElementById("cancel").onclick = ()=>{ editingSale=null; render(); };
   document.getElementById("save").onclick = async ()=>{
     const description = document.getElementById("f-desc").value.trim();
@@ -3680,14 +3748,17 @@ function renderSaleEditor(main){
       date: document.getElementById("f-date").value,
       platform: document.getElementById("f-platform").value,
       businessLine: document.getElementById("f-line").value,
+      orderId: document.getElementById("f-orderid").value.trim(),
       description,
       grossAmount,
       feesAmount: Number(document.getElementById("f-fees").value)||0,
+      shippingCost: Number(document.getElementById("f-shipping").value)||0,
+      cogsAmount: Number(document.getElementById("f-cogs").value)||0,
       notes: document.getElementById("f-notes").value.trim()
     };
     const idx = state.marketplaceSales.findIndex(x=>x.id===data.id);
     if(idx>=0) state.marketplaceSales[idx]=data; else state.marketplaceSales.push(data);
-    await persist("marketplaceSales");
+    await persist("marketplaceSales", data.id);
     editingSale = null;
     showToast("Venda salva.");
     render();
@@ -3809,7 +3880,7 @@ function renderExpenseEditor(main){
     };
     const idx = state.expenses.findIndex(x=>x.id===data.id);
     if(idx>=0) state.expenses[idx]=data; else state.expenses.push(data);
-    await persist("expenses");
+    await persist("expenses", data.id);
     editingExpense = null;
     showToast("Despesa salva.");
     render();
@@ -3819,6 +3890,14 @@ function renderExpenseEditor(main){
 /* =========================================================
    TAX REPORT
 ========================================================= */
+/* Imposto sobre vendas cobrado do cliente é passivo, não receita.
+   Rateia cada pagamento entre base (subtotal) e imposto. */
+function paymentSplit(p, inv){
+  const t = calcDocTotals(inv);
+  const share = t.total > 0 ? (Number(p.amount)||0) / t.total : 0;
+  return {receita: t.subtotal * share, imposto: t.taxAmount * share};
+}
+
 function renderTax(main){
   const years = new Set([new Date().getFullYear()]);
   state.invoices.forEach(i=> i.date && years.add(Number(i.date.slice(0,4))));
@@ -3837,9 +3916,19 @@ function renderTax(main){
     };
     const [start,end] = qRanges[quarter];
 
-    const invoiceIncome = allPaymentsFlat()
+    let invoiceIncome = 0, salesTaxCollected = 0;
+    allPaymentsFlat()
       .filter(p => p.date>=start && p.date<=end)
-      .reduce((s,p)=> s+(Number(p.amount)||0), 0);
+      .forEach(p => {
+        const inv = state.invoices.find(i => i.id === p.invoiceId);
+        if(!inv){
+          invoiceIncome += Number(p.amount)||0;
+          return;
+        }
+        const sp = paymentSplit(p, inv);
+        invoiceIncome += sp.receita;
+        salesTaxCollected += sp.imposto;
+      });
 
     const marketplaceIncome = state.marketplaceSales
       .filter(sale => sale.date>=start && sale.date<=end)
@@ -3853,7 +3942,8 @@ function renderTax(main){
     exps.forEach(e=>{ byCategoryMap[e.category] = (byCategoryMap[e.category]||0) + (Number(e.amount)||0); });
     const byCategory = Object.entries(byCategoryMap).sort((a,b)=>b[1]-a[1]);
     const net = income - expenseTotal;
-    const seTax = net>0 ? net*0.153 : 0;
+    const seBase = net > 0 ? net * 0.9235 : 0;
+    const seTax = seBase >= 400 ? seBase * 0.153 : 0;
     const periodLabel = quarter==="all" ? `Ano ${year}` : `${year} — T${quarter}`;
 
     main.innerHTML = `
@@ -3875,7 +3965,7 @@ function renderTax(main){
         </select>
       </div>
 
-      <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);">
+      <div class="stat-grid cols-3">
         <div class="stat-card">
           <div class="stat-label">Receita bruta</div>
           <div class="stat-value" style="color:var(--status-good)">${fmtMoney(income)}</div>
@@ -3883,6 +3973,11 @@ function renderTax(main){
         </div>
         <div class="stat-card"><div class="stat-label">Despesas totais</div><div class="stat-value amber">${fmtMoney(expenseTotal)}</div></div>
         <div class="stat-card"><div class="stat-label">Lucro líquido</div><div class="stat-value ${net<0?'danger':''}">${fmtMoney(net)}</div></div>
+        <div class="stat-card">
+          <div class="stat-label">Imposto sobre vendas retido</div>
+          <div class="stat-value amber">${fmtMoney(salesTaxCollected)}</div>
+          <div class="stat-hint">A recolher à CDTFA — não é receita</div>
+        </div>
       </div>
 
       <div class="card">
@@ -3895,7 +3990,7 @@ function renderTax(main){
       </div>
 
       <div class="note-banner">
-        <strong>Lembretes (Schedule C + Schedule SE):</strong> self-employment tax de 15,3% sobre o lucro líquido
+        <strong>Lembretes (Schedule C + Schedule SE):</strong> self-employment tax estimado sobre 92,35% do lucro líquido
         (estimado aqui: ${fmtMoney(seTax)}) · estimated taxes trimestrais recomendados acima de ~$1.000/ano de lucro projetado ·
         vendas via marketplace já recolhem imposto automaticamente (AB 147), vendas diretas são responsabilidade própria ·
         receita de marketplace já está líquida de taxas da plataforma.
@@ -3979,7 +4074,7 @@ function renderStudioCalculator(main){
           </div>` : ""}
           <div class="field-stack">
             <div class="field"><label>Peso (g)</label><input type="number" inputmode="decimal" id="c-peso" value="${form.peso}" placeholder="0"></div>
-            <div class="field"><label>Tempo impressão (h)</label><input type="number" inputmode="decimal" step="0.1" id="c-tempo" value="${form.tempo}" placeholder="0.0"></div>
+            <div class="field"><label>Tempo de impressão (h.mm — ex.: 2.30 = 2h30min)</label><input type="number" inputmode="decimal" step="0.01" id="c-tempo" value="${form.tempo}" placeholder="2.30"></div>
             <div class="field"><label>Pós-processo (min)</label><input type="number" inputmode="decimal" id="c-pos" value="${form.pos}" placeholder="0"></div>
           </div>
           <button class="btn btn-primary btn-sm" id="calc-run" type="button" style="width:100%; justify-content:center; margin-top:16px;">Calcular</button>
@@ -4107,7 +4202,7 @@ function renderWorksCalculator(main){
           </div>` : ""}
           <div class="field-stack">
             <div class="field"><label>Peso (g)</label><input type="number" inputmode="decimal" id="c-peso" value="${form.peso}" placeholder="0"></div>
-            <div class="field"><label>Tempo impressão (h)</label><input type="number" inputmode="decimal" step="0.1" id="c-tempo" value="${form.tempo}" placeholder="0.0"></div>
+            <div class="field"><label>Tempo de impressão (h.mm — ex.: 2.30 = 2h30min)</label><input type="number" inputmode="decimal" step="0.01" id="c-tempo" value="${form.tempo}" placeholder="2.30"></div>
             <div class="field"><label>Pós-processo (min)</label><input type="number" inputmode="decimal" id="c-pos" value="${form.pos}" placeholder="0"></div>
             <div class="field"><label>Horas escaneamento+CAD</label><input type="number" inputmode="decimal" step="0.1" id="c-horasnre" value="${form.horasNRE}" placeholder="0.0"></div>
           </div>
@@ -4499,7 +4594,7 @@ function renderSettingsCatalogo(body, s){
         entry.pricingMode = modeSel.value;
         entry.unit = entry.pricingMode==="fixed" ? "un" : "h";
         if(priceInp) entry.price = Number(priceInp.value)||0;
-        await persist("catalog");
+        await persist("catalog", entry.id);
       };
       nameInp.onchange = save;
       typeSel.onchange = save;
