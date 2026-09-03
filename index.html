@@ -19,7 +19,9 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <style>
+
   /* ============================================================
      Reverso Gestor — Apple (España) Obsidian Design System
      Tokens per assets/design-tokens.css. Dark showroom canvas,
@@ -860,55 +862,71 @@ body{overflow-x:hidden}
 @media(max-width:900px){.ops-kpis{grid-template-columns:repeat(2,1fr)}.ops-grid{grid-template-columns:1fr}}
 @media(max-width:600px){.ops-kpis{grid-template-columns:repeat(2,1fr);gap:8px}.ops-kpi{padding:12px}.ops-kpi strong{font-size:21px}.ops-project{padding:12px}.ops-toolbar{position:sticky;top:0;z-index:4;padding:6px 0;background:linear-gradient(var(--color-carbon) 70%,transparent);backdrop-filter:blur(8px)}.ops-modal{border-radius:20px 20px 0 0!important;margin-top:auto!important;max-height:88vh;overflow:auto}.ops-mini-grid{grid-template-columns:1fr 1fr}.ops-project-actions .btn{min-height:40px}}
 
+
 </style>
 <style>
-/* ===== Reverso v11 — Part Master / Operations layer ===== */
-.r11-shell{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;margin-top:18px}
-.r11-card{background:var(--card,#171717);border:1px solid rgba(255,255,255,.09);border-radius:18px;padding:18px;box-shadow:0 12px 30px rgba(0,0,0,.12)}
-.r11-card h3{margin:0 0 12px;font-size:16px}
-.r11-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.r11-field{display:flex;flex-direction:column;gap:6px}
-.r11-field.full{grid-column:1/-1}
-.r11-field label{font-size:11px;letter-spacing:.04em;text-transform:uppercase;opacity:.7}
-.r11-field input,.r11-field select,.r11-field textarea{width:100%;box-sizing:border-box;border-radius:11px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.035);color:inherit;padding:11px 12px;font:inherit}
-.r11-field textarea{min-height:82px;resize:vertical}
-.r11-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}
-.r11-btn{border:1px solid rgba(255,255,255,.11);background:rgba(255,255,255,.05);color:inherit;border-radius:11px;padding:10px 13px;font-weight:700;cursor:pointer;transition:transform .18s,background .18s,border-color .18s}
-.r11-btn:hover{transform:translateY(-1px);background:rgba(255,255,255,.09)}
-.r11-btn.primary{background:#f0b323;color:#171717;border-color:#f0b323}
-.r11-btn.danger{color:#ff8c8c}
-.r11-status{display:inline-flex;align-items:center;gap:7px;padding:6px 9px;border-radius:999px;font-size:11px;font-weight:800;background:rgba(255,255,255,.06)}
-.r11-status.ok{color:#8ee0ad;background:rgba(80,190,120,.12)}
-.r11-status.warn{color:#ffd47a;background:rgba(240,179,35,.12)}
-.r11-status.bad{color:#ff9b9b;background:rgba(220,80,80,.12)}
-.r11-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-.r11-kpi{padding:13px;border-radius:14px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07)}
-.r11-kpi .n{font-size:22px;font-weight:850;line-height:1.1}
-.r11-kpi .l{font-size:10px;text-transform:uppercase;opacity:.6;margin-top:4px}
-.r11-timeline{position:relative;margin:8px 0 0 7px;padding-left:22px}
-.r11-timeline:before{content:"";position:absolute;left:3px;top:4px;bottom:4px;width:2px;background:rgba(255,255,255,.12)}
-.r11-step{position:relative;padding:8px 0 12px}
-.r11-step:before{content:"";position:absolute;left:-23px;top:12px;width:10px;height:10px;border-radius:50%;background:#555;border:2px solid #171717;box-shadow:0 0 0 1px rgba(255,255,255,.1)}
-.r11-step.done:before{background:#7bd89b}
-.r11-step.current:before{background:#f0b323;box-shadow:0 0 0 4px rgba(240,179,35,.12)}
-.r11-step .title{font-weight:800;font-size:13px}
-.r11-step .meta{font-size:11px;opacity:.58;margin-top:3px}
-.r11-progress{height:7px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;margin-top:9px}
-.r11-progress>span{display:block;height:100%;background:#f0b323;border-radius:99px;transition:width .6s cubic-bezier(.2,.8,.2,1)}
-.r11-table-wrap{overflow:auto;border-radius:13px;border:1px solid rgba(255,255,255,.07)}
-.r11-table{width:100%;border-collapse:collapse;min-width:720px}
-.r11-table th,.r11-table td{padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.06);text-align:left;font-size:12px;white-space:nowrap}
-.r11-table th{font-size:10px;text-transform:uppercase;letter-spacing:.05em;opacity:.55}
-.r11-empty{padding:28px;text-align:center;opacity:.55}
-.r11-hint{font-size:11px;opacity:.55;line-height:1.5;margin-top:8px}
-.r11-drawer{position:fixed;inset:0;z-index:9999;display:none}
-.r11-drawer.open{display:block}
-.r11-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(5px)}
-.r11-panel{position:absolute;right:0;top:0;bottom:0;width:min(720px,94vw);background:#121212;border-left:1px solid rgba(255,255,255,.1);padding:20px;overflow:auto;animation:r11slide .28s ease}
-@keyframes r11slide{from{transform:translateX(30px);opacity:.3}to{transform:none;opacity:1}}
-@media(max-width:900px){.r11-shell{grid-template-columns:1fr}.r11-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:600px){.r11-grid{grid-template-columns:1fr}.r11-field.full{grid-column:auto}.r11-card{padding:14px;border-radius:15px}.r11-panel{width:100%;box-sizing:border-box;padding:15px}.r11-btn{min-height:44px}.r11-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
-</style></head>
+/* Shared workspace shell and order workflow. Reuses the original Obsidian palette. */
+body{margin:0;color:var(--color-frost-white);background:var(--color-pure-black)}
+#dock-field{display:none}
+#sidebar{position:sticky;top:0;align-self:flex-start;height:100dvh;width:240px;min-width:240px;box-sizing:border-box;padding:32px 12px;background:var(--color-carbon);border:0;border-radius:0;transform:none}
+#sidebar .brand{margin:0 12px 32px}
+#nav{display:flex;flex-direction:column;gap:8px}
+#nav button{margin:0;padding:12px;border:0;border-radius:10px;transform:none;min-height:48px;white-space:normal}
+#nav button.active{background:var(--color-graphite)}
+#main{padding:24px 32px 60px;max-width:1440px;box-sizing:border-box}
+.wf-subnav,.wf-tabs,.wf-actions,.wf-context{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.wf-subnav{padding-bottom:24px;margin-bottom:24px;border-bottom:1px solid var(--color-smoke)}
+.wf-tabs{margin-bottom:24px}
+.wf-selected{background:var(--color-graphite);color:var(--color-frost-white);border:1px solid var(--color-smoke)}
+.wf-demo{padding:12px 0;margin-bottom:16px;color:var(--color-silver-mist);font-size:14px;display:flex;flex-wrap:wrap;gap:8px}
+.wf-demo a{color:var(--color-halo-blue)}
+.wf-back{margin-bottom:16px}
+.wf-record{display:flex;align-items:center;justify-content:space-between;gap:24px;width:100%;box-sizing:border-box;text-align:left;background:transparent;border:0;border-bottom:1px solid var(--color-smoke);padding:24px 0;color:inherit;font:inherit}
+button.wf-record{cursor:pointer}
+button.wf-record:hover{background:var(--color-carbon)}
+.wf-record>span:first-child{min-width:0}
+.wf-record strong,.wf-record small,.wf-record>span>span{display:block;overflow-wrap:anywhere}
+.wf-record strong{font-size:19px;font-weight:600;line-height:1.21;letter-spacing:-.28px;margin:8px 0}
+.wf-record small,.wf-note{color:var(--color-silver-mist);font-size:14px;line-height:1.43}
+.wf-amount{flex-shrink:0;font-size:24px;font-variant-numeric:tabular-nums;text-align:right}
+.wf-summary{display:flex;flex-wrap:wrap;gap:32px;padding:24px 0;border-bottom:1px solid var(--color-smoke)}
+.wf-summary>div{display:flex;flex-direction:column;gap:8px}
+.wf-summary span{font-size:14px;color:var(--color-silver-mist)}
+.wf-summary strong{font-size:24px;line-height:1.17;letter-spacing:-.24px;font-weight:600}
+.wf-section,.wf-agenda-day{padding:24px 0;border-bottom:1px solid var(--color-smoke)}
+.wf-section h2,.wf-agenda-day h2{font-size:19px;font-weight:600;line-height:1.21;letter-spacing:-.28px;margin:0 0 16px}
+.wf-section p{font-size:14px;line-height:1.43;color:var(--color-silver-mist)}
+.wf-field,.wf-context>label{display:flex;flex-direction:column;gap:8px;margin:16px 0;font-size:14px;min-width:0}
+.wf-field input,.wf-field select,.wf-context select{font:inherit;color:var(--color-frost-white);background:var(--color-carbon);border:1px solid var(--color-smoke);border-radius:10px;padding:12px;min-width:0;max-width:100%;box-sizing:border-box;min-height:48px}
+.wf-context{padding:8px 0 24px;align-items:flex-end}.wf-context>label{flex:1;min-width:min(240px,100%)}
+.wf-context select{width:100%}
+#wf-error{color:var(--status-danger);font-size:14px}
+.modal-box{max-height:90dvh;overflow-y:auto}
+.btn:focus-visible,button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--color-halo-blue);outline-offset:4px;box-shadow:none}
+.card,.field input:focus,.field select:focus,.field textarea:focus{box-shadow:none}
+.wf-print{color:var(--color-obsidian);padding:32px}
+@media(max-width:900px){
+ #app{flex-direction:column}
+ #sidebar{position:relative;top:auto;height:auto;width:100%;min-width:0;display:block;padding:16px;border-radius:0}
+ #sidebar .brand{margin:0 0 16px;display:block}
+ #sidebar .sidebar-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;padding:12px 0 0}
+ #sidebar #nav{position:static;display:flex;flex-direction:row;flex-wrap:wrap;justify-content:flex-start;width:100%;padding:0;border:0;border-radius:0;background:transparent;overflow:visible}
+ #sidebar #nav button{display:flex!important;flex:0 1 auto;width:auto;margin:0;padding:8px 12px;min-height:44px;font-size:14px;gap:8px}
+ #sidebar #nav .label{display:inline!important;font-size:14px}
+ #sidebar #nav .icon{display:none}
+ #main{width:100%;padding:24px 16px 48px}
+ .wf-record{gap:12px;flex-wrap:wrap}.wf-record .wf-actions{width:100%}
+ .wf-amount{font-size:19px}.wf-subnav .btn,.wf-tabs .btn{min-height:44px;box-sizing:border-box;padding:8px 12px}
+ .wf-context>label{flex-basis:100%}
+ .wf-field input,.wf-field select,.wf-context select{font-size:16px}
+ .modal-box{width:100%;box-sizing:border-box;padding:24px}
+}
+@media print{.wf-subnav,.wf-demo,.wf-tabs,#sidebar{display:none!important}.wf-print{display:block}}
+#sidebar #nav .label{max-width:none;width:auto;overflow:visible;text-overflow:clip;white-space:normal}
+#sidebar #nav button{max-width:none}
+
+</style>
+</head>
 <body>
 
 <div id="login-screen"></div>
@@ -923,7 +941,7 @@ body{overflow-x:hidden}
       <button id="logout-btn" style="all:unset; cursor:pointer; color:var(--color-signal-orange); font-weight:600;">Sair</button>
     </div>
   </div>
-  <div id="main"></div>
+  <main id="main"><div id="workspace-nav"></div><div id="workspace-view"></div></main>
 </div>
 
 <div id="print-area"></div>
@@ -932,6 +950,60 @@ body{overflow-x:hidden}
 <input type="file" id="import-file-input" accept="application/json">
 
 <script>
+/* Domain rules shared by the application and regression tests. No I/O. */
+(function(root){
+  'use strict';
+  const collections=['clients','estimates','invoices','expenses','marketplaceSales','notes','pipeline','catalog','engineeringProjects','mileageLogs','taxPayments','tax1099','inventory','orders','parts','partRevisions','stockMovements'];
+  const clone=x=>JSON.parse(JSON.stringify(x));
+  function approval(state,estimate,makeId,today){
+    if(!estimate.clientId) throw Error('Selecione um cliente antes de aprovar.');
+    const existing=state.orders.find(o=>o.id===estimate.orderId||o.estimateId===estimate.id);
+    if(existing && existing.clientId!==estimate.clientId) throw Error('O cliente deve ser o mesmo do pedido vinculado.');
+    const order=existing?clone(existing):{id:makeId(),number:'PED-'+estimate.number,title:estimate.items.find(i=>i.desc)?.desc||estimate.number,clientId:estimate.clientId,businessLine:estimate.businessLine,estimateId:estimate.id,revisionIds:estimate.revisionId?[estimate.revisionId]:[],deliveryDate:null,notes:'',createdAt:today};
+    order.revisionIds=[...new Set([...(order.revisionIds||[]),...(estimate.revisionId?[estimate.revisionId]:[])])];
+    order.estimateId=estimate.id;order.approvedAt=order.approvedAt||today;
+    const revision=state.partRevisions.find(r=>r.id===estimate.revisionId);
+    const hasProduction=state.pipeline.some(p=>p.orderId===order.id);
+    const legacyProduction=state.pipeline.find(p=>!p.orderId&&p.estimateId===estimate.id);
+    const production=hasProduction?null:legacyProduction?{...clone(legacyProduction),orderId:order.id}:{id:makeId(),orderId:order.id,clientId:order.clientId,businessLine:order.businessLine,title:order.title,estimateId:estimate.id,invoiceId:null,revisionId:revision?.id||null,partId:revision?.partId||null,revisionSnapshot:revision?clone(revision):null,engineeringProjectId:revision?.engineeringProjectId||null,material:revision?.material||'',stage:'fila',forecastDate:order.deliveryDate||null,horasMaquina:0,notes:'',createdAt:today,printedAt:null,completedAt:null,history:[{stage:'fila',at:today}]};
+    return {order,production,estimate:{...clone(estimate),orderId:order.id,status:'accepted',acceptedAt:estimate.acceptedAt||today}};
+  }
+  function stageChange(card,stage,today){
+    const stages=['fila','escaneamento_cad','imprimindo','pos_processamento','qualidade','pronto','entregue'];
+    if(!stages.includes(stage)) throw Error('Etapa inválida.');
+    const next=clone(card); next.stage=stage;next.updatedAt=today;
+    if(stage!==card.stage) next.history=[...(card.history||[]),{stage,at:today}];
+    if(stages.indexOf(stage)>=3&&!next.printedAt)next.printedAt=today;
+    if(stage==='entregue'&&!next.completedAt)next.completedAt=today;
+    if(stage!=='entregue')next.completedAt=null;
+    return next;
+  }
+  function backup(state){return {app:'reverso-gestor',version:3,exportedAt:new Date().toISOString(),settings:clone(state.settings),...Object.fromEntries(collections.map(k=>[k,clone(state[k]||[])]))};}
+  function restore(state,payload){
+    if(!payload||payload.app!=='reverso-gestor'||!Array.isArray(payload.clients)) throw Error('Backup Reverso inválido.');
+    const next=clone(state);
+    for(const key of collections){
+      if(!(key in payload))continue; // Older backups cannot erase omitted modules.
+      if(!Array.isArray(payload[key]))throw Error('Coleção inválida: '+key);
+      const ids=new Set();
+      for(const row of payload[key]){if(!row||typeof row.id!=='string'||!row.id||ids.has(row.id))throw Error('Identificador ausente ou duplicado em '+key);ids.add(row.id);}
+      next[key]=clone(payload[key]);
+    }
+    if(payload.settings){if(typeof payload.settings!=='object'||Array.isArray(payload.settings))throw Error('Configurações inválidas.');next.settings={...next.settings,...clone(payload.settings)};}
+    return next;
+  }
+  function stockConsumption(item,card,grams,makeId,today){
+    if(!Number.isFinite(grams)||grams<=0)throw Error('Informe o consumo em gramas.');
+    if(grams>Number(item.qty)*1000+0.000001)throw Error('Saldo insuficiente neste lote.');
+    return {item:{...clone(item),qty:Math.round((Number(item.qty)-grams/1000)*1e6)/1e6},movement:{id:makeId(),inventoryId:item.id,productionId:card.id,orderId:card.orderId||null,grams,cost:grams/1000*Number(item.costKg||0),date:today}};
+  }
+  const api={collections,clone,approval,stageChange,backup,restore,stockConsumption};
+  if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.ReversoModel=api;
+})(typeof window==='undefined'?{}:window);
+
+</script>
+<script>
+
 (function(){
 "use strict";
 
@@ -949,16 +1021,18 @@ const firebaseConfig = {
   messagingSenderId: "222670798861",
   appId: "1:222670798861:web:fd87d681048bdded5e1544"
 };
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+const demoMode = new URLSearchParams(location.search).get('demo') === '1';
+const Model = window.ReversoModel;
+if(!demoMode && window.firebase) firebase.initializeApp(firebaseConfig);
+const auth = !demoMode && window.firebase ? firebase.auth() : null;
+const db = auth ? firebase.firestore() : null;
 
 let currentUser = null;
 
 /* =========================================================
    STATE & PERSISTENCE (Firestore)
 ========================================================= */
-const COLLECTION_NAMES = ["clients", "estimates", "invoices", "expenses", "marketplaceSales", "notes", "pipeline", "catalog", "engineeringProjects", "mileageLogs", "taxPayments", "tax1099", "inventory"];
+const COLLECTION_NAMES = Model.collections;
 
 
 /* Pricing premises — same model as the Studio/Works Excel calculators, now editable in-app. */
@@ -1165,7 +1239,7 @@ let state = {
   mileageLogs: [],
   taxPayments: [],
   tax1099: [],
-  inventory: []
+  inventory: [], orders: [], parts: [], partRevisions: [], stockMovements: []
 };
 
 let ready = false;
@@ -1206,7 +1280,7 @@ async function loadCollection(name){
   }catch(e){
     _persistedIds[name] = new Set();
     showToast("Erro ao carregar " + name + ". Verifique sua conexão.");
-    return [];
+    throw e;
   }
 }
 
@@ -1217,6 +1291,7 @@ async function loadCollection(name){
    "verifique sua conexão". Agora a leitura some e, passando o id tocado,
    só esse documento é escrito. Sem id, grava tudo (import/restauração). */
 async function persist(collectionKey, touchedIds){
+  if(demoMode) return true;
   try{
     if(collectionKey === "settings"){
       // merge:true — duas abas abertas não apagam mais as alterações uma da outra
@@ -1240,7 +1315,7 @@ async function persist(collectionKey, touchedIds){
     for(let i = 0; i < ops.length; i += 450){   // Firestore: máx. 500 operações por batch
       const batch = db.batch();
       ops.slice(i, i + 450).forEach(op => {
-        if(op.t === "set") batch.set(col.doc(String(op.item.id)), op.item);
+        if(op.t === "set") batch.set(col.doc(String(op.item.id)), Model.clone(op.item));
         else batch.delete(col.doc(op.id));
       });
       await batch.commit();
@@ -1892,65 +1967,25 @@ function effectiveEstimateStatus(e){
 /* =========================================================
    BACKUP: EXPORT / IMPORT
 ========================================================= */
-function exportBackup(){
-  const payload = {
-    app: "reverso-gestor",
-    version: 2,
-    exportedAt: new Date().toISOString(),
-    settings: state.settings,
-    clients: state.clients,
-    estimates: state.estimates,
-    invoices: state.invoices,
-    expenses: state.expenses,
-    marketplaceSales: state.marketplaceSales,
-    engineeringProjects: state.engineeringProjects
-  };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "reverso-backup-" + todayISO() + ".json";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(()=> URL.revokeObjectURL(url), 1000);
-  showToast("Backup exportado.");
-}
+function exportBackup(){ downloadJSON(Model.backup(state),'reverso-backup-'+todayISO()+'.json'); }
 
 function triggerImport(){
   document.getElementById("import-file-input").click();
 }
 
 async function handleImportFile(file){
-  if(!file) return;
-  let payload;
-  try{
-    const text = await file.text();
-    payload = JSON.parse(text);
-  }catch(e){
-    showToast("Não consegui ler esse arquivo. Verifique se é um backup válido (.json).");
-    return;
-  }
-  if(!payload || typeof payload !== "object" || !("clients" in payload || "invoices" in payload)){
-    showToast("Arquivo não parece ser um backup do Reverso Gestor.");
-    return;
-  }
-  confirmModal(
-    "Importar backup?",
-    "Isso substitui todos os dados atuais (clientes, orçamentos, faturas, despesas, vendas de marketplace e configurações) pelos do arquivo. Não pode ser desfeito.",
-    async ()=>{
-      state.settings = Object.assign({}, DEFAULT_SETTINGS, payload.settings || {});
-      state.clients = payload.clients || [];
-      state.estimates = payload.estimates || [];
-      state.invoices = payload.invoices || [];
-      state.expenses = payload.expenses || [];
-      state.marketplaceSales = payload.marketplaceSales || [];
-      state.engineeringProjects = payload.engineeringProjects || [];
-      await persistAll();
-      showToast("Backup importado com sucesso.");
-      render();
-    }
-  );
+  if(!file)return;
+  let payload,next;
+  try{payload=JSON.parse(await file.text());next=Model.restore(state,payload);}catch(e){showToast(e.message||'Backup inválido.');return;}
+  confirmModal('Restaurar backup?', 'Os módulos presentes no arquivo serão substituídos. Módulos ausentes serão preservados. Uma cópia do estado atual será baixada antes da restauração.',async()=>{
+    downloadJSON(Model.backup(state),'reverso-antes-da-restauracao-'+todayISO()+'.json');
+    const records=[];
+    if(payload.settings)records.push(['settings',next.settings]);
+    for(const key of COLLECTION_NAMES){if(!(key in payload))continue;next[key].forEach(row=>records.push([key,row]));const keep=new Set(next[key].map(x=>x.id));state[key].filter(x=>!keep.has(x.id)).forEach(row=>records.push([key,{id:row.id},true]));}
+    if(!(await commitRecords(records)))return;
+    selectedAnalysisId=null;activeOrderId=null;calculatorContext=null;engineeringContext=null;resetEditors();
+    showToast('Backup restaurado.');render();
+  });
 }
 
 
@@ -2140,9 +2175,9 @@ function engineeringAnalyze(input){
 function engStatusLabel(s){return s==="good"?"RECOMENDADO":s==="alt"?"ALTERNATIVA":s==="warn"?"COMPATÍVEL COM RESSALVAS":"NÃO RECOMENDADO";}
 function engStatusClass(s){return s==="good"?"good":s==="alt"?"alt":s==="warn"?"warn":"bad";}
 
-function renderEngineering(main){
+function legacyRenderEngineering(main){
   const last=state.engineeringProjects.slice().sort((a,b)=>(b.updatedAt||"").localeCompare(a.updatedAt||""));
-  const defaults=last[0]||{};
+  const defaults=state.engineeringProjects.find(p=>p.id===selectedAnalysisId)||{};
   const option=(v,label,sel)=>`<option value="${v}" ${sel===v?"selected":""}>${label}</option>`;
   main.innerHTML=`
     <div class="view-header">
@@ -2243,7 +2278,13 @@ function renderEngineering(main){
   document.getElementById("eng-save").onclick=async()=>{
     const a=recalc(), b=a.result.best, now=new Date().toISOString();
     const p={id:uid(),...a.input,recommendationId:b.id,recommendationName:b.d.name,score:b.score,confidence:a.result.confidence,ranking:a.result.candidates.slice(0,12).map(x=>({id:x.id,name:x.d.name,score:x.score,status:x.status,reasons:x.reasons.slice(0,5)})),calculated:{stress:b.stress,fs:b.fs,deflection:b.deflection,metrics:b.metrics},createdAt:now,updatedAt:now};
-    state.engineeringProjects.unshift(p); await persist("engineeringProjects",p.id); showToast("Análise salva no Firebase."); renderEngineering(main);
+    p.revisionId=document.getElementById('eng-revision')?.value||null;
+    p.orderId=engineeringContext?.orderId||null;
+    const records=[['engineeringProjects',p]];
+    const rev=state.partRevisions.find(r=>r.id===p.revisionId);
+    if(rev)records.push(['partRevisions',{...rev,engineeringProjectId:p.id}]);
+    if(!(await commitRecords(records)))return;
+    selectedAnalysisId=p.id;showToast('Análise salva.');render();
   };
   document.getElementById("eng-report").onclick=()=>{
     const a=recalc(); openEngineeringReport(a.input,a.result);
@@ -2325,7 +2366,7 @@ function enhanceNativeControls(scope){
     control.addEventListener('input',refresh); control.addEventListener('change',refresh); refresh();
   });
 }
-function installBackNavigation(main){
+function legacyInstallBackNavigation(main){
   if(currentView==='dashboard'||main.querySelector('.back-nav')) return;
   const header=main.querySelector('.view-header'); if(!header) return;
   const back=document.createElement('button'); back.type='button';back.className='back-nav';back.innerHTML='← Voltar ao painel';
@@ -2468,7 +2509,7 @@ function openMobileMore(){
   document.getElementById('more-close').onclick=()=>modalRoot.innerHTML=''; modalRoot.querySelectorAll('[data-more-view]').forEach(b=>b.onclick=()=>{currentView=b.dataset.moreView;modalRoot.innerHTML='';render();});
 }
 
-function renderNav(){
+function legacyRenderNav(){
   const nav = document.getElementById("nav");
   if(!navBuilt){
     nav.innerHTML = '<span class="nav-indicator" aria-hidden="true"></span>' + VIEWS.map(v => `
@@ -2493,9 +2534,9 @@ function renderNav(){
   if(dockRefresh) dockRefresh();
 }
 
-function render(){
+function legacyRender(){
   renderNav();
-  const main = document.getElementById("main");
+  const main = document.getElementById("workspace-view");
   if(!ready){ main.innerHTML = "<p>Carregando…</p>"; return; }
 
   if(editingDoc){ renderDocEditor(main); enhanceNativeControls(main); installBackNavigation(main); return; }
@@ -2547,7 +2588,7 @@ function urgencyClass(dueDate){
   return "";
 }
 
-function renderDashboard(main){
+function legacyRenderDashboard(main){
   const today=todayISO(), monthKey=today.slice(0,7);
   const payments=allPaymentsFlat().filter(p=>(p.date||"").slice(0,7)===monthKey);
   const monthSplit=splitPayments(payments);
@@ -2580,7 +2621,7 @@ function renderDashboard(main){
   const accountEmail=(currentUser&&currentUser.email||'').toLowerCase();
   const greetingName=accountEmail==='lincolnporta@gmail.com'?'Lincoln':accountEmail==='eduardaterumi@gmail.com'?'Duda':(state.settings.businessName||'Reverso').split(' ')[0];
   const quick=[
-    ['＋','Novo orçamento','Criar cotação','estimate'],['＋','Nova fatura','Registrar cobrança','invoice'],['＋','Nova peça','Engenharia','engineering'],['＋','Registrar despesa','Lançar custo','expense']
+    ['＋','Novo orçamento','Criar cotação','estimate'],['＋','Nova fatura','Registrar cobrança','invoice'],['＋','Nova peça','Cadastro e revisões','engineering'],['＋','Registrar despesa','Lançar custo','expense']
   ];
   main.innerHTML=`
     <div class="command-center">
@@ -2631,7 +2672,7 @@ function operationsProgress(stage){
   const i=PIPELINE_STAGES.findIndex(s=>s.id===stage);
   return Math.max(0,Math.min(100,Math.round(((i+1)/PIPELINE_STAGES.length)*100)));
 }
-function operationsTimeline(c){
+function legacyOperationsTimeline(c){
   const events=[];
   events.push({label:"Processo criado",date:c.createdAt||null,done:true,detail:"Registro inicial no Reverso Gestor."});
   const idx=PIPELINE_STAGES.findIndex(s=>s.id===c.stage);
@@ -2646,7 +2687,7 @@ function openOperationsProject(id){
   const c=state.pipeline.find(x=>x.id===id); if(!c) return;
   const est=c.estimateId?state.estimates.find(x=>x.id===c.estimateId):null;
   const inv=c.invoiceId?state.invoices.find(x=>x.id===c.invoiceId):null;
-  const eng=state.engineeringProjects.filter(x=>x.recommendationId && c.material && x.recommendationName===c.material).sort((a,b)=>(b.updatedAt||"").localeCompare(a.updatedAt||""))[0];
+  const eng=state.engineeringProjects.find(x=>x.id===c.engineeringProjectId);
   const progress=operationsProgress(c.stage);
   const events=operationsTimeline(c);
   modalRoot.innerHTML=`<div class="modal-backdrop" id="ops-detail-backdrop"><div class="modal-box ops-modal">
@@ -2661,7 +2702,7 @@ function openOperationsProject(id){
   document.getElementById('ops-open-pipeline').onclick=()=>{modalRoot.innerHTML='';editingPipelineCard={data:JSON.parse(JSON.stringify(c)),isNew:false};currentView='pipeline';render();};
   if(est) document.getElementById('ops-open-estimate').onclick=()=>{modalRoot.innerHTML='';editingDoc={type:'estimate',data:JSON.parse(JSON.stringify(est)),isNew:false};currentView='estimates';render();};
   if(inv) document.getElementById('ops-open-invoice').onclick=()=>{modalRoot.innerHTML='';editingDoc={type:'invoice',data:JSON.parse(JSON.stringify(inv)),isNew:false};currentView='invoices';render();};
-  if(eng) document.getElementById('ops-open-eng').onclick=()=>{modalRoot.innerHTML='';currentView='engineering';render();};
+  if(eng) document.getElementById('ops-open-eng').onclick=()=>{modalRoot.innerHTML='';selectedAnalysisId=eng.id;currentView='engineering';render();};
 }
 function openOperationsCalendar(selectedISO){
   const start=new Date(selectedISO+'T12:00:00'); start.setDate(start.getDate()-start.getDay());
@@ -2693,7 +2734,7 @@ function renderOperations(main){
     const follow=estimatesNeedingFollowUp();
     if(follow.length) focus.push({title:`${follow.length} orçamento(s) sem retorno`,sub:"Oportunidade de follow-up",view:"estimates",kind:"warn"});
     if(!focus.length) focus.push({title:"Nenhuma exceção crítica",sub:"Operação dentro do esperado",view:null,kind:"good"});
-    main.innerHTML=`<div class="view-header"><div><div class="view-title">Centro de Operações</div><div class="view-sub">Uma visão 360° do ciclo: orçamento → produção → entrega → pagamento.</div></div><button class="btn btn-primary" id="ops-new">+ Novo processo</button></div>
+    main.innerHTML=`<div class="view-header"><div><div class="view-title">Centro de Operações</div><div class="view-sub">Uma visão 360° do ciclo: orçamento → produção → entrega → pagamento.</div></div><button class="btn btn-primary" id="ops-new">+ Nova ordem de produção</button></div>
       <div class="ops-kpis"><div class="ops-kpi"><small>Em produção</small><strong>${active.length}</strong><span>${printed.length} já impressos</span></div><div class="ops-kpi"><small>Próximos 7 dias</small><strong>${due7.length}</strong><span>${overdue.length?overdue.length+" atrasada(s)":"Sem atrasos"}</span></div><div class="ops-kpi"><small>A receber</small><strong>${fmtMoney(revenueOpen)}</strong><span>faturas abertas</span></div><div class="ops-kpi"><small>Capacidade registrada</small><strong>${active.reduce((s,c)=>s+Number(c.horasMaquina||0),0).toFixed(1)} h</strong><span>horas de máquina</span></div></div>
       <div class="ops-toolbar"><input class="grow" type="search" id="ops-search" placeholder="Buscar processo, cliente ou material…" value="${escapeHTML(query)}"><select id="ops-line"><option value="">Todas as linhas</option><option value="Reverso Works" ${line==="Reverso Works"?"selected":""}>Reverso Works</option><option value="Reverso Studio" ${line==="Reverso Studio"?"selected":""}>Reverso Studio</option></select><select id="ops-stage"><option value="">Todas as etapas</option>${PIPELINE_STAGES.map(x=>`<option value="${x.id}" ${stage===x.id?"selected":""}>${x.label}</option>`).join("")}</select></div>
       <div class="ops-grid"><div class="card"><div class="command-section-title"><strong>Projetos em andamento</strong><span>${cards.length} processo(s)</span></div>${cards.length?cards.map(c=>{const p=operationsProgress(c.stage), late=c.forecastDate&&c.forecastDate<today&&c.stage!=="entregue";return `<div class="ops-project"><div class="ops-project-head"><div><div class="ops-project-title">${escapeHTML(c.title||"(sem título)")}</div><div class="ops-project-meta">${escapeHTML(clientName(c.clientId))} · ${escapeHTML(c.businessLine||"—")} · ${escapeHTML(c.material||"Material N/D")}</div></div><span class="badge ${late?'badge-line-works':'badge-platform'}">${escapeHTML(stageLabel(c.stage))}</span></div><div class="ops-progress" style="--progress:${p}%"><i></i></div><div class="ops-stage-row"><small>${p}% do fluxo</small><small class="${late?'danger-text':''}">${c.forecastDate?(late?'Atrasado · ':'Entrega · ')+fmtDate(c.forecastDate):'Sem previsão'}</small></div><div class="ops-actions ops-project-actions"><button class="btn btn-sm btn-primary" data-ops-open="${c.id}">Abrir ciclo</button><button class="btn btn-sm btn-ghost" data-ops-edit="${c.id}">Editar</button></div></div>`}).join(""):`<div class="ops-empty">Nenhum processo corresponde aos filtros.</div>`}</div>
@@ -2742,10 +2783,10 @@ function renderPipeline(main){
     main.innerHTML = `
       <div class="view-header">
         <div>
-          <div class="view-title">Funil de processos</div>
-          <div class="view-sub">${state.pipeline.length} processo(s) — conectado a orçamentos e faturas pelas datas de entrega</div>
+          <div class="view-title">Quadro de produção</div>
+          <div class="view-sub">${state.pipeline.length} processo(s) — vinculado a pedidos, peças e documentos</div>
         </div>
-        <button class="btn btn-primary" id="new-card">+ Novo processo</button>
+        <button class="btn btn-primary" id="new-card">+ Nova ordem de produção</button>
       </div>
       <div class="toolbar">
         <input type="search" id="search-card" placeholder="Buscar por título ou cliente…" value="${escapeHTML(search)}">
@@ -2796,7 +2837,7 @@ function renderPipeline(main){
     main.querySelectorAll("[data-move]").forEach(sel=> sel.onchange = async ()=>{
       const c = state.pipeline.find(x=>x.id===sel.dataset.move);
       if(!c) return;
-      c.stage = sel.value;
+      Object.assign(c, Model.stageChange(c, sel.value, todayISO()));
       if(hasPrinted(sel.value) && !c.printedAt) c.printedAt = todayISO();
       if(sel.value === "entregue" && !c.completedAt) c.completedAt = todayISO();
       await persist("pipeline", c.id);
@@ -2814,13 +2855,13 @@ function renderPipeline(main){
   draw();
 }
 
-function renderPipelineEditor(main){
+function legacyRenderPipelineEditor(main){
   const {data, isNew} = editingPipelineCard;
   main.innerHTML = `
     <div class="view-header">
       <div>
-        <div class="view-title">${isNew ? "Novo processo" : "Editar processo"}</div>
-        <div class="view-sub">Funil de processos</div>
+        <div class="view-title">${isNew ? "Nova ordem de produção" : "Editar ordem de produção"}</div>
+        <div class="view-sub">Quadro de produção</div>
       </div>
       <div style="display:flex; gap:8px;">
         <button class="btn btn-ghost" id="back">&larr; Voltar</button>
@@ -2886,7 +2927,7 @@ function renderPipelineEditor(main){
     if(est){
       document.getElementById("c-client").value = est.clientId;
       document.getElementById("c-line").value = est.businessLine;
-      if(!document.getElementById("c-forecast").value) document.getElementById("c-forecast").value = est.validUntil||"";
+
     }
   };
   document.getElementById("c-invoice").onchange = (e)=>{
@@ -2894,7 +2935,7 @@ function renderPipelineEditor(main){
     if(inv){
       document.getElementById("c-client").value = inv.clientId;
       document.getElementById("c-line").value = inv.businessLine;
-      if(!document.getElementById("c-forecast").value) document.getElementById("c-forecast").value = inv.dueDate||"";
+
     }
   };
   document.getElementById("save-card").onclick = async ()=>{
@@ -3083,6 +3124,7 @@ function renderClients(main){
       render();
     });
     main.querySelectorAll("[data-del]").forEach(b=> b.onclick = ()=>{
+      if(state.orders.some(o=>o.clientId===b.dataset.del)||state.parts.some(p=>p.clientId===b.dataset.del)){showToast('Cliente vinculado a pedidos ou peças. Preserve o cadastro para manter o histórico.');return;}
       const vinc = state.estimates.filter(d=>d.clientId===b.dataset.del).length
                  + state.invoices.filter(d=>d.clientId===b.dataset.del).length
                  + state.pipeline.filter(d=>d.clientId===b.dataset.del).length;
@@ -3215,7 +3257,7 @@ function renderClientEditor(main){
   };
 }
 
-function renderClientProfile(main){
+function legacyRenderClientProfile(main){
   const c = normalizeClient(state.clients.find(x=>x.id===viewingClient));
   if(!c){ viewingClient = null; renderClients(main); return; }
 
@@ -3394,7 +3436,7 @@ function renderDocList(main, type){
                 <td><span class="badge badge-${type==="estimate" ? effectiveEstimateStatus(d) : d.status}">${statusLabel(type, type==="estimate" ? effectiveEstimateStatus(d) : d.status)}</span></td>
                 <td class="row-actions">
                   <button class="btn btn-sm btn-ghost" data-open="${d.id}">Abrir</button>
-                  <button class="btn btn-sm btn-ghost" data-pipeline="${d.id}">${state.pipeline.some(c => (type==="estimate"?c.estimateId:c.invoiceId)===d.id) ? "Ver no funil" : "+ Funil"}</button>
+                  <button class="btn btn-sm btn-ghost" data-pipeline="${d.id}">${state.pipeline.some(c => (type==="estimate"?c.estimateId:c.invoiceId)===d.id) ? "Ver produção" : "+ Produção"}</button>
                   <button class="btn btn-sm btn-danger" data-del="${d.id}">Excluir</button>
                 </td>
               </tr>`;
@@ -3410,17 +3452,25 @@ function renderDocList(main, type){
     main.querySelectorAll("[data-pipeline]").forEach(b=> b.onclick = ()=>{
       const doc = state[col].find(x=>x.id===b.dataset.pipeline);
       const existing = state.pipeline.find(c => (type==="estimate"?c.estimateId:c.invoiceId)===doc.id);
-      if(existing){ editingPipelineCard = {data: JSON.parse(JSON.stringify(existing)), isNew:false}; render(); return; }
+      if(existing){ currentView='pipeline'; editingPipelineCard = {data: JSON.parse(JSON.stringify(existing)), isNew:false}; render(); return; }
+      if(type==='estimate'&&doc.status!=='accepted'){openDocEditor(type,doc);showToast('Registre a aprovação para iniciar a produção.');return;}
       const card = newPipelineSkeleton();
       card.clientId = doc.clientId;
       card.businessLine = doc.businessLine;
       card.title = (doc.items && doc.items[0] && doc.items[0].desc) ? doc.items[0].desc : (doc.number + " — " + clientName(doc.clientId));
-      if(type==="estimate"){ card.estimateId = doc.id; card.forecastDate = doc.validUntil; }
-      else { card.invoiceId = doc.id; card.forecastDate = doc.dueDate; }
+      if(type==="estimate") card.estimateId = doc.id;
+      else card.invoiceId = doc.id;
+      card.orderId=doc.orderId||null;
+      card.forecastDate=state.orders.find(o=>o.id===doc.orderId)?.deliveryDate||null;
+      const rev=state.partRevisions.find(r=>r.id===doc.revisionId);
+      if(rev)Object.assign(card,{revisionId:rev.id,partId:rev.partId,revisionSnapshot:Model.clone(rev),engineeringProjectId:rev.engineeringProjectId||null,material:rev.material||''});
+      currentView='pipeline';
       editingPipelineCard = {data: card, isNew:true};
       render();
     });
     main.querySelectorAll("[data-del]").forEach(b=> b.onclick = ()=>{
+      const target=state[col].find(x=>x.id===b.dataset.del);
+      if(target?.orderId||state.pipeline.some(p=>(type==='estimate'?p.estimateId:p.invoiceId)===target?.id)||(! (type==='estimate')&&sumPayments(target)>0)){showToast('Documento vinculado a pedido, produção ou recebimentos. Preserve-o para manter o histórico.');return;}
       confirmModal(`Excluir ${type==="estimate"?"orçamento":"fatura"}?`, "Essa ação não pode ser desfeita.", async ()=>{
         state[col] = state[col].filter(x=>x.id!==b.dataset.del);
         await persist(col, []);
@@ -3491,6 +3541,7 @@ function openDocEditor(type, doc, forceNew){
       ? {line1: data.shipTo, line2:"", city:"", state:"", zip:"", country:"Estados Unidos"}
       : {line1:"", line2:"", city:"", state:"", zip:"", country:"Estados Unidos"};
   }
+  currentView=type==="estimate"?"estimates":"invoices";
   editingDoc = {type, data, isNew: forceNew === true ? true : !doc};
   render();
 }
@@ -3518,7 +3569,7 @@ function renderDocEditor(main){
       </div>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <button class="btn btn-ghost" id="back">&larr; Voltar</button>
-        <button class="btn btn-ghost" id="print-doc">Imprimir / PDF</button>${data.type==='invoice' && data.id ? `<button class="btn btn-amber" id="print-receipt">Recibo de pagamento</button>` : ''}
+        <button class="btn btn-ghost" id="print-doc">Imprimir / PDF</button>${!isEstimate && data.id ? `<button class="btn btn-amber" id="print-receipt">Recibo de pagamento</button>` : ''}
         ${isEstimate ? `<button class="btn btn-amber" id="convert-invoice-top" type="button" ${isNew ? "disabled title='Salve o orçamento primeiro'":""}>Converter em fatura</button>` : ""}
         <button class="btn btn-primary" id="save-doc">Salvar</button>
       </div>
@@ -3732,10 +3783,10 @@ function renderDocEditor(main){
         <td><select class="catalog-select">${catalogOptionsHTML(it.catalogId)}</select></td>
         <td><input class="desc-input" value="${escapeHTML(it.desc)}" placeholder="Descrição do item/serviço"></td>
         <td>
-          <input class="num-input qty-input" type="number" inputmode="decimal" step="any" value="${it.qty}" placeholder="${isHours?'h.mm':'0'}">
+          <input aria-label="Quantidade do item" class="num-input qty-input" type="number" inputmode="decimal" step="any" value="${it.qty}" placeholder="${isHours?'h.mm':'0'}">
           ${isHours ? `<div class="li-meta" style="text-align:right; margin-top:2px;">${qtyLabel}</div>` : ""}
         </td>
-        <td><input class="num-input rate-input" type="number" inputmode="decimal" step="any" value="${it.rate}"></td>
+        <td><input aria-label="Preço unitário do item" class="num-input rate-input" type="number" inputmode="decimal" step="any" value="${it.rate}"></td>
         <td class="tax-cell"><input type="checkbox" class="taxable-input" ${it.taxable!==false ? "checked":""}></td>
         <td class="amount-cell">${fmtMoney(lineAmount(it))}</td>
         <td><button class="remove-line" data-remove="${idx}" title="Remover">&times;</button></td>
@@ -4031,32 +4082,16 @@ function renderDocEditor(main){
     };
   } else {
     async function doConvertToInvoice(){
-      const invSkeleton = newDocSkeleton("invoice");
-      invSkeleton.clientId = data.clientId;
-      invSkeleton.businessLine = data.businessLine;
-      invSkeleton.items = JSON.parse(JSON.stringify(data.items));
-      invSkeleton.applyTax = data.applyTax;
-      invSkeleton.taxRate = data.taxRate;
-      invSkeleton.fromEstimateNumber = data.number;
-      invSkeleton.requiresShipping = data.requiresShipping;
-      invSkeleton.shippingAddress = JSON.parse(JSON.stringify(data.shippingAddress));
-      invSkeleton.materialsUsed = JSON.parse(JSON.stringify(data.materialsUsed||[]));
-      invSkeleton.poNumber = data.poNumber || "";
-      /* Notas acordadas no orçamento não podem sumir na conversão. */
-      if(data.notes && data.notes !== state.settings.estimateNotes){
-        invSkeleton.notes = data.notes;
-      }
-      /* O número da fatura passa a ser atribuído no salvamento — antes o
-         contador subia aqui e abandonar a conversão queimava o número,
-         abrindo buraco na sequência fiscal. */
-      // Marca o orçamento de origem como aceito (não é mais editável manualmente).
-      data.status = "accepted";
-      const idxEst = state.estimates.findIndex(x=>x.id===data.id);
-      if(idxEst>=0){ state.estimates[idxEst] = data; await persist("estimates", data.id); }
-      /* forceNew: o esqueleto é um objeto pronto, mas a fatura ainda não
-         existe em state.invoices — precisa receber número no salvamento. */
-      openDocEditor("invoice", invSkeleton, true);
-      showToast("Orçamento convertido em fatura — revise e salve.");
+      if(data.status!=='accepted'){showToast('Registre a aprovação antes de gerar a fatura.');return;}
+      if(!(await saveDocument(false)))return;
+      const existing=state.invoices.find(i=>i.fromEstimateId===data.id||(!i.fromEstimateId&&i.fromEstimateNumber===data.number));
+      if(existing){openDocEditor('invoice',existing);return;}
+      const invSkeleton=newDocSkeleton('invoice');
+      ['clientId','businessLine','items','applyTax','taxRate','requiresShipping','shippingAddress','materialsUsed','poNumber','orderId','revisionId'].forEach(k=>{if(data[k]!==undefined)invSkeleton[k]=Model.clone(data[k]);});
+      invSkeleton.fromEstimateId=data.id;invSkeleton.fromEstimateNumber=data.number;
+      if(data.notes&&data.notes!==state.settings.estimateNotes)invSkeleton.notes=data.notes;
+      openDocEditor('invoice',invSkeleton,true);
+      showToast('Revise e salve a fatura.');
     }
     const convBtn = document.getElementById("convert-invoice");
     if(convBtn && !isNew) convBtn.onclick = doConvertToInvoice;
@@ -4064,38 +4099,63 @@ function renderDocEditor(main){
     if(convBtnTop && !isNew) convBtnTop.onclick = doConvertToInvoice;
   }
 
-  document.getElementById("save-doc").onclick = async ()=>{
+  async function saveDocument(close=true, targetStatus=null){
     commitFormToData();
-    if(!data.clientId){ showToast("Selecione um cliente (digite o nome e escolha na lista)."); return; }
-    data.items = data.items.filter(it => (it.desc && it.desc.trim()) || Number(it.rate)>0);
-    if(data.items.length===0) data.items = [{desc:"", qty:1, rate:0, taxable:true, catalogId:null}];
-
-    if(isEstimate && (!data.status || data.status === "draft")){
-      data.status = "sent";
-      data.sentDate = data.sentDate || todayISO();
+    data.orderId=document.getElementById('doc-order')?.value||null;
+    data.revisionId=document.getElementById('doc-revision')?.value||null;
+    if(!data.clientId){showToast('Selecione um cliente.');return false;}
+    const linkedOrder=state.orders.find(o=>o.id===data.orderId);
+    if(linkedOrder&&linkedOrder.businessLine!==data.businessLine){showToast('A linha de negócio deve ser a mesma do pedido.');return false;}
+    if(linkedOrder&&linkedOrder.clientId!==data.clientId){showToast('O cliente deve ser o mesmo do pedido.');return false;}
+    if(isEstimate&&data.status==='accepted'&&targetStatus){showToast('Este orçamento já foi aprovado.');return false;}
+    data.items=data.items.filter(it=>(it.desc&&it.desc.trim())||Number(it.rate)>0);
+    if(!data.items.length){showToast('Adicione pelo menos um item.');return false;}
+    if(state[col].some(d=>d.id!==data.id&&d.number===data.number)){showToast('Número já utilizado.');return false;}
+    const record=Model.clone(data);
+    const records=[];
+    if(editingDoc.isNew){
+      const assigned=nextDocNumber(type);
+      if(!manualNumberTouched)record.number=assigned.number;
+      if(state[col].some(d=>d.id!==record.id&&d.number===record.number)){showToast('Número já utilizado.');return false;}
+      records.push(['settings',{...state.settings,[isEstimate?'nextEstimateNumber':'nextInvoiceNumber']:assigned.next}]);
     }
-
-    /* Numeração ANTES de entrar em state[col]: nextDocNumber pula números já
-       usados, e o próprio documento em edição faria o contador saltar um. */
-    if(isNew){
-      const assigned = nextDocNumber(type);
-      /* Número definitivo só é atribuído agora. Se o usuário digitou um
-         número manual no campo, o dele prevalece. */
-      if(!manualNumberTouched) data.number = assigned.number;
-      if(isEstimate) state.settings.nextEstimateNumber = assigned.next;
-      else state.settings.nextInvoiceNumber = assigned.next;
+    if(targetStatus==='sent'){record.status='sent';record.sentDate=record.sentDate||todayISO();}
+    if(targetStatus==='accepted'||(isEstimate&&record.status==='accepted'&&!record.orderId)){
+      let plan;try{plan=Model.approval(state,record,uid,todayISO());}catch(e){showToast(e.message);return false;}
+      Object.assign(record,plan.estimate);records.push(['orders',plan.order]);if(plan.production)records.push(['pipeline',plan.production]);
     }
+    records.push([col,record]);
+    if(!isEstimate&&record.fromEstimateId&&state.invoices.some(i=>i.id!==record.id&&i.fromEstimateId===record.fromEstimateId)){showToast('Este orçamento já possui uma fatura. Abra a fatura existente.');return false;}
+    if(!isEstimate&&record.orderId&&state.marketplaceSales.some(s=>s.projectId===record.orderId)){showToast('Este pedido já tem receita registrada no Marketplace. Preserve uma única origem de receita.');return false;}
+    if(!isEstimate&&record.orderId){
+      state.pipeline.filter(c=>c.orderId===record.orderId&&!c.invoiceId).forEach(c=>records.push(['pipeline',{...c,invoiceId:record.id}]));
+    }
+    if(!(await commitRecords(records)))return false;
+    Object.assign(data,record);editingDoc.isNew=false;
+    showToast(targetStatus==='accepted'?'Aprovação registrada. Pedido e produção disponíveis.':'Documento salvo.');
+    if(close){editingDoc=null;if(record.orderId){activeOrderId=record.orderId;currentView='orders';}render();}
+    return true;
+  }
+  document.getElementById('save-doc').onclick=()=>saveDocument();
+  const context=document.createElement('div');context.className='wf-context';
+  context.innerHTML=`<label>Pedido <select id="doc-order"><option value="">Sem vínculo — criado na aprovação</option>${state.orders.map(o=>`<option value="${o.id}" ${data.orderId===o.id?'selected':''}>${escapeHTML(o.number+' · '+o.title)}</option>`).join('')}</select></label><label>Peça / revisão <select id="doc-revision"><option value="">Selecionar depois</option>${revisionOptions(data.revisionId)}</select></label>`;
+  main.querySelector('.view-header').after(context);
+  if(isEstimate){
+    const actions=main.querySelector('.view-header').lastElementChild;
+    for(const [status,label] of [['sent','Marcar como enviado'],['accepted','Registrar aprovação']]){
+      if(data.status==='accepted'||(status==='sent'&&data.status==='sent'))continue;
+      const button=document.createElement('button');button.className='btn btn-ghost';button.textContent=label;button.onclick=()=>saveDocument(true,status);actions.append(button);
+    }
+    main.querySelectorAll('#convert-invoice,#convert-invoice-top').forEach(b=>{b.disabled=data.status!=='accepted';b.textContent='Gerar fatura';});
+  }
+  const receipt=main.querySelector('#print-receipt');if(receipt)receipt.onclick=()=>printPaymentReceipt(data);
+  if(isEstimate&&data.status==='accepted'){
+    main.querySelectorAll('input,select,textarea').forEach(el=>el.disabled=true);
+    main.querySelectorAll('[data-remove],#add-item,#save-doc,#copy-client-address').forEach(el=>el.disabled=true);
+    const note=document.createElement('p');note.className='wf-note';note.textContent='Orçamento aprovado: condições preservadas. Para alterar valores, crie um novo orçamento no pedido.';context.after(note);
+  }
 
-    const idx = state[col].findIndex(x=>x.id===data.id);
-    if(idx>=0) state[col][idx] = data; else state[col].push(data);
 
-    if(isNew) await persist("settings");
-    await persist(col, data.id);
-    editingDoc.isNew = false;
-    showToast("Salvo com sucesso.");
-    editingDoc = null;
-    render();
-  };
 }
 
 /* =========================================================
@@ -4408,7 +4468,7 @@ function renderMarketplace(main){
   draw();
 }
 
-function renderSaleEditor(main){
+function legacyRenderSaleEditor(main){
   const s = editingSale.id ? editingSale : {
     id:null, date: todayISO(), platform: MARKETPLACE_PLATFORMS[0], description:"",
     businessLine: "Reverso Studio", grossAmount:"", feesAmount:"", notes:"",
@@ -4491,12 +4551,12 @@ function renderSaleEditor(main){
     };
     /* Deduplicação por nº do pedido — base do importador CSV. */
     if(data.orderId){
-      const dup = state.marketplaceSales.find(x => x.id !== data.id && x.orderId === data.orderId);
+      const dup = state.marketplaceSales.find(x => x.id !== data.id && x.orderId === data.orderId && x.platform === data.platform);
       if(dup){ showToast("Já existe uma venda com o pedido " + data.orderId + "."); return; }
     }
-    const idx = state.marketplaceSales.findIndex(x=>x.id===data.id);
-    if(idx>=0) state.marketplaceSales[idx]=data; else state.marketplaceSales.push(data);
-    await persist("marketplaceSales", data.id);
+    data.projectId=document.getElementById('sale-project')?.value||null;
+    if(data.projectId&&state.invoices.some(i=>i.orderId===data.projectId)){showToast('Este pedido já possui fatura. Use os recebimentos da fatura para evitar receita duplicada.');return;}
+    if(!(await commitRecords([['marketplaceSales',data]])))return;
     editingSale = null;
     showToast("Venda salva.");
     render();
@@ -4746,7 +4806,7 @@ function renderTax(main){
     main.appendChild(taxTools);
     const atp=document.getElementById("add-tax-payment"); if(atp) atp.onclick=()=>openTaxPaymentModal();
     const an=document.getElementById("add-1099"); if(an) an.onclick=()=>open1099Modal();
-    const eh=document.getElementById("edit-home-office"); if(eh) eh.onclick=()=>{ currentView="settings"; render(); setTimeout(()=>{ const b=document.querySelector('[data-settings-tab="calculo"]'); if(b) b.click(); },0); };
+    const eh=document.getElementById("edit-home-office"); if(eh) eh.onclick=()=>{ currentView="settings"; render(); setTimeout(()=>{ const b=document.querySelector('[data-tab="calculo"]'); if(b) b.click(); },0); };
     document.getElementById("f-year").onchange = e=>{ year=Number(e.target.value); draw(); };
     document.getElementById("f-quarter").onchange = e=>{ quarter=e.target.value; draw(); };
     document.getElementById("print-report").onclick = ()=> printTaxReport({periodLabel, income, invoiceIncome, marketplaceIncome, expenseTotal, net, byCategory, salesTaxCollected, seBase, seTax});
@@ -4806,7 +4866,7 @@ function taxYearTotals(year){
   const income=allPaymentsFlat().filter(p=>p.date>=start&&p.date<=end).reduce((s,p)=>s+(Number(p.amount)||0)-((Number(p.salesTax)||0)),0)+state.marketplaceSales.filter(x=>x.date>=start&&x.date<=end).reduce((s,x)=>s+netSale(x),0);
   const expenses=state.expenses.filter(x=>x.date>=start&&x.date<=end&&x.deductible!==false).reduce((s,x)=>s+(Number(x.amount)||0),0);
   const mileage=state.mileageLogs.filter(x=>x.date>=start&&x.date<=end).reduce((s,x)=>s+(Number(x.amount)||0),0);
-  const office=(state.settings.homeOfficeMethod==='simplified'?Math.min(Number(state.settings.homeOfficeSqFt)||0,300)*5:(Number(state.settings.homeOfficeSqFt)||0)*(Number(state.settings.homeOfficeUsePercent)||0)/100);return {income,expenses,mileage,office,profit:income-expenses+mileage+office};
+  const office=(state.settings.homeOfficeMethod==='simplified'?Math.min(Number(state.settings.homeOfficeSqFt)||0,300)*5:(Number(state.settings.homeOfficeSqFt)||0)*(Number(state.settings.homeOfficeUsePercent)||0)/100);return {income,expenses,mileage,office,profit:income-expenses-mileage-office};
 }
 function renderTaxTools(main,year){
   const t=taxYearTotals(year), paid=state.taxPayments.filter(x=>String(x.date||'').startsWith(String(year))).reduce((s,x)=>s+(Number(x.amount)||0),0), est=Math.max(0,t.profit)*Number(state.settings.estimatedTaxRate||0.25), remaining=Math.max(0,est-paid);
@@ -4831,6 +4891,9 @@ function open1099Modal(){modalRoot.innerHTML=`<div class="modal-backdrop"><div c
 function openCalculatorHandoff(type, businessLine, items){
   const skeleton = newDocSkeleton(type);
   skeleton.businessLine = businessLine;
+  skeleton.orderId=calculatorContext?.orderId||null;
+  skeleton.revisionId=calculatorContext?.revisionId||null;
+  skeleton.clientId=state.orders.find(o=>o.id===skeleton.orderId)?.clientId||null;
   if(items && items.length) skeleton.items = items;
   if(type==="invoice" && !skeleton.payments) skeleton.payments = [];
   editingDoc = {type, data: skeleton, isNew: true};
@@ -5539,6 +5602,7 @@ function renderLoginScreen(errorMsg){
       <div class="login-actions">
         <button class="btn btn-primary" id="login-submit">${authMode==="signup" ? "Criar conta" : "Entrar"}</button>
       </div>
+      <a class="btn btn-ghost" href="?demo=1">Explorar demonstração</a>
       <div class="login-toggle">
         ${authMode==="signup"
           ? `Já tem conta? <a id="to-login">Entrar</a>`
@@ -5556,6 +5620,7 @@ function renderLoginScreen(errorMsg){
 }
 
 async function handleAuthSubmit(){
+  if(!auth){renderLoginScreen("Conexão com autenticação indisponível. Recarregue e tente novamente.");return;}
   const email = document.getElementById("login-email").value.trim();
   const password = document.getElementById("login-password").value;
   if(!email || !password){ renderLoginScreen("Preencha email e senha."); return; }
@@ -5588,7 +5653,7 @@ function translateAuthError(e){
    BOOTSTRAP — versão em nuvem (Firebase Auth + Firestore)
 ========================================================= */
 
-function openCommandPalette(){
+function legacyOpenCommandPalette(){
   const actions=[
     ['dashboard','Painel','Command Center','⌘1'],['clients','Clientes','Abrir clientes',''],['estimates','Orçamentos','Ver / criar orçamento',''],['invoices','Faturas','Ver / criar fatura',''],['pipeline','Funil de processos','Produção e entregas',''],['operations','Centro de Operações','Visão 360° de produção, financeiro e entregas',''],['engineering','Engenharia de Materiais','Selecionar material para uma peça',''],['inventory','Estoque','Filamentos e consumíveis',''],['expenses','Despesas','Registrar custos',''],['mileage','Quilometragem','Registrar viagem',''],['tax','Relatório Fiscal','Impostos e reconciliação',''],['maintenance','Manutenção da máquina','Limpeza e manutenção',''],['settings','Configurações','Empresa e premissas','']
   ];
@@ -5602,9 +5667,8 @@ async function showApp(){
   document.getElementById("login-screen").style.display = "none";
   document.getElementById("app").style.display = "flex";
   document.getElementById("user-email").textContent = currentUser.email || "";
-  document.getElementById("main").innerHTML = "<p style='padding:20px;'>Carregando seus dados…</p>";
-  await loadAll();
-  render();
+  document.getElementById("workspace-view").innerHTML = "<p style='padding:20px;'>Carregando seus dados…</p>";
+  try{await loadAll();render();}catch(e){document.getElementById("workspace-view").innerHTML='<div class="card">Não foi possível carregar todos os registros. <button class="btn btn-ghost" onclick="location.reload()">Tentar novamente</button></div>';}
 }
 
 function showLogin(){
@@ -5614,18 +5678,10 @@ function showLogin(){
   renderLoginScreen();
 }
 
-auth.onAuthStateChanged(async (user)=>{
-  currentUser = user;
-  if(user){
-    await showApp();
-  } else {
-    showLogin();
-  }
-});
 
 document.addEventListener("DOMContentLoaded", ()=>{
   const logoutBtn = document.getElementById("logout-btn");
-  if(logoutBtn) logoutBtn.onclick = ()=> auth.signOut();
+  if(logoutBtn) logoutBtn.onclick = ()=> demoMode ? location.assign(location.pathname) : auth.signOut();
 });
 document.addEventListener('keydown',e=>{
   if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();if(currentUser)openCommandPalette();}
@@ -5633,236 +5689,267 @@ document.addEventListener('keydown',e=>{
 });
 
 const __logoutBtnEarly = document.getElementById("logout-btn");
-if(__logoutBtnEarly) __logoutBtnEarly.onclick = ()=> auth.signOut();
+if(__logoutBtnEarly) __logoutBtnEarly.onclick = ()=> demoMode ? location.assign(location.pathname) : auth.signOut();
 
-})();
-</script>
 
-<!-- ===== Reverso v11 — Part Master / Operations ===== -->
-<section id="r11-module" style="display:none">
-  <div class="r11-card">
-    <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">
-      <div>
-        <div style="font-size:11px;opacity:.55;text-transform:uppercase;letter-spacing:.08em">Reverso Works</div>
-        <h2 style="margin:4px 0 0">Ficha Mestre da Peça</h2>
-        <div class="r11-hint">Part ID, engenharia, produção, qualidade e histórico em um único registro.</div>
-      </div>
-      <span id="r11-save-state" class="r11-status">Novo registro</span>
-    </div>
-    <div class="r11-shell">
-      <div>
-        <div class="r11-card" style="padding:14px;margin-top:0">
-          <div class="r11-grid">
-            <div class="r11-field"><label>Part ID</label><input id="r11-partId" placeholder="RW-PART-00047"></div>
-            <div class="r11-field"><label>Revisão</label><input id="r11-rev" value="R01"></div>
-            <div class="r11-field"><label>Nome da peça</label><input id="r11-name" placeholder="Suporte de sensor"></div>
-            <div class="r11-field"><label>Cliente</label><input id="r11-client" placeholder="Cliente / empresa"></div>
-            <div class="r11-field"><label>Veículo / aplicação</label><input id="r11-application" placeholder="BMW X5 / aplicação"></div>
-            <div class="r11-field"><label>Nº OEM / referência</label><input id="r11-oem" placeholder="Opcional"></div>
-            <div class="r11-field"><label>Material aprovado</label><input id="r11-material" placeholder="PAHT-CF"></div>
-            <div class="r11-field"><label>Status</label>
-              <select id="r11-status"><option>Conceito</option><option>Engenharia</option><option>Em produção</option><option>QC</option><option>Aprovada</option><option>Entregue</option><option>Bloqueada</option></select>
-            </div>
-            <div class="r11-field"><label>Prioridade</label>
-              <select id="r11-priority"><option>Normal</option><option>Alta</option><option>Urgente</option></select>
-            </div>
-            <div class="r11-field"><label>Entrega prevista</label><input id="r11-due" type="date"></div>
-            <div class="r11-field full"><label>Observações / especificação</label><textarea id="r11-notes" placeholder="Requisitos, alterações, observações do cliente..."></textarea></div>
-          </div>
-          <div class="r11-actions">
-            <button class="r11-btn primary" onclick="r11SavePart()">Salvar peça</button>
-            <button class="r11-btn" onclick="r11NewPart()">Nova peça</button>
-            <button class="r11-btn" onclick="r11OpenList()">Lista de peças</button>
-            <button class="r11-btn" onclick="r11PrintPart()">Relatório</button>
-          </div>
-        </div>
-        <div class="r11-card" style="padding:14px;margin-top:14px">
-          <h3>Produção</h3>
-          <div class="r11-grid">
-            <div class="r11-field"><label>Etapa atual</label>
-              <select id="r11-stage"><option>Orçamento</option><option>Engenharia</option><option>CAD</option><option>Preparação</option><option>Impressão</option><option>Pós-processamento</option><option>QC</option><option>Entrega</option></select>
-            </div>
-            <div class="r11-field"><label>Progresso (%)</label><input id="r11-progressInput" type="number" min="0" max="100" value="0"></div>
-            <div class="r11-field"><label>Horas de máquina</label><input id="r11-machineHours" type="number" min="0" step=".1" value="0"></div>
-            <div class="r11-field"><label>Material consumido (g)</label><input id="r11-materialGrams" type="number" min="0" step="1" value="0"></div>
-            <div class="r11-field"><label>Custo real estimado ($)</label><input id="r11-actualCost" type="number" min="0" step=".01" value="0"></div>
-            <div class="r11-field"><label>Preço vendido ($)</label><input id="r11-salePrice" type="number" min="0" step=".01" value="0"></div>
-          </div>
-          <div class="r11-progress"><span id="r11-progressBar" style="width:0%"></span></div>
-          <div class="r11-hint" id="r11-marginHint">Margem: —</div>
-        </div>
-      </div>
-      <div>
-        <div class="r11-card" style="padding:14px;margin-top:0">
-          <h3>Resumo</h3>
-          <div class="r11-kpis">
-            <div class="r11-kpi"><div class="n" id="r11-kpiProgress">0%</div><div class="l">Progresso</div></div>
-            <div class="r11-kpi"><div class="n" id="r11-kpiHours">0h</div><div class="l">Máquina</div></div>
-            <div class="r11-kpi"><div class="n" id="r11-kpiMaterial">0g</div><div class="l">Material</div></div>
-            <div class="r11-kpi"><div class="n" id="r11-kpiMargin">—</div><div class="l">Margem</div></div>
-          </div>
-        </div>
-        <div class="r11-card" style="padding:14px;margin-top:14px">
-          <h3>Ciclo de vida</h3>
-          <div class="r11-timeline" id="r11-timeline"></div>
-        </div>
-        <div class="r11-card" style="padding:14px;margin-top:14px">
-          <h3>Engineering link</h3>
-          <div class="r11-hint">Vincule a análise de engenharia pelo Part ID. A ficha usa o mesmo identificador para manter rastreabilidade.</div>
-          <div class="r11-actions"><button class="r11-btn" onclick="r11OpenEngineering()">Abrir Engenharia</button></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="r11-card" style="margin-top:18px">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-      <div><h3 style="margin-bottom:3px">Peças recentes</h3><div class="r11-hint">Últimos registros do dispositivo/sessão e do Firestore quando conectado.</div></div>
-      <button class="r11-btn" onclick="r11OpenList()">Ver todas</button>
-    </div>
-    <div class="r11-table-wrap" style="margin-top:12px"><table class="r11-table"><thead><tr><th>Part ID</th><th>Peça</th><th>Cliente</th><th>Material</th><th>Etapa</th><th>Progresso</th><th></th></tr></thead><tbody id="r11-list"></tbody></table></div>
-  </div>
-</section>
-
-<div id="r11-drawer" class="r11-drawer">
-  <div class="r11-backdrop" onclick="r11CloseList()"></div>
-  <div class="r11-panel">
-    <div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">Peças</h2><button class="r11-btn" onclick="r11CloseList()">Fechar</button></div>
-    <div class="r11-hint">Selecione uma peça para continuar o ciclo.</div>
-    <div id="r11-all-list" style="margin-top:14px"></div>
-  </div>
-</div>
-
-<script>
-/* ===== Reverso v11 — Part Master logic ===== */
-(function(){
-  const KEY='reverso_v11_parts';
-  const stages=['Orçamento','Engenharia','CAD','Preparação','Impressão','Pós-processamento','QC','Entrega'];
-  const $=id=>document.getElementById(id);
-  const fields=['partId','rev','name','client','application','oem','material','status','priority','due','notes','stage','progressInput','machineHours','materialGrams','actualCost','salePrice'];
-
-  function localLoad(){ try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return []} }
-  function localSave(a){localStorage.setItem(KEY,JSON.stringify(a));}
-  function uid(){return 'rw-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7)}
-  function val(id){return $(id)?.value ?? ''}
-  function setv(id,v){if($(id)) $(id).value=v??''}
-  function current(){
-    return {
-      id: window.r11CurrentId || uid(),
-      partId:val('r11-partId') || ('RW-PART-'+String(Date.now()).slice(-5)),
-      rev:val('r11-rev')||'R01', name:val('r11-name'), client:val('r11-client'),
-      application:val('r11-application'), oem:val('r11-oem'), material:val('r11-material'),
-      status:val('r11-status'), priority:val('r11-priority'), due:val('r11-due'), notes:val('r11-notes'),
-      stage:val('r11-stage'), progress:Math.max(0,Math.min(100,Number(val('r11-progressInput'))||0)),
-      machineHours:Number(val('r11-machineHours'))||0, materialGrams:Number(val('r11-materialGrams'))||0,
-      actualCost:Number(val('r11-actualCost'))||0, salePrice:Number(val('r11-salePrice'))||0,
-      updatedAt:new Date().toISOString()
-    };
+/* Workflow: entities are shared by every view; navigation never creates data. */
+const modalRoot=document.getElementById('modal-root');
+let activeOrderId=null, orderTab='Resumo', selectedAnalysisId=null;
+let calculatorContext=null, engineeringContext=null, writeBusy=false;
+const GROUPS=[
+  {id:'home',label:'Início',icon:'dashboard',views:[['dashboard','Visão geral']]},
+  {id:'customers',label:'Clientes',icon:'clients',views:[['clients','Clientes']]},
+  {id:'commercial',label:'Comercial',icon:'estimates',views:[['orders','Pedidos'],['estimates','Orçamentos'],['calc-works','Precificação Works'],['calc-studio','Precificação Studio']]},
+  {id:'production',label:'Produção',icon:'pipeline',views:[['operations','Visão geral'],['pipeline','Quadro'],['agenda','Agenda'],['inventory','Estoque'],['maintenance','Manutenção']]},
+  {id:'technical',label:'Engenharia & Peças',icon:'engineering',views:[['parts','Peças e revisões'],['engineering','Análises de materiais']]},
+  {id:'finance',label:'Financeiro',icon:'invoices',views:[['invoices','Faturas e recebimentos'],['marketplace','Marketplace'],['expenses','Despesas'],['mileage','Quilometragem'],['tax','Fiscal']]},
+  {id:'config',label:'Configurações',icon:'settings',views:[['settings','Configurações']]}
+];
+const h=escapeHTML;
+function resetEditors(){editingDoc=null;editingClient=null;viewingClient=null;editingExpense=null;editingSale=null;editingPipelineCard=null;}
+function navigate(view){calculatorContext=null;engineeringContext=null;selectedAnalysisId=null;resetEditors();currentView=view;activeOrderId=null;render();}
+function orderOpen(id,tab='Resumo'){resetEditors();activeOrderId=id;orderTab=tab;currentView='orders';render();}
+function groupNow(){return GROUPS.find(g=>g.views.some(v=>v[0]===currentView))||GROUPS[0];}
+function renderNav(){
+  const group=groupNow(),nav=document.getElementById('nav');
+  nav.setAttribute('aria-label','Áreas do aplicativo');
+  nav.innerHTML=GROUPS.map(g=>`<button type="button" data-group="${g.id}" ${g.id===group.id?'class="active" aria-current="page"':''}><span class="icon">${NAV_ICONS[g.icon]}</span><span class="label">${g.label}</span></button>`).join('');
+  nav.querySelectorAll('button').forEach(b=>b.onclick=()=>navigate(GROUPS.find(g=>g.id===b.dataset.group).views[0][0]));
+}
+function installBackNavigation(main){
+  const id=editingDoc?.data.orderId||editingPipelineCard?.data.orderId;
+  if(id){const b=document.createElement('button');b.className='btn btn-ghost wf-back';b.textContent='← Voltar ao pedido';b.onclick=()=>orderOpen(id);main.prepend(b);}
+}
+function render(){
+  if(!ready){legacyRender();return;}
+  document.querySelector('.mobile-actionbar')?.remove();
+  const main=document.getElementById('workspace-view');
+  if(!editingDoc&&!editingPipelineCard&&editingClient===null&&viewingClient===null&&editingExpense===null&&editingSale===null&&['orders','parts','agenda'].includes(currentView)){
+    renderNav();if(currentView==='orders')renderOrders(main);if(currentView==='parts')renderParts(main);if(currentView==='agenda')renderAgenda(main);
+  }else legacyRender();
+  document.querySelector('.mobile-actionbar')?.remove();
+  const group=groupNow(),bar=document.createElement('div');bar.className='wf-subnav';bar.setAttribute('aria-label','Seções de '+group.label);
+  bar.innerHTML=group.views.filter(([id])=>id!=='calc-studio').map(([id,label])=>`<button type="button" class="btn ${(id===currentView||(id==='calc-works'&&currentView==='calc-studio'))?'wf-selected':'btn-ghost'}" ${(id===currentView||(id==='calc-works'&&currentView==='calc-studio'))?'aria-current="page"':''} data-section="${id}">${id==='calc-works'?'Precificação':label}</button>`).join('');
+  bar.querySelectorAll('button').forEach(b=>b.onclick=()=>navigate(b.dataset.section));const chrome=document.getElementById('workspace-nav');chrome.replaceChildren(bar);
+  if(demoMode){const banner=document.createElement('div');banner.className='wf-demo';banner.innerHTML='Demonstração · dados fictícios, sem sincronização. <a href="'+location.pathname+'">Voltar ao login</a>';chrome.prepend(banner);}
+  if(currentView.startsWith('calc-')){
+    const modes=document.createElement('div');modes.className='wf-tabs';modes.setAttribute('aria-label','Linha de precificação');modes.innerHTML=['Works','Studio'].map(line=>`<button class="btn ${currentView==='calc-'+line.toLowerCase()?'wf-selected':'btn-ghost'}" data-pricing-mode="${line.toLowerCase()}">${line}</button>`).join('');bar.after(modes);modes.querySelectorAll('button').forEach(b=>b.onclick=()=>{currentView='calc-'+b.dataset.pricingMode;render();});
+    if(calculatorContext)contextBack(chrome,calculatorContext.orderId);
   }
-  function populate(p){
-    window.r11CurrentId=p.id;
-    Object.entries(p).forEach(([k,v])=>{
-      const id='r11-'+k;
-      if($(id)) setv(id,v);
-    });
-    render();
-  }
-  function blank(){
-    window.r11CurrentId=null;
-    ['partId','name','client','application','oem','material','due','notes'].forEach(k=>setv('r11-'+k,''));
-    setv('r11-rev','R01'); setv('r11-status','Conceito'); setv('r11-priority','Normal'); setv('r11-stage','Orçamento');
-    setv('r11-progressInput',0); setv('r11-machineHours',0); setv('r11-materialGrams',0); setv('r11-actualCost',0); setv('r11-salePrice',0);
-    $('r11-save-state').textContent='Novo registro'; render();
-  }
-  function render(){
-    const p=current();
-    const prog=p.progress;
-    $('r11-progressBar').style.width=prog+'%';
-    $('r11-kpiProgress').textContent=prog+'%';
-    $('r11-kpiHours').textContent=(p.machineHours||0).toFixed(1)+'h';
-    $('r11-kpiMaterial').textContent=Math.round(p.materialGrams||0)+'g';
-    const margin=p.salePrice>0 ? ((p.salePrice-p.actualCost)/p.salePrice*100) : null;
-    $('r11-kpiMargin').textContent=margin===null?'—':margin.toFixed(1)+'%';
-    $('r11-marginHint').textContent=margin===null?'Margem: —':'Margem estimada: '+margin.toFixed(1)+'% • lucro: $'+(p.salePrice-p.actualCost).toFixed(2);
-    const idx=Math.max(0,stages.indexOf(p.stage));
-    $('r11-timeline').innerHTML=stages.map((s,i)=>`<div class="r11-step ${i<idx?'done':''} ${i===idx?'current':''}"><div class="title">${s}</div><div class="meta">${i<idx?'Concluída':i===idx?'Etapa atual':'Próxima etapa'}</div></div>`).join('');
-    renderList();
-  }
-  function renderList(){
-    const arr=localLoad().sort((a,b)=>String(b.updatedAt).localeCompare(String(a.updatedAt)));
-    const body=$('r11-list');
-    body.innerHTML=arr.length?arr.slice(0,12).map(p=>`<tr><td><strong>${esc(p.partId)}</strong></td><td>${esc(p.name||'—')}</td><td>${esc(p.client||'—')}</td><td>${esc(p.material||'—')}</td><td>${esc(p.stage||'—')}</td><td>${p.progress||0}%</td><td><button class="r11-btn" onclick="window.r11Load('${p.id}')">Abrir</button></td></tr>`).join(''):'<tr><td colspan="7"><div class="r11-empty">Nenhuma peça cadastrada ainda.</div></td></tr>';
-    $('r11-all-list').innerHTML=arr.length?arr.map(p=>`<div class="r11-card" style="margin-bottom:10px;padding:13px;cursor:pointer" onclick="window.r11Load('${p.id}')"><div style="display:flex;justify-content:space-between;gap:10px"><strong>${esc(p.partId)}</strong><span class="r11-status ${p.priority==='Urgente'?'bad':p.priority==='Alta'?'warn':'ok'}">${esc(p.priority||'Normal')}</span></div><div style="margin-top:5px">${esc(p.name||'Sem nome')}</div><div class="r11-hint">${esc(p.client||'Sem cliente')} • ${esc(p.material||'Material —')} • ${esc(p.stage||'—')} • ${p.progress||0}%</div></div>`).join(''):'<div class="r11-empty">Nenhuma peça.</div>';
-  }
-  function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-
-  window.r11SavePart=async function(){
-    const p=current();
-    const arr=localLoad(); const i=arr.findIndex(x=>x.id===p.id);
-    if(i>=0) arr[i]=p; else arr.unshift(p);
-    localSave(arr);
-    $('r11-save-state').textContent='Salvo agora';
-    render();
-    // Best-effort Firestore integration: use existing Firebase globals if available.
-    try{
-      const db=window.db || window.firestoreDb;
-      const auth=window.auth || window.firebaseAuth;
-      const uidAuth=auth?.currentUser?.uid;
-      if(db && uidAuth && window.setDoc && window.doc){
-        await window.setDoc(window.doc(db,'users',uidAuth,'parts',p.id),p,{merge:true});
-      }
-    }catch(e){ console.warn('Reverso v11 Firestore sync:',e); }
-  };
-  window.r11Load=function(id){
-    const p=localLoad().find(x=>x.id===id); if(!p)return;
-    populate(p); r11CloseList();
-  };
-  window.r11NewPart=blank;
-  window.r11OpenList=()=>{$('r11-drawer').classList.add('open');renderList()};
-  window.r11CloseList=()=>{$('r11-drawer').classList.remove('open')};
-  window.r11OpenEngineering=()=>{
-    // Try common existing navigation hooks, otherwise show a useful fallback.
-    if(typeof window.showPage==='function'){ try{window.showPage('engineering');return}catch(e){} }
-    alert('Abra a aba Engenharia de Materiais e utilize este Part ID para vincular a análise.');
-  };
-  window.r11PrintPart=function(){
-    const p=current();
-    const w=window.open('','_blank','width=900,height=700');
-    if(!w)return;
-    w.document.write(`<html><head><title>${esc(p.partId)} — Reverso Works</title><style>body{font-family:Arial;padding:32px;color:#111}h1{margin-bottom:4px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}.box{border:1px solid #ddd;padding:12px;border-radius:8px}small{color:#666}</style></head><body><small>REVERSO WORKS</small><h1>${esc(p.partId)} · ${esc(p.rev)}</h1><div>${esc(p.name||'')}</div><div class="grid">${[['Cliente',p.client],['Aplicação',p.application],['OEM',p.oem],['Material',p.material],['Status',p.status],['Etapa',p.stage],['Progresso',p.progress+'%'],['Entrega',p.due||'—'],['Horas máquina',p.machineHours+' h'],['Material',p.materialGrams+' g'],['Custo real','$'+p.actualCost.toFixed(2)],['Preço','$'+p.salePrice.toFixed(2)]].map(x=>`<div class="box"><small>${esc(x[0])}</small><br><strong>${esc(x[1])}</strong></div>`).join('')}</div><h3>Observações</h3><p>${esc(p.notes||'—')}</p><script>window.print();<\/script>
-<script>
-document.addEventListener('DOMContentLoaded',()=>{
+  if(currentView==='engineering'&&engineeringContext?.orderId)contextBack(chrome,engineeringContext.orderId);
+  main.querySelectorAll('input,select,textarea').forEach((el,i)=>{if(!el.id)el.id='field-'+i;const label=el.closest('.field')?.querySelector('label');if(label)label.htmlFor=el.id;if(!label&&!el.closest('label')&&!el.getAttribute('aria-label'))el.setAttribute('aria-label',el.getAttribute('placeholder')||el.id);});
+  // Keep one primary action and a visible focus treatment across inherited screens.
+  main.querySelectorAll('.btn-primary').forEach((b,i)=>{if(i>0){b.classList.remove('btn-primary');b.classList.add('btn-ghost');}});
+}
+function contextBack(main,id){const order=state.orders.find(o=>o.id===id);if(!order)return;const b=document.createElement('button');b.className='btn btn-ghost wf-back';b.textContent='← '+order.number+' · '+order.title;b.onclick=()=>orderOpen(id);const bar=main.querySelector('.wf-subnav');if(bar)bar.after(b);else main.prepend(b);}
+function downloadJSON(payload,name){const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+async function commitRecords(records){
+  if(writeBusy){showToast('Aguarde a gravação atual.');return false;}
+  if(records.length>450){showToast('Este conjunto excede 450 registros. É necessária uma restauração administrativa para este volume. Nenhum dado foi alterado.');return false;}
+  writeBusy=true;
   try{
-    const candidates=[...document.querySelectorAll('a,button')];
-    const has=candidates.some(x=>/ficha|peça|parts|part master/i.test(x.textContent||''));
-    if(!has){
-      const nav=document.querySelector('nav,aside,[class*="sidebar"],[class*="menu"]');
-      if(nav){
-        const b=document.createElement('button');
-        b.className='r11-btn';
-        b.textContent='🧩 Ficha da Peça';
-        b.style.cssText='width:100%;text-align:left;margin-top:8px';
-        b.onclick=()=>{document.querySelectorAll('section[id$="-module"],main section').forEach(s=>{if(s.id!=='r11-module'&&s.id) s.style.display='none'}); const m=document.getElementById('r11-module'); if(m){m.style.display='block';window.scrollTo({top:0,behavior:"smooth"})}};
-        nav.appendChild(b);
-      }
+    if(!demoMode){
+      const batch=db.batch();
+      records.forEach(([col,row,remove])=>{const ref=col==='settings'?userDocRef():userColRef(col).doc(String(row.id));if(remove)batch.delete(ref);else if(col==='settings')batch.set(ref,Model.clone(row),{merge:true});else batch.set(ref,Model.clone(row));});
+      await batch.commit();
     }
-  }catch(e){console.warn('Reverso v11 nav:',e)}
-});
-</scriptx>
-</body></html>`);
-    w.document.close();
-  };
-  function hookInputs(){
-    ['r11-progressInput','r11-machineHours','r11-materialGrams','r11-actualCost','r11-salePrice','r11-stage'].forEach(id=>$(id)?.addEventListener('input',render));
+    records.forEach(([col,row,remove])=>{
+      if(col==='settings'){state.settings=Model.clone(row);return;}
+      const i=state[col].findIndex(x=>x.id===row.id);
+      if(remove){if(i>=0)state[col].splice(i,1);}else if(i<0)state[col].push(Model.clone(row));else state[col][i]=Model.clone(row);
+      if(!demoMode){const known=_persistedIds[col]||(_persistedIds[col]=new Set());remove?known.delete(row.id):known.add(row.id);}
+    });
+    return true;
+  }catch(e){showToast('Não foi possível salvar. Seus registros anteriores foram preservados. '+(e.code||''));return false;}finally{writeBusy=false;}
+}
+function revisionLabel(r){const p=state.parts.find(p=>p.id===r.partId);return (p?.partNumber||'Peça')+' · '+(p?.name||'')+' · '+r.rev;}
+function revisionOptions(selected){return state.partRevisions.map(r=>`<option value="${h(r.id)}" ${selected===r.id?'selected':''}>${h(revisionLabel(r))}</option>`).join('');}
+function orderRows(order){return state.pipeline.filter(c=>c.orderId===order.id);}
+function orderInvoices(order){return state.invoices.filter(i=>i.orderId===order.id);}
+function field(label,id,value='',type='text',extra=''){return `<label class="wf-field">${label}<input id="${id}" type="${type}" value="${h(String(value??''))}" ${extra}></label>`;}
+function selectField(label,id,options){return `<label class="wf-field">${label}<select id="${id}">${options}</select></label>`;}
+function dialog(title,body,onSave){
+  modalRoot.innerHTML=`<div class="modal-backdrop"><div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="wf-dialog-title"><h2 id="wf-dialog-title">${h(title)}</h2><form id="wf-form">${body}<p id="wf-error" role="alert"></p><div class="modal-actions"><button type="button" class="btn btn-ghost" id="wf-cancel">Cancelar</button><button class="btn btn-primary" type="submit">Salvar</button></div></form></div></div>`;
+  const previous=document.activeElement;
+  document.getElementById('wf-cancel').onclick=()=>{closeModal();previous?.focus();};
+  const form=document.getElementById('wf-form');form.onsubmit=async e=>{e.preventDefault();const button=form.querySelector('[type="submit"]');button.disabled=true;try{await onSave();}catch(err){document.getElementById('wf-error').textContent=err.message;}finally{button.disabled=false;}};
+  const box=modalRoot.querySelector('[role="dialog"]');box.onkeydown=e=>{if(e.key!=='Tab')return;const controls=[...box.querySelectorAll('button,input,select,textarea,a[href]')].filter(x=>!x.disabled);const first=controls[0],last=controls.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}};
+  form.querySelector('input,select')?.focus();
+}
+const value=id=>document.getElementById(id).value.trim();
+function editOrder(existing){
+  const o=existing||{};
+  dialog(o.id?'Editar pedido':'Novo pedido',field('Nome do pedido','o-title',o.title,'text','required')+selectField('Cliente','o-client','<option value="">Selecione</option>'+state.clients.map(c=>`<option value="${c.id}" ${o.clientId===c.id?'selected':''}>${h(c.name)}</option>`).join(''))+selectField('Linha de negócio','o-line',['Reverso Works','Reverso Studio'].map(x=>`<option ${o.businessLine===x?'selected':''}>${x}</option>`).join(''))+field('Entrega combinada','o-delivery',o.deliveryDate,'date')+field('Observações','o-notes',o.notes),async()=>{
+    if(!value('o-client'))throw Error('Selecione um cliente.');
+    if(o.id&&o.clientId!==value('o-client')&&(state.estimates.some(x=>x.orderId===o.id)||orderInvoices(o).length||orderRows(o).length))throw Error('Este pedido já tem registros vinculados. Preserve o cliente para manter o histórico.');
+    const id=o.id||uid(),next={...o,id,number:o.number||'PED-'+id.slice(-6).toUpperCase(),title:value('o-title'),clientId:value('o-client'),businessLine:value('o-line'),deliveryDate:value('o-delivery')||null,notes:value('o-notes'),revisionIds:o.revisionIds||[],createdAt:o.createdAt||todayISO()};
+    if(await commitRecords([['orders',next]])){closeModal();orderOpen(id);}
+  });
+}
+function renderOrders(main){
+  const selected=state.orders.find(o=>o.id===activeOrderId);if(selected){renderOrder(main,selected);return;}
+  main.innerHTML=`<div class="view-header"><div><div class="view-title">Pedidos</div><div class="view-sub">Do primeiro contato à entrega. Todo o histórico em um lugar.</div></div><button class="btn btn-primary" id="new-order">Novo pedido</button></div><label class="wf-field">Buscar pedido ou cliente<input type="search" id="order-search" placeholder="Nome, número ou cliente"></label><div id="order-list"></div>`;
+  const draw=q=>{const rows=state.orders.filter(o=>(o.title+' '+o.number+' '+clientName(o.clientId)).toLowerCase().includes(q.toLowerCase()));document.getElementById('order-list').innerHTML=rows.length?rows.map(o=>{const runs=orderRows(o),due=orderInvoices(o).reduce((n,i)=>n+balanceDue(i),0);return `<button type="button" class="wf-record" data-order="${o.id}"><span><small>${h(o.number)} · ${h(clientName(o.clientId))}</small><strong>${h(o.title)}</strong><span>${runs.length?runs.every(c=>c.stage==='entregue')?'Produção entregue':runs.length+' ordem(ns) de produção':'Em definição'} · ${o.deliveryDate?'Entrega '+fmtDate(o.deliveryDate):'Entrega a combinar'}</span></span><span class="wf-amount">${fmtMoney(due)}<small>a receber →</small></span></button>`;}).join(''):'<div class="empty-state">Nenhum pedido encontrado. Crie um pedido ou aprove um orçamento.</div>';main.querySelectorAll('[data-order]').forEach(b=>b.onclick=()=>orderOpen(b.dataset.order));};
+  document.getElementById('new-order').onclick=()=>editOrder();document.getElementById('order-search').oninput=e=>draw(e.target.value);draw('');
+  const unlinked=state.pipeline.filter(c=>!c.orderId).length;
+  if(unlinked){const note=document.createElement('p');note.className='wf-note';note.textContent=unlinked+' processo(s) anterior(es) ainda sem pedido. Abra-os em Produção para vincular sem duplicar.';main.append(note);}
+}
+function renderOrder(main,o){
+  const tabs=['Resumo','Peças','Engenharia','Orçamento','Produção','Entrega','Financeiro'];
+  const marketplace=state.marketplaceSales.filter(s=>s.projectId===o.id);
+  const runs=orderRows(o),invoices=orderInvoices(o),estimates=state.estimates.filter(e=>e.orderId===o.id),revisions=state.partRevisions.filter(r=>(o.revisionIds||[]).includes(r.id));
+  main.innerHTML=`<button class="btn btn-ghost wf-back" id="all-orders">← Todos os pedidos</button><div class="view-header"><div><div class="view-sub">${h(o.number)} · ${h(clientName(o.clientId))} · ${h(o.businessLine)}</div><h1 class="view-title">${h(o.title)}</h1></div><button class="btn btn-ghost" id="edit-order">Editar pedido</button></div><div class="wf-tabs" aria-label="Detalhes do pedido">${tabs.map(t=>`<button class="btn ${orderTab===t?'wf-selected':'btn-ghost'}" aria-pressed="${orderTab===t}" data-order-tab="${t}">${t}</button>`).join('')}</div><div id="order-content"></div>`;
+  document.getElementById('all-orders').onclick=()=>{activeOrderId=null;render();};document.getElementById('edit-order').onclick=()=>editOrder(o);main.querySelectorAll('[data-order-tab]').forEach(b=>b.onclick=()=>{orderTab=b.dataset.orderTab;render();});
+  const content=document.getElementById('order-content');
+  const runRows=()=>runs.map(c=>`<button class="wf-record" data-run="${c.id}"><span><strong>${h(c.title)}</strong><small>${h(stageLabel(c.stage))} · ${h(c.revisionSnapshot?revisionLabel(c.revisionSnapshot):'Peça ainda não vinculada')}</small></span><span>Abrir →</span></button>`).join('')||'<p class="wf-note">A aprovação do orçamento cria a primeira ordem de produção.</p>';
+  if(orderTab==='Resumo'){
+    content.innerHTML=`<div class="wf-summary"><div><span>Comercial</span><strong>${estimates.some(e=>e.status==='accepted')?'Aprovado':estimates.length?'Em negociação':'A definir'}</strong></div><div><span>Produção</span><strong>${runs.length?runs.every(c=>c.stage==='entregue')?'Entregue':'Em andamento':'Não iniciada'}</strong></div><div><span>Saldo das faturas</span><strong>${fmtMoney(invoices.reduce((n,i)=>n+balanceDue(i),0))}</strong></div></div><div class="wf-section"><h2>Próximo passo</h2><p>${!revisions.length?'Vincule a peça e a revisão deste pedido.':!estimates.length?'Calcule o preço e prepare o orçamento.':!estimates.some(e=>e.status==='accepted')?'Registre a resposta do cliente no orçamento.':!invoices.length?'Gere a fatura a partir do orçamento aprovado.':'Acompanhe a fabricação, a entrega e os recebimentos nas seções deste pedido.'}</p><button class="btn btn-primary" id="next-order">${!revisions.length?'Vincular peça':!estimates.length?'Preparar orçamento':!estimates.some(e=>e.status==='accepted')?'Abrir orçamento':!invoices.length?'Gerar fatura':'Acompanhar produção'}</button></div><div class="wf-section"><h2>Entrega combinada</h2><p>${o.deliveryDate?fmtDate(o.deliveryDate):'Ainda não definida'}</p><p>${h(o.notes||'')}</p></div>`;
+    document.getElementById('next-order').onclick=()=>{orderTab=!revisions.length?'Peças':!estimates.length||!estimates.some(e=>e.status==='accepted')||!invoices.length?'Orçamento':'Produção';render();};
   }
-  window.r11Init=function(){
-    if(!localLoad().length) blank();
-    else populate(localLoad()[0]);
-    hookInputs();
-    render();
+  if(orderTab==='Peças'){
+    content.innerHTML=`<div class="wf-actions"><button class="btn btn-primary" id="link-revision">Vincular peça existente</button><button class="btn btn-ghost" id="create-part">Nova peça</button></div>${revisions.map(r=>`<div class="wf-record"><span><strong>${h(revisionLabel(r))}</strong><small>${h(r.material||'Material a definir')} · ${h(r.application||'')}</small></span><button class="btn btn-ghost" data-repeat="${r.id}">Reimprimir</button></div>`).join('')||'<p class="wf-note">Selecione uma peça e a revisão que será fabricada.</p>'}`;
+    document.getElementById('link-revision').onclick=()=>linkRevision(o);document.getElementById('create-part').onclick=()=>editPart(null,o.id);content.querySelectorAll('[data-repeat]').forEach(b=>b.onclick=()=>newProduction(o,b.dataset.repeat));
+  }
+  if(orderTab==='Engenharia'){
+    const reports=state.engineeringProjects.filter(p=>p.orderId===o.id||revisions.some(r=>r.id===p.revisionId));
+    content.innerHTML=`<button class="btn btn-primary" id="order-engineering">Nova análise</button>${reports.map(p=>`<button class="wf-record" data-report="${p.id}"><span><strong>${h(p.name||'Análise')}</strong><small>${h(p.recommendationName)} · ${p.score}/100</small></span><span>Abrir →</span></button>`).join('')||'<p class="wf-note">Nenhuma análise vinculada.</p>'}`;
+    document.getElementById('order-engineering').onclick=()=>{engineeringContext={orderId:o.id,revisionId:revisions[0]?.id};selectedAnalysisId=null;currentView='engineering';render();};content.querySelectorAll('[data-report]').forEach(b=>b.onclick=()=>{selectedAnalysisId=b.dataset.report;engineeringContext={orderId:o.id};currentView='engineering';render();});
+  }
+  if(orderTab==='Orçamento'){
+    content.innerHTML=`<div class="wf-actions"><button class="btn btn-primary" id="order-pricing">Calcular preço</button><button class="btn btn-ghost" id="order-estimate">Novo orçamento</button></div>${estimates.map(e=>`<button class="wf-record" data-estimate="${e.id}"><span><strong>${h(e.number)}</strong><small>${h(statusLabel('estimate',effectiveEstimateStatus(e)))}</small></span><span>${fmtMoney(calcDocTotals(e).total)} →</span></button>`).join('')||'<p class="wf-note">Nenhum orçamento neste pedido.</p>'}`;
+    document.getElementById('order-pricing').onclick=()=>{calculatorContext={orderId:o.id,revisionId:revisions[0]?.id};currentView=o.businessLine==='Reverso Studio'?'calc-studio':'calc-works';render();};
+    document.getElementById('order-estimate').onclick=()=>{const d=newDocSkeleton('estimate');Object.assign(d,{orderId:o.id,clientId:o.clientId,businessLine:o.businessLine,revisionId:revisions[0]?.id||null});openDocEditor('estimate',d,true);};content.querySelectorAll('[data-estimate]').forEach(b=>b.onclick=()=>openDocEditor('estimate',state.estimates.find(e=>e.id===b.dataset.estimate)));
+  }
+  if(orderTab==='Produção'){
+    content.innerHTML=`<button class="btn btn-primary" id="new-production">Nova ordem de produção</button>${runRows()}`;document.getElementById('new-production').onclick=()=>newProduction(o);
+  }
+  if(orderTab==='Entrega'){
+    content.innerHTML=`<div class="wf-section"><h2>Prazo do pedido</h2><p>${o.deliveryDate?fmtDate(o.deliveryDate):'A combinar'}</p><p>Entrega e pagamento são acompanhados separadamente.</p></div>${runRows()}<div class="wf-section"><h2>Rastreamento do pedido</h2>${field('Transportadora','order-carrier',o.carrier)}${field('Código de rastreio','order-tracking',o.trackingNumber)}<button class="btn btn-primary" id="save-shipping">Salvar rastreamento</button></div>`;
+    document.getElementById('save-shipping').onclick=async()=>{if(await commitRecords([['orders',{...o,carrier:value('order-carrier'),trackingNumber:value('order-tracking')}]])){showToast('Rastreamento salvo.');render();}};
+  }
+  if(orderTab==='Financeiro'){
+    content.innerHTML=`<div class="wf-summary"><div><span>Faturado</span><strong>${fmtMoney(invoices.reduce((n,i)=>n+calcDocTotals(i).total,0))}</strong></div><div><span>Recebido</span><strong>${fmtMoney(invoices.reduce((n,i)=>n+sumPayments(i),0))}</strong></div><div><span>A receber</span><strong>${fmtMoney(invoices.reduce((n,i)=>n+balanceDue(i),0))}</strong></div></div>${invoices.map(i=>`<button class="wf-record" data-invoice="${i.id}"><span><strong>${h(i.number)}</strong><small>${h(statusLabel('invoice',i.status))} · vencimento ${fmtDate(i.dueDate)}</small></span><span>${fmtMoney(balanceDue(i))} em aberto →</span></button>`).join('')||'<p class="wf-note">Gere a fatura na seção Orçamento após registrar a aprovação.</p>'}`;
+    content.insertAdjacentHTML('beforeend',marketplace.length?'<h2>Receita Marketplace</h2>'+marketplace.map(s=>`<div class="wf-record"><strong>${h(s.platform)} · ${h(s.description)}</strong><span>${fmtMoney(netSale(s))} líquido</span></div>`).join(''):'');
+    content.querySelectorAll('[data-invoice]').forEach(b=>b.onclick=()=>openDocEditor('invoice',state.invoices.find(i=>i.id===b.dataset.invoice)));
+  }
+  content.querySelectorAll('[data-run]').forEach(b=>b.onclick=()=>{editingPipelineCard={data:Model.clone(state.pipeline.find(c=>c.id===b.dataset.run)),isNew:false};currentView='pipeline';render();});
+}
+function linkRevision(order){dialog('Vincular peça ao pedido',selectField('Peça / revisão','link-rev',revisionOptions()),async()=>{const id=value('link-rev');if(!id)throw Error('Cadastre uma peça primeiro.');if(await commitRecords([['orders',{...order,revisionIds:[...new Set([...(order.revisionIds||[]),id])]}]])){closeModal();render();}});}
+function newProduction(order,revisionId){
+  const revs=state.partRevisions.filter(r=>(order.revisionIds||[]).includes(r.id));
+  dialog('Nova ordem de produção',selectField('Peça / revisão','production-revision','<option value="">Selecione</option>'+revs.map(r=>`<option value="${r.id}" ${r.id===revisionId?'selected':''}>${h(revisionLabel(r))}</option>`).join(''))+field('Entrega desta fabricação','production-due',order.deliveryDate,'date'),async()=>{
+    const rev=state.partRevisions.find(r=>r.id===value('production-revision'));if(!rev)throw Error('Vincule uma peça ao pedido antes de fabricar.');
+    const c={...newPipelineSkeleton(),title:revisionLabel(rev),orderId:order.id,clientId:order.clientId,businessLine:order.businessLine,revisionId:rev.id,partId:rev.partId,revisionSnapshot:Model.clone(rev),engineeringProjectId:rev.engineeringProjectId||null,material:rev.material||'',estimateId:order.estimateId||null,forecastDate:value('production-due')||null,history:[{stage:'fila',at:todayISO()}]};
+    if(await commitRecords([['pipeline',c]])){closeModal();orderTab='Produção';render();}
+  });
+}
+function renderParts(main){
+  main.innerHTML=`<div class="view-header"><div><div class="view-title">Peças e revisões</div><div class="view-sub">A identidade da peça permanece. Cada fabricação tem sua própria ordem.</div></div><button class="btn btn-primary" id="new-part">Nova peça</button></div><div class="wf-actions"><button class="btn btn-ghost" id="import-local-parts">Importar fichas antigas</button><input type="file" id="legacy-parts-file" accept="application/json" hidden><button class="btn btn-ghost" id="import-part-file">Importar fichas de arquivo</button></div>${state.parts.map(p=>{const revs=state.partRevisions.filter(r=>r.partId===p.id);return `<section class="wf-section"><h2>${h(p.partNumber)} · ${h(p.name)}</h2><p>${h(p.clientId?clientName(p.clientId):'Sem cliente específico')} · ${h(p.oem||'Sem referência OEM')}</p>${revs.map(r=>`<div class="wf-record"><span><strong>${h(r.rev)} · ${h(r.material||'Material a definir')}</strong><small>${h(r.application||'')} · ${r.engineeringProjectId?'Análise vinculada':'Sem análise vinculada'}</small></span><div class="wf-actions"><button class="btn btn-ghost" data-revise="${r.id}">Nova revisão</button><button class="btn btn-ghost" data-analyze="${r.id}">Engenharia</button><button class="btn btn-ghost" data-print-part="${r.id}">Imprimir ficha</button></div></div>`).join('')}</section>`;}).join('')||'<div class="empty-state">Cadastre sua primeira peça para reutilizar especificações e manter revisões.</div>'}`;
+  document.getElementById('new-part').onclick=()=>editPart();main.querySelectorAll('[data-revise]').forEach(b=>b.onclick=()=>editPart(state.partRevisions.find(r=>r.id===b.dataset.revise)));main.querySelectorAll('[data-analyze]').forEach(b=>b.onclick=()=>{engineeringContext={revisionId:b.dataset.analyze};selectedAnalysisId=state.partRevisions.find(r=>r.id===b.dataset.analyze)?.engineeringProjectId||null;currentView='engineering';render();});
+  main.querySelectorAll('[data-print-part]').forEach(b=>b.onclick=()=>printPart(state.partRevisions.find(r=>r.id===b.dataset.printPart)));
+  document.getElementById('import-local-parts').onclick=()=>{try{importLegacyParts(JSON.parse(localStorage.getItem('reverso_v11_parts')||'[]'));}catch(e){showToast('Não foi possível ler as fichas antigas.');}};
+  document.getElementById('import-part-file').onclick=()=>document.getElementById('legacy-parts-file').click();document.getElementById('legacy-parts-file').onchange=async e=>{try{importLegacyParts(JSON.parse(await e.target.files[0].text()));}catch(err){showToast('Arquivo de fichas inválido.');}};
+}
+function editPart(previous,orderId){
+  const part=state.parts.find(p=>p.id===previous?.partId),rev=previous||{},order=state.orders.find(o=>o.id===orderId);
+  dialog(previous?'Criar nova revisão':'Nova peça',field('Código da peça','part-number',part?.partNumber||'','text',part?'readonly':'required')+field('Nome da peça','part-name',part?.name||'','text',part?'readonly':'required')+field('Revisão','part-rev',previous?'R'+String(state.partRevisions.filter(r=>r.partId===part.id).length+1).padStart(2,'0'):'R01','text','required')+selectField('Cliente','part-client','<option value="">Sem cliente específico</option>'+state.clients.map(c=>`<option value="${c.id}" ${(part?.clientId||order?.clientId)===c.id?'selected':''}>${h(c.name)}</option>`).join(''))+field('Referência OEM','part-oem',part?.oem)+field('Aplicação','part-application',rev.application)+field('Material especificado','part-material',rev.material)+field('Notas técnicas','part-notes',rev.notes),async()=>{
+    const partId=part?.id||uid();
+    if(!part&&state.parts.some(p=>p.partNumber.toLowerCase()===value('part-number').toLowerCase()))throw Error('Código existente. Abra a peça e crie uma nova revisão.');
+    if(state.partRevisions.some(r=>r.partId===partId&&r.rev.toLowerCase()===value('part-rev').toLowerCase()))throw Error('Essa revisão já existe.');
+    const nextPart=part||{id:partId,partNumber:value('part-number'),name:value('part-name'),clientId:value('part-client')||null,oem:value('part-oem'),createdAt:todayISO()};
+    const nextRev={id:uid(),partId,rev:value('part-rev'),application:value('part-application'),material:value('part-material'),notes:value('part-notes'),engineeringProjectId:null,createdAt:todayISO()};
+    const records=[['parts',nextPart],['partRevisions',nextRev]];if(order)records.push(['orders',{...order,revisionIds:[...(order.revisionIds||[]),nextRev.id]}]);
+    if(await commitRecords(records)){closeModal();if(order)orderOpen(order.id,'Peças');else render();}
+  });
+}
+async function importLegacyParts(rows){
+  if(rows&&Array.isArray(rows.parts))rows=rows.parts;
+  if(!Array.isArray(rows))throw Error('Arquivo deve conter uma lista de fichas.');
+  const fresh=rows.filter(p=>p&&typeof p.id==='string'&&!state.parts.some(x=>x.legacyId===p.id));
+  if(!fresh.length){showToast('Nenhuma ficha nova encontrada neste navegador. Para outro endereço, importe um arquivo JSON.');return;}
+  confirmModal('Importar '+fresh.length+' ficha(s)?','As fichas serão adicionadas à conta atual. Os registros locais originais serão preservados. Etapas antigas serão mantidas como referência, sem criar produção duplicada.',async()=>{
+    const records=[];for(const old of fresh){const id=uid(),part={id,legacyId:old.id,partNumber:String(old.partId||'LEG-'+id),name:String(old.name||'Peça importada'),clientId:state.clients.find(c=>c.name===old.client)?.id||null,oem:String(old.oem||''),legacy:Model.clone(old),createdAt:todayISO()};const revision={id:uid(),partId:id,rev:String(old.rev||'R01'),material:String(old.material||''),application:String(old.application||''),notes:String(old.notes||''),engineeringProjectId:null,createdAt:todayISO()};records.push(['parts',part],['partRevisions',revision]);}
+    if(await commitRecords(records)){showToast('Fichas importadas.');render();}
+  });
+}
+function printPart(rev){const p=state.parts.find(p=>p.id===rev.partId);const area=document.getElementById('print-area');area.innerHTML=`<article class="wf-print"><h1>${h(p.partNumber)} · ${h(rev.rev)}</h1><h2>${h(p.name)}</h2><p>Cliente: ${h(clientName(p.clientId))}</p><p>Aplicação: ${h(rev.application)}</p><p>Material: ${h(rev.material)}</p><p>${h(rev.notes)}</p></article>`;window.print();setTimeout(()=>area.innerHTML='',500);}
+function renderEngineering(main){
+  legacyRenderEngineering(main);
+  const saved=state.engineeringProjects.find(p=>p.id===selectedAnalysisId),ctx=document.createElement('div');ctx.className='wf-context';ctx.innerHTML=selectField('Vincular análise à peça / revisão','eng-revision','<option value="">Análise independente</option>'+revisionOptions(saved?.revisionId||engineeringContext?.revisionId));main.querySelector('.view-header').after(ctx);
+  const rev=state.partRevisions.find(r=>r.id===(saved?.revisionId||engineeringContext?.revisionId));if(!saved&&rev){const el=document.getElementById('eng-name');el.value=revisionLabel(rev);el.dispatchEvent(new Event('input'));}
+  const history=document.createElement('div');history.className='wf-section';history.innerHTML='<h2>Abrir análise salva</h2>'+state.engineeringProjects.map(p=>`<button class="btn btn-ghost" data-analysis="${p.id}">${h(p.name||'Análise')} · ${h((p.createdAt||'').slice(0,10))}</button>`).join('');main.append(history);history.querySelectorAll('button').forEach(b=>b.onclick=()=>{selectedAnalysisId=b.dataset.analysis;render();});
+}
+function renderPipelineEditor(main){
+  legacyRenderPipelineEditor(main);
+  const data=editingPipelineCard.data;
+  const context=document.createElement('div');context.className='wf-context';context.innerHTML=selectField('Pedido','production-order','<option value="">Sem vínculo</option>'+state.orders.map(o=>`<option value="${o.id}" ${data.orderId===o.id?'selected':''}>${h(o.number+' · '+o.title)}</option>`).join(''))+selectField('Peça / revisão','production-part','<option value="">Sem peça vinculada</option>'+revisionOptions(data.revisionId));main.querySelector('.view-header').after(context);
+  context.insertAdjacentHTML('beforeend',selectField('Análise desta fabricação','production-analysis','<option value="">Sem análise vinculada</option>'+state.engineeringProjects.map(p=>`<option value="${p.id}" ${data.engineeringProjectId===p.id?'selected':''}>${h(p.name||'Análise')} · ${h(p.recommendationName)}</option>`).join('')));
+  if(['imprimindo','pos_processamento','qualidade','pronto','entregue'].includes(data.stage))document.getElementById('production-analysis').disabled=true;
+  if(data.revisionSnapshot){document.getElementById('production-part').disabled=true;document.getElementById('c-material').readOnly=true;}
+  document.getElementById('production-order').onchange=e=>{const o=state.orders.find(o=>o.id===e.target.value);if(o){document.getElementById('c-client').value=o.clientId;document.getElementById('c-line').value=o.businessLine;}};
+  document.getElementById('production-part').onchange=e=>{const r=state.partRevisions.find(r=>r.id===e.target.value);if(r)document.getElementById('c-material').value=r.material||'';};
+  document.getElementById('save-card').onclick=async()=>{
+    const order=state.orders.find(o=>o.id===value('production-order')),rev=state.partRevisions.find(r=>r.id===value('production-part'));
+    if(!value('c-title')){showToast('Dê um título à ordem.');return;}
+    if(order&&order.clientId!==value('c-client')){showToast('O cliente deve ser o mesmo do pedido.');return;}
+    for(const [id,col] of [['c-estimate','estimates'],['c-invoice','invoices']]){const doc=state[col].find(x=>x.id===value(id));if(doc&&(doc.clientId!==value('c-client')||(order&&doc.orderId&&doc.orderId!==order.id))){showToast('Documento pertence a outro cliente ou pedido.');return;}}
+    const next=Model.stageChange(data,value('c-stage'),todayISO());Object.assign(next,{title:value('c-title'),clientId:value('c-client')||null,businessLine:value('c-line'),orderId:order?.id||null,estimateId:value('c-estimate')||null,invoiceId:value('c-invoice')||null,forecastDate:value('c-forecast')||null,horasMaquina:Number(value('c-hours'))||0,notes:value('c-notes'),material:value('c-material')});
+    if(rev&&!next.revisionSnapshot)Object.assign(next,{revisionId:rev.id,partId:rev.partId,revisionSnapshot:Model.clone(rev),engineeringProjectId:rev.engineeringProjectId||null,material:rev.material||''});
+    const analysisId=value('production-analysis')||next.engineeringProjectId||null;
+    const analysis=state.engineeringProjects.find(p=>p.id===analysisId);
+    if(analysis?.revisionId&&analysis.revisionId!==next.revisionId){showToast('A análise deve pertencer à revisão desta fabricação.');return;}
+    next.engineeringProjectId=analysisId;
+    const records=[['pipeline',next]];
+    if(order){for(const [id,col] of [['c-estimate','estimates'],['c-invoice','invoices']]){const doc=state[col].find(x=>x.id===value(id));if(doc&&!doc.orderId)records.push([col,{...doc,orderId:order.id}]);}}
+    if(order&&rev)records.push(['orders',{...order,revisionIds:[...new Set([...(order.revisionIds||[]),rev.id])]}]);
+    if(await commitRecords(records)){editingPipelineCard=null;showToast('Ordem salva.');if(order)orderOpen(order.id,'Produção');else render();}
   };
-  document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{try{r11Init()}catch(e){console.warn(e)}},150));
+  if(!editingPipelineCard.isNew){
+    const block=document.createElement('div');block.className='wf-section';const movements=state.stockMovements.filter(m=>m.productionId===data.id);block.innerHTML=`<h2>Consumo de material</h2><p>${movements.reduce((n,m)=>n+m.grams,0)} g registrados · ${fmtMoney(movements.reduce((n,m)=>n+m.cost,0))}</p><button class="btn btn-ghost" id="consume-stock">Registrar consumo de lote</button><h2>Histórico de etapas</h2>${(data.history||[]).map(e=>`<p>${h(stageLabel(e.stage))} · ${fmtDate(e.at)}</p>`).join('')||'<p>Registro anterior sem histórico de transições.</p>'}`;main.append(block);document.getElementById('consume-stock').onclick=()=>consumeStock(data);
+  }
+}
+function consumeStock(card){dialog('Registrar consumo',selectField('Lote disponível','consume-item','<option value="">Selecione</option>'+state.inventory.map(i=>`<option value="${i.id}">${h(i.name+' · '+(i.lot||'sem lote'))} · ${Number(i.qty).toFixed(3)} kg</option>`).join(''))+field('Quantidade consumida (g)','consume-grams','','number','min="0.001" step="0.001" required'),async()=>{const item=state.inventory.find(i=>i.id===value('consume-item'));if(!item)throw Error('Selecione um lote.');const plan=Model.stockConsumption(item,card,Number(value('consume-grams')),uid,todayISO());if(await commitRecords([['inventory',plan.item],['stockMovements',plan.movement]])){closeModal();showToast('Consumo registrado e estoque atualizado.');render();}});}
+function renderClientProfile(main){legacyRenderClientProfile(main);const section=document.createElement('section');section.className='wf-section';section.innerHTML='<h2>Pedidos deste cliente</h2>'+state.orders.filter(o=>o.clientId===viewingClient).map(o=>`<button class="wf-record" data-customer-order="${o.id}"><strong>${h(o.number)} · ${h(o.title)}</strong><span>Abrir →</span></button>`).join('');main.append(section);section.querySelectorAll('button').forEach(b=>b.onclick=()=>orderOpen(b.dataset.customerOrder));}
+function renderDashboard(main){legacyRenderDashboard(main);const quick=main.querySelector('[data-quick="engineering"]');if(quick)quick.onclick=()=>{currentView='parts';render();editPart();};const actions=main.querySelector('.quick-grid');if(actions){const b=document.createElement('button');b.className='quick-action';b.innerHTML='<strong>Novo pedido</strong><span>Organizar um novo trabalho</span>';b.onclick=()=>editOrder();actions.prepend(b);}}
+function renderAgenda(main){
+  main.innerHTML=`<div class="view-header"><div><div class="view-title">Agenda de produção</div><div class="view-sub">Prazos de fabricação e entrega, separados dos vencimentos financeiros.</div></div></div><label class="wf-field">Semana de<input type="date" id="agenda-date" value="${todayISO()}"></label><div id="agenda-week"></div>`;
+  const draw=()=>{const start=new Date(value('agenda-date')+'T12:00:00');if(!Number.isFinite(start.getTime()))return;start.setDate(start.getDate()-start.getDay());let html='';for(let i=0;i<7;i++){const day=new Date(start);day.setDate(day.getDate()+i);const iso=localISO(day),runs=state.pipeline.filter(c=>c.forecastDate===iso);html+=`<section class="wf-agenda-day"><h2>${h(day.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'short'}))}</h2>${runs.map(c=>`<button class="wf-record" data-agenda-run="${c.id}"><strong>${h(c.title)}</strong><span>${h(stageLabel(c.stage))} →</span></button>`).join('')||'<p class="wf-note">Sem entregas previstas</p>'}</section>`;}document.getElementById('agenda-week').innerHTML=html;main.querySelectorAll('[data-agenda-run]').forEach(b=>b.onclick=()=>{editingPipelineCard={data:Model.clone(state.pipeline.find(c=>c.id===b.dataset.agendaRun)),isNew:false};currentView='pipeline';render();});};document.getElementById('agenda-date').onchange=draw;draw();
+}
+function seedDemo(){
+  state.settings=Model.clone(DEFAULT_SETTINGS);COLLECTION_NAMES.forEach(k=>state[k]=[]);
+  state.clients=[{...newClientSkeleton(),id:'demo-client',name:'Oficina Horizonte',type:'individual',email:'oficina@example.com',phone:'',address:{},categories:[],tracking:[]}];
+  state.parts=[{id:'demo-part',partNumber:'RW-001',name:'Suporte de sensor',clientId:'demo-client',oem:'REF-001',createdAt:todayISO()}];
+  state.partRevisions=[{id:'demo-rev',partId:'demo-part',rev:'R01',application:'Fixação de sensor',material:'PETG HF',notes:'Conferir dimensões antes de fabricar.',engineeringProjectId:null,createdAt:todayISO()}];
+  const estimate=newDocSkeleton('estimate');Object.assign(estimate,{id:'demo-est',number:'EST-0001',clientId:'demo-client',revisionId:'demo-rev',items:[{desc:'Suporte de sensor — R01',qty:2,rate:45,taxable:true}],status:'sent',sentDate:todayISO()});state.estimates=[estimate];
+  const plan=Model.approval(state,estimate,uid,todayISO());plan.order.deliveryDate=addDays(todayISO(),3);plan.order.title='Suporte de sensor · lote inicial';plan.production.forecastDate=plan.order.deliveryDate;plan.production.stage='escaneamento_cad';plan.production.history.push({stage:'escaneamento_cad',at:todayISO()});state.orders=[plan.order];state.pipeline=[plan.production];state.estimates=[plan.estimate];
+  state.inventory=[{id:'demo-stock',name:'PETG HF',lot:'DEMO-01',qty:1.5,costKg:24,reorder:.25,color:'Preto'}];
+  state.settings.nextEstimateNumber=2;seedDefaultCatalog();ready=true;currentUser={email:'Demonstração',uid:'demo'};
+  document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='flex';document.getElementById('user-email').textContent='Demonstração';currentView='orders';render();
+}
+function operationsTimeline(c){
+  const events=[{label:'Ordem criada',date:c.createdAt,done:true,detail:'Registro de fabricação.'}];
+  if(c.history?.length)c.history.forEach(e=>events.push({label:stageLabel(e.stage),date:e.at,done:true,detail:'Etapa registrada'}));
+  else events.push({label:stageLabel(c.stage),date:c.updatedAt||null,done:true,detail:'Etapa atual. Registro anterior sem histórico.'});
+  return events;
+}
+function openCommandPalette(){
+  modalRoot.innerHTML='<div class="modal-backdrop"><div class="modal-box" role="dialog" aria-modal="true" aria-label="Buscar seção"><label class="wf-field">Buscar seção<input id="wf-command" placeholder="Pedidos, peças, produção…"></label><div id="wf-results"></div><button class="btn btn-ghost" id="wf-command-close">Fechar</button></div></div>';
+  const input=document.getElementById('wf-command');const draw=()=>{const q=input.value.toLowerCase();const rows=GROUPS.flatMap(g=>g.views.map(v=>({id:v[0],label:g.label+' / '+v[1]}))).filter(v=>v.label.toLowerCase().includes(q));document.getElementById('wf-results').innerHTML=rows.map(v=>`<button class="wf-record" data-command-view="${v.id}">${h(v.label)}</button>`).join('');modalRoot.querySelectorAll('[data-command-view]').forEach(b=>b.onclick=()=>{const view=b.dataset.commandView;closeModal();navigate(view);});};input.oninput=draw;document.getElementById('wf-command-close').onclick=closeModal;draw();input.focus();
+}
+function renderSaleEditor(main){legacyRenderSaleEditor(main);const ctx=document.createElement('div');ctx.className='wf-context';ctx.innerHTML=selectField('Pedido interno (opcional)','sale-project','<option value="">Sem vínculo</option>'+state.orders.map(o=>`<option value="${o.id}" ${editingSale.projectId===o.id?'selected':''}>${h(o.number+' · '+o.title)}</option>`).join(''));main.querySelector('.view-header').after(ctx);}
+
+// Associate labels after legacy views redraw their own forms.
+const fieldObserver=new MutationObserver(()=>{
+  [document.getElementById('workspace-view'),modalRoot].forEach(root=>root.querySelectorAll('.field').forEach((field,i)=>{
+    const label=field.querySelector('label'),input=field.querySelector('input,select,textarea');
+    if(label&&input){if(!input.id)input.id='auto-field-'+i;if(label.htmlFor!==input.id)label.htmlFor=input.id;}
+  }));
+});
+fieldObserver.observe(document.getElementById('workspace-view'),{childList:true,subtree:true});
+fieldObserver.observe(modalRoot,{childList:true,subtree:true});
+if(demoMode)seedDemo();else if(auth){auth.onAuthStateChanged(async user=>{currentUser=user;resetEditors();activeOrderId=null;selectedAnalysisId=null;calculatorContext=null;engineeringContext=null;if(user)await showApp();else showLogin();});}else renderLoginScreen('Autenticação indisponível. Confira a conexão ou explore a demonstração.');
 })();
+
 </script>
 </body>
 </html>
