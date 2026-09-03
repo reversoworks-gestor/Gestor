@@ -704,6 +704,51 @@
     nav.mainnav button{min-height:44px;}
   }
 
+  /* ============================================================
+     UI refinement — native dark controls, preserving Reverso palette
+     ============================================================ */
+  .input-group{position:relative;display:block;width:100%;}
+  .field .input-group>input,.field .input-group>select,.field .input-group>textarea{
+    min-height:48px;padding:18px 16px 8px;border-radius:var(--radius-links);
+    background:var(--color-carbon);transition:border-color .15s ease,background .15s ease;
+  }
+  .field .input-group>textarea{padding-top:22px;}
+  .field .input-group>label{
+    position:absolute;left:12px;top:50%;z-index:1;pointer-events:none;
+    padding:0 4px;color:var(--color-platinum);background:var(--color-carbon);
+    font-size:14px;font-weight:400;letter-spacing:var(--tracking-body);text-transform:none;
+    transform:translateY(-50%);transition:transform .15s ease,color .15s ease,font-size .15s ease;
+  }
+  .field .input-group.is-floating>label,.field .input-group:focus-within>label{
+    transform:translateY(-24px);font-size:10px;font-weight:600;color:var(--color-halo-blue);
+  }
+  .field .input-group:focus-within>input,.field .input-group:focus-within>select,.field .input-group:focus-within>textarea{border-color:var(--color-apple-blue);box-shadow:none;background:var(--color-obsidian);}
+  .field .input-group select{border-radius:var(--radius-pill);padding-left:16px;}
+  .field .input-group select+label{transform:translateY(-24px);font-size:10px;font-weight:600;}
+  .checkbox-field input{appearance:none;-webkit-appearance:none;width:20px;height:20px;border:1px solid var(--color-smoke);border-radius:var(--radius-links);background:var(--color-carbon);position:relative;cursor:pointer;transition:background .2s ease,border-color .2s ease,transform .2s ease;}
+  .checkbox-field input:checked{background:var(--color-apple-blue);border-color:var(--color-apple-blue);transform:rotate(-4deg);}
+  .checkbox-field input:checked:after{content:"";position:absolute;left:6px;top:3px;width:5px;height:9px;border:solid var(--color-paper-white);border-width:0 2px 2px 0;transform:rotate(45deg);}
+  .checkbox-field input:focus-visible{outline:2px solid var(--color-halo-blue);outline-offset:2px;}
+  .toolbar input[type=search],.ops-toolbar input[type=search]{border-radius:var(--radius-pill);min-height:40px;transition:width .25s ease,border-color .15s ease,background .15s ease;}
+  @media(min-width:900px){.toolbar input[type=search]{width:48px;padding-left:40px;background-position:16px center;}.toolbar input[type=search]:focus,.toolbar input[type=search]:not(:placeholder-shown){width:290px;}}
+  .card,.stat-card{border-radius:var(--radius-cards);}
+  .quick-action,.ops-project,.kanban-card{border-radius:var(--radius-links);}
+  .back-nav{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;margin:0 0 12px;color:var(--color-platinum);font:600 12px/1 var(--font-body);letter-spacing:var(--tracking-body);}
+  .back-nav:hover{color:var(--color-frost-white);}
+  .kanban-board{min-height:calc(100vh - 280px);padding-bottom:18px;}
+  .kanban-col{min-height:calc(100vh - 300px);display:flex;flex-direction:column;}
+  .kanban-cards{flex:1;}
+  .kanban-board{scrollbar-width:thin;}
+  .ops-layout{display:grid;grid-template-columns:1.2fr .8fr;gap:16px;align-items:stretch;}
+  .ops-projects-card{min-height:440px;}
+  .ops-calendar-card{min-height:440px;cursor:pointer;}
+  .ops-calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:12px;}
+  .ops-cal-head{font-size:10px;color:var(--color-platinum);text-align:center;padding:4px 0;}
+  .ops-cal-day{min-height:54px;padding:6px;border:1px solid var(--color-smoke);border-radius:var(--radius-links);font-size:11px;color:var(--color-frost-white);background:var(--color-carbon);}
+  .ops-cal-day.today{border-color:var(--color-apple-blue);}.ops-cal-day.muted{opacity:.35;}.ops-cal-event{display:block;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--color-halo-blue);font-size:9px;}
+  .ops-bottom{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;}
+  @media(max-width:900px){.ops-layout,.ops-bottom{grid-template-columns:1fr;}.ops-calendar-card{min-height:0;}.kanban-board,.kanban-col{min-height:0;}}
+
   @media (max-width: 600px) and (display-mode: standalone){
     /* Standalone (Add to Home Screen) already hides Safari chrome —
        trim the extra top padding we add for the browser UI. */
@@ -2266,6 +2311,28 @@ let editingExpense = null;
 let editingSale = null;
 let editingPipelineCard = null;
 
+/* Converte os campos já existentes para o padrão de label flutuante sem
+   mudar IDs, valores ou listeners usados pelos módulos. */
+function enhanceNativeControls(scope){
+  (scope||document).querySelectorAll('.field').forEach(field=>{
+    if(field.querySelector('.input-group')) return;
+    const label=field.querySelector(':scope > label');
+    const control=field.querySelector(':scope > input,:scope > select,:scope > textarea');
+    if(!label||!control||control.type==='checkbox'||control.type==='radio') return;
+    const group=document.createElement('div'); group.className='input-group';
+    control.before(group); group.append(control,label);
+    const refresh=()=>group.classList.toggle('is-floating',!!String(control.value||'').trim());
+    control.addEventListener('input',refresh); control.addEventListener('change',refresh); refresh();
+  });
+}
+function installBackNavigation(main){
+  if(currentView==='dashboard'||main.querySelector('.back-nav')) return;
+  const header=main.querySelector('.view-header'); if(!header) return;
+  const back=document.createElement('button'); back.type='button';back.className='back-nav';back.innerHTML='← Voltar ao painel';
+  back.onclick=()=>{editingDoc=null;editingClient=null;viewingClient=null;editingExpense=null;editingSale=null;editingPipelineCard=null;currentView='dashboard';render();};
+  header.querySelector('div')?.prepend(back);
+}
+
 /* ------------------------------------------------------------------
    Glass dock — proximity magnification + sliding indicator.
    Ported from ThreeUI "Animated Top Dock", glass variant (MIT,
@@ -2431,12 +2498,12 @@ function render(){
   const main = document.getElementById("main");
   if(!ready){ main.innerHTML = "<p>Carregando…</p>"; return; }
 
-  if(editingDoc){ renderDocEditor(main); return; }
-  if(editingClient !== null){ renderClientEditor(main); return; }
-  if(viewingClient !== null){ renderClientProfile(main); return; }
-  if(editingExpense !== null){ renderExpenseEditor(main); return; }
-  if(editingSale !== null){ renderSaleEditor(main); return; }
-  if(editingPipelineCard !== null){ renderPipelineEditor(main); return; }
+  if(editingDoc){ renderDocEditor(main); enhanceNativeControls(main); installBackNavigation(main); return; }
+  if(editingClient !== null){ renderClientEditor(main); enhanceNativeControls(main); installBackNavigation(main); return; }
+  if(viewingClient !== null){ renderClientProfile(main); enhanceNativeControls(main); installBackNavigation(main); return; }
+  if(editingExpense !== null){ renderExpenseEditor(main); enhanceNativeControls(main); installBackNavigation(main); return; }
+  if(editingSale !== null){ renderSaleEditor(main); enhanceNativeControls(main); installBackNavigation(main); return; }
+  if(editingPipelineCard !== null){ renderPipelineEditor(main); enhanceNativeControls(main); installBackNavigation(main); return; }
 
   switch(currentView){
     case "dashboard": renderDashboard(main); break;
@@ -2456,6 +2523,8 @@ function render(){
     case "inventory": renderInventory(main); break;
     case "settings": renderSettings(main); break;
   }
+  enhanceNativeControls(main);
+  installBackNavigation(main);
   const oldAction=document.querySelector(".mobile-actionbar"); if(oldAction) oldAction.remove();
   if(ready && !editingDoc && !editingClient && viewingClient===null && editingExpense===null && editingSale===null && editingPipelineCard===null && ["dashboard","clients","estimates","invoices","pipeline","operations","marketplace","expenses","engineering","inventory"].includes(currentView)){
     const bar=document.createElement("div"); bar.className="mobile-actionbar";
@@ -2508,6 +2577,8 @@ function renderDashboard(main){
   for(let i=0;i<7;i++){const x=new Date(d);x.setHours(12,0,0,0);x.setDate(d.getDate()+i);const iso=x.toISOString().slice(0,10);days.push({iso,day:x.toLocaleDateString('pt-BR',{weekday:'short'}).replace('.',''),num:x.getDate(),count:state.pipeline.filter(c=>c.stage!=="entregue"&&c.forecastDate===iso).length});}
   const hour=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   const greeting=new Date().getHours()<12?'Bom dia':new Date().getHours()<18?'Boa tarde':'Boa noite';
+  const accountEmail=(currentUser&&currentUser.email||'').toLowerCase();
+  const greetingName=accountEmail==='lincolnporta@gmail.com'?'Lincoln':accountEmail==='eduardaterumi@gmail.com'?'Duda':(state.settings.businessName||'Reverso').split(' ')[0];
   const quick=[
     ['＋','Novo orçamento','Criar cotação','estimate'],['＋','Nova fatura','Registrar cobrança','invoice'],['＋','Nova peça','Engenharia','engineering'],['＋','Registrar despesa','Lançar custo','expense']
   ];
@@ -2515,7 +2586,7 @@ function renderDashboard(main){
     <div class="command-center">
       <div class="card command-hero">
         <div class="command-hero-content">
-          <div><div class="command-kicker">Command Center · Reverso Works</div><h1 class="command-title">${greeting}, ${escapeHTML((state.settings.businessName||'Reverso').split(' ')[0])}.</h1><div class="command-sub">Aqui está o estado do negócio agora. A ideia é você abrir o app e saber em poucos segundos o que merece atenção.</div></div>
+          <div><div class="command-kicker">Command Center · Reverso Works</div><h1 class="command-title">${greeting}, ${escapeHTML(greetingName)}.</h1><div class="command-sub">Aqui está o estado do negócio agora. A ideia é você abrir o app e saber em poucos segundos o que merece atenção.</div></div>
           <div class="command-clock" id="live-clock">${hour}</div>
         </div>
       </div>
@@ -2526,7 +2597,7 @@ function renderDashboard(main){
     </div>
     <div class="card" style="margin-bottom:16px"><div class="command-section-title"><strong>Ações rápidas</strong><span>atalho: ⌘K / Ctrl K</span></div><div class="quick-grid">${quick.map(q=>`<button class="quick-action" data-quick="${q[3]}"><div class="qa-icon">${q[0]}</div><strong>${q[1]}</strong><span>${q[2]}</span></button>`).join('')}</div></div>
     <div class="dashboard-grid">
-      <div class="card"><div class="command-section-title"><strong>Agenda de produção</strong><span>próximos 7 dias</span></div><div class="day-strip">${days.map(x=>`<div class="day-cell ${x.iso===today?'today':''}"><div class="day-name">${x.day}</div><div class="day-num">${x.num}</div><div class="day-count">${x.count?x.count+' entrega'+(x.count>1?'s':''):'Livre'}</div></div>`).join('')}</div><div style="margin-top:12px">${pipelineUpcoming.slice(0,5).map(c=>`<div class="note-item"><div class="note-body"><div class="note-text">${escapeHTML(c.title||'(sem título)')} <span class="stat-hint">— ${escapeHTML(clientName(c.clientId))}</span></div><div class="note-dates"><span class="note-created">${escapeHTML(stageLabel(c.stage))}</span><span class="note-due ${urgencyClass(c.forecastDate)}">${fmtDate(c.forecastDate)}</span></div></div><button class="btn btn-sm btn-ghost" data-open-card="${c.id}">Abrir</button></div>`).join('') || `<div class="empty-state" style="padding:18px"><div class="big">Agenda livre</div>Nenhuma entrega prevista para os próximos 7 dias.</div>`}</div></div>
+      <div class="card"><div class="command-section-title"><strong>Agenda de produção</strong><span><button class="btn btn-sm btn-ghost" id="agenda-add">+ Evento</button></span></div><div class="day-strip">${days.map(x=>`<div class="day-cell ${x.iso===today?'today':''}"><div class="day-name">${x.day}</div><div class="day-num">${x.num}</div><div class="day-count">${x.count?x.count+' entrega'+(x.count>1?'s':''):'Livre'}</div></div>`).join('')}</div><div style="margin-top:12px">${pipelineUpcoming.slice(0,5).map(c=>`<div class="note-item"><div class="note-body"><div class="note-text">${escapeHTML(c.title||'(sem título)')} <span class="stat-hint">— ${escapeHTML(clientName(c.clientId))}</span></div><div class="note-dates"><span class="note-created">${escapeHTML(stageLabel(c.stage))}</span><span class="note-due ${urgencyClass(c.forecastDate)}">${fmtDate(c.forecastDate)}</span></div></div><button class="btn btn-sm btn-ghost" data-open-card="${c.id}">Abrir</button></div>`).join('') || `<div class="empty-state" style="padding:18px"><div class="big">Agenda livre</div>Nenhuma entrega prevista para os próximos 7 dias.</div>`}</div></div>
       <div class="card"><div class="command-section-title"><strong>Precisa da sua atenção</strong><span>${attention.length} sinal(is)</span></div><div class="attention-list">${attention.slice(0,maxAttention).map(a=>`<div class="attention-item" data-attention="${a.view||''}"><i class="attention-dot ${a.type==='danger'?'danger':a.type==='good'?'good':''}"></i><div><strong>${escapeHTML(a.title)}</strong><small>${escapeHTML(a.sub)}</small></div></div>`).join('')}</div></div>
     </div>
     <div class="dashboard-grid-3" style="margin-top:16px">
@@ -2540,6 +2611,7 @@ function renderDashboard(main){
   main.querySelectorAll('[data-attention]').forEach(b=>b.onclick=()=>{if(b.dataset.attention){currentView=b.dataset.attention;render();}});
   main.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{currentView=b.dataset.go;render();});
   main.querySelectorAll('[data-open-card]').forEach(b=>b.onclick=()=>{const c=state.pipeline.find(x=>x.id===b.dataset.openCard);if(c){editingPipelineCard={data:JSON.parse(JSON.stringify(c)),isNew:false};render();}});
+  const agendaAdd=document.getElementById('agenda-add'); if(agendaAdd) agendaAdd.onclick=()=>{const event=newPipelineSkeleton();event.forecastDate=today;editingPipelineCard={data:event,isNew:true};currentView='pipeline';render();};
 }
 
 function statusLabel(type, status){
@@ -2591,6 +2663,15 @@ function openOperationsProject(id){
   if(inv) document.getElementById('ops-open-invoice').onclick=()=>{modalRoot.innerHTML='';editingDoc={type:'invoice',data:JSON.parse(JSON.stringify(inv)),isNew:false};currentView='invoices';render();};
   if(eng) document.getElementById('ops-open-eng').onclick=()=>{modalRoot.innerHTML='';currentView='engineering';render();};
 }
+function openOperationsCalendar(selectedISO){
+  const start=new Date(selectedISO+'T12:00:00'); start.setDate(start.getDate()-start.getDay());
+  const days=[];for(let i=0;i<7;i++){const d=new Date(start);d.setDate(start.getDate()+i);days.push(d);}
+  modalRoot.innerHTML=`<div class="modal-backdrop" id="ops-calendar-backdrop"><div class="modal-box modal-box-wide"><div class="view-header"><div><div class="view-title" style="font-size:24px">Agenda de produção</div><div class="view-sub">${fmtDate(days[0].toISOString().slice(0,10))} — ${fmtDate(days[6].toISOString().slice(0,10))}</div></div><button class="btn btn-ghost" id="ops-calendar-close">Fechar</button></div><div class="ops-calendar-grid">${days.map(d=>{const iso=d.toISOString().slice(0,10),events=state.pipeline.filter(x=>x.forecastDate===iso&&x.stage!=='entregue');return `<div class="ops-cal-day ${iso===todayISO()?'today':''}" style="min-height:220px"><strong>${d.toLocaleDateString('pt-BR',{weekday:'short'}).replace('.','')} ${d.getDate()}</strong>${events.length?events.map(e=>`<button class="btn btn-sm btn-ghost" data-calendar-open="${e.id}" style="display:flex;margin-top:8px;width:100%;text-align:left">${escapeHTML(e.title||'Processo')}</button>`).join(''):`<div class="stat-hint" style="margin-top:10px">Livre</div>`}</div>`}).join('')}</div><div class="modal-actions"><button class="btn btn-primary" id="ops-calendar-add">+ Novo evento</button></div></div></div>`;
+  document.getElementById('ops-calendar-close').onclick=()=>modalRoot.innerHTML='';
+  document.getElementById('ops-calendar-backdrop').onclick=e=>{if(e.target.id==='ops-calendar-backdrop')modalRoot.innerHTML='';};
+  modalRoot.querySelectorAll('[data-calendar-open]').forEach(b=>b.onclick=()=>{modalRoot.innerHTML='';openOperationsProject(b.dataset.calendarOpen);});
+  document.getElementById('ops-calendar-add').onclick=()=>{modalRoot.innerHTML='';const item=newPipelineSkeleton();item.forecastDate=selectedISO;editingPipelineCard={data:item,isNew:true};currentView='pipeline';render();};
+}
 function renderOperations(main){
   let query="", line="", stage="";
   function draw(){
@@ -2617,6 +2698,23 @@ function renderOperations(main){
       <div class="ops-toolbar"><input class="grow" type="search" id="ops-search" placeholder="Buscar processo, cliente ou material…" value="${escapeHTML(query)}"><select id="ops-line"><option value="">Todas as linhas</option><option value="Reverso Works" ${line==="Reverso Works"?"selected":""}>Reverso Works</option><option value="Reverso Studio" ${line==="Reverso Studio"?"selected":""}>Reverso Studio</option></select><select id="ops-stage"><option value="">Todas as etapas</option>${PIPELINE_STAGES.map(x=>`<option value="${x.id}" ${stage===x.id?"selected":""}>${x.label}</option>`).join("")}</select></div>
       <div class="ops-grid"><div class="card"><div class="command-section-title"><strong>Projetos em andamento</strong><span>${cards.length} processo(s)</span></div>${cards.length?cards.map(c=>{const p=operationsProgress(c.stage), late=c.forecastDate&&c.forecastDate<today&&c.stage!=="entregue";return `<div class="ops-project"><div class="ops-project-head"><div><div class="ops-project-title">${escapeHTML(c.title||"(sem título)")}</div><div class="ops-project-meta">${escapeHTML(clientName(c.clientId))} · ${escapeHTML(c.businessLine||"—")} · ${escapeHTML(c.material||"Material N/D")}</div></div><span class="badge ${late?'badge-line-works':'badge-platform'}">${escapeHTML(stageLabel(c.stage))}</span></div><div class="ops-progress" style="--progress:${p}%"><i></i></div><div class="ops-stage-row"><small>${p}% do fluxo</small><small class="${late?'danger-text':''}">${c.forecastDate?(late?'Atrasado · ':'Entrega · ')+fmtDate(c.forecastDate):'Sem previsão'}</small></div><div class="ops-actions ops-project-actions"><button class="btn btn-sm btn-primary" data-ops-open="${c.id}">Abrir ciclo</button><button class="btn btn-sm btn-ghost" data-ops-edit="${c.id}">Editar</button></div></div>`}).join(""):`<div class="ops-empty">Nenhum processo corresponde aos filtros.</div>`}</div>
       <div><div class="card"><div class="command-section-title"><strong>Foco agora</strong><span>prioridades</span></div><div class="ops-focus">${focus.slice(0,5).map(f=>`<div class="ops-focus-item ${f.kind==='good'?'good':''}" data-ops-focus="${f.view||''}"><i class="ops-focus-dot"></i><div><strong>${escapeHTML(f.title)}</strong><small>${escapeHTML(f.sub)}</small></div></div>`).join("")}</div></div><div class="card" style="margin-top:16px"><div class="command-section-title"><strong>Atalhos operacionais</strong><span>fluxo</span></div><div class="ops-focus"><div class="ops-focus-item" data-go="pipeline"><i class="ops-focus-dot"></i><div><strong>Funil de produção</strong><small>Mover etapas e acompanhar entregas.</small></div></div><div class="ops-focus-item" data-go="engineering"><i class="ops-focus-dot"></i><div><strong>Engenharia</strong><small>Validar material antes de imprimir.</small></div></div><div class="ops-focus-item" data-go="inventory"><i class="ops-focus-dot"></i><div><strong>Estoque</strong><small>Ver disponibilidade e reposição.</small></div></div></div></div></div></div>`;
+    /* O calendário ocupa a área principal ao lado dos projetos; foco e atalhos
+       passam para baixo, mantendo os dois blocos no mesmo nível visual. */
+    const opsGrid=main.querySelector('.ops-grid');
+    if(opsGrid){
+      opsGrid.classList.add('ops-layout');
+      const legacySide=opsGrid.lastElementChild;
+      const bottom=document.createElement('div'); bottom.className='ops-bottom';
+      Array.from(legacySide.children).forEach(card=>bottom.append(card));
+      legacySide.remove();
+      const calendar=document.createElement('div'); calendar.className='card ops-calendar-card';calendar.id='ops-calendar';
+      const base=new Date();base.setHours(12,0,0,0); const year=base.getFullYear(),month=base.getMonth();
+      const first=new Date(year,month,1);const start=new Date(year,month,1-first.getDay());
+      const cells=[];for(let i=0;i<42;i++){const date=new Date(start);date.setDate(start.getDate()+i);const iso=date.toISOString().slice(0,10);const items=state.pipeline.filter(x=>x.forecastDate===iso&&x.stage!=='entregue').slice(0,2);cells.push(`<div class="ops-cal-day ${date.getMonth()!==month?'muted':''} ${iso===today?'today':''}"><strong>${date.getDate()}</strong>${items.map(x=>`<span class="ops-cal-event">${escapeHTML(x.title||'Processo')}</span>`).join('')}</div>`)}
+      calendar.innerHTML=`<div class="command-section-title"><strong>${base.toLocaleDateString('pt-BR',{month:'long',year:'numeric'})}</strong><span>agenda de produção</span></div><div class="ops-calendar-grid">${['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map(x=>`<div class="ops-cal-head">${x}</div>`).join('')}${cells.join('')}</div><div class="stat-hint" style="margin-top:12px">Clique para abrir a agenda semanal.</div>`;
+      opsGrid.append(calendar);opsGrid.after(bottom);
+      calendar.onclick=()=>openOperationsCalendar(today);
+    }
     document.getElementById('ops-new').onclick=()=>{editingPipelineCard={data:newPipelineSkeleton(),isNew:true};currentView='pipeline';render();};
     document.getElementById('ops-search').oninput=e=>{query=e.target.value;draw();};
     document.getElementById('ops-line').onchange=e=>{line=e.target.value;draw();};
@@ -2688,6 +2786,8 @@ function renderPipeline(main){
     document.getElementById("new-card").onclick = ()=>{ editingPipelineCard = {data: newPipelineSkeleton(), isNew:true}; render(); };
     document.getElementById("search-card").oninput = e=>{ search=e.target.value; draw(); };
     document.getElementById("filter-line").onchange = e=>{ lineFilter=e.target.value; draw(); };
+    const kanban=main.querySelector('.kanban-board');
+    if(kanban) kanban.addEventListener('wheel',e=>{if(e.shiftKey){kanban.scrollLeft+=e.deltaY; e.preventDefault();}},{passive:false});
     main.querySelectorAll("[data-edit-card]").forEach(b=> b.onclick = ()=>{
       const c = state.pipeline.find(x=>x.id===b.dataset.editCard);
       editingPipelineCard = {data: JSON.parse(JSON.stringify(c)), isNew:false};
@@ -2925,6 +3025,16 @@ function renderMaintenance(main){
 /* =========================================================
    CLIENTS
 ========================================================= */
+function openClientFinancialSummary(clientId){
+  const c=state.clients.find(x=>x.id===clientId); if(!c) return;
+  const estimates=state.estimates.filter(x=>x.clientId===clientId).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const invoices=state.invoices.filter(x=>x.clientId===clientId).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const rows=(docs,type)=>docs.length?docs.map(d=>`<div class="calc-list-row"><div><div class="li-desc">${escapeHTML(d.number||'Sem número')}</div><div class="li-meta">${fmtDate(d.date||d.createdDate||todayISO())} · ${escapeHTML(statusLabel(type,type==='estimate'?effectiveEstimateStatus(d):d.status))}</div></div><div class="li-price">${fmtMoney(calcDocTotals(d).total)}</div></div>`).join(''):`<div class="stat-hint">Nenhum registro.</div>`;
+  modalRoot.innerHTML=`<div class="modal-backdrop" id="client-summary-backdrop"><div class="modal-box"><div class="view-header"><div><div class="view-title" style="font-size:24px">${escapeHTML(c.name)}</div><div class="view-sub">Resumo comercial</div></div><button class="btn btn-ghost" id="client-summary-close">Fechar</button></div><div class="section-title">Orçamentos <span class="hint">${estimates.length}</span></div>${rows(estimates,'estimate')}<div class="section-title">Faturas <span class="hint">${invoices.length}</span></div>${rows(invoices,'invoice')}<div class="modal-actions"><button class="btn btn-primary" id="client-summary-profile">Ver perfil completo</button></div></div></div>`;
+  document.getElementById('client-summary-close').onclick=()=>modalRoot.innerHTML='';
+  document.getElementById('client-summary-backdrop').onclick=e=>{if(e.target.id==='client-summary-backdrop')modalRoot.innerHTML='';};
+  document.getElementById('client-summary-profile').onclick=()=>{modalRoot.innerHTML='';viewingClient=clientId;currentView='clients';render();};
+}
 function renderClients(main){
   let search = "";
   function draw(){
@@ -2947,7 +3057,7 @@ function renderClients(main){
           <tbody>
             ${list.map(c => `
               <tr>
-                <td><a class="link-strong" data-view-profile="${c.id}">${escapeHTML(c.name)}</a></td>
+                <td><a class="link-strong" data-client-summary="${c.id}">${escapeHTML(c.name)}</a></td>
                 <td>${escapeHTML(c.phone||"—")}</td>
                 <td>${escapeHTML(c.email||"—")}</td>
                 <td>${c.type==="company" ? `<span class="badge badge-line-studio">Empresa</span>` : ""}</td>
@@ -2963,6 +3073,7 @@ function renderClients(main){
     `;
     document.getElementById("new-client").onclick = ()=>{ editingClient = newClientSkeleton(); render(); };
     document.getElementById("search-client").oninput = (e)=>{ search = e.target.value; draw(); };
+    main.querySelectorAll("[data-client-summary]").forEach(el=> el.onclick=()=>openClientFinancialSummary(el.dataset.clientSummary));
     main.querySelectorAll("[data-view-profile]").forEach(el=> el.onclick = ()=>{
       viewingClient = el.dataset.viewProfile;
       render();
@@ -5737,7 +5848,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     }
   }catch(e){console.warn('Reverso v11 nav:',e)}
 });
-</script>
+</scriptx>
 </body></html>`);
     w.document.close();
   };
