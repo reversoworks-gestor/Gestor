@@ -1259,6 +1259,186 @@ button.wf-record:hover{background:var(--color-carbon)}
 @media print{.glass-topbar,.skip-link,.nav-caption,.login-intro{display:none!important}}
 
 </style>
+<style>
+/* ============================================================
+   Reverso Clean Dark — concise, quiet and operational.
+   This final layer deliberately removes legacy decoration while
+   preserving the application logic and the Obsidian color system.
+   ============================================================ */
+@media screen {
+  :root { --radius-cards:var(--radius-links); }
+
+  body { background:var(--color-pure-black); }
+  #dock-field,.nav-indicator,.glass-topbar,.nav-caption,.brand small,
+  #user-email,.view-sub { display:none!important; }
+
+  #app { min-height:100dvh; }
+  #sidebar {
+    width:220px;
+    padding:var(--spacing-24,24px) var(--spacing-12,12px);
+    background:var(--color-carbon);
+    border-right:1px solid var(--color-smoke);
+    backdrop-filter:none;
+    -webkit-backdrop-filter:none;
+  }
+  #sidebar .brand {
+    min-height:104px;
+    margin:0 0 var(--spacing-24,24px);
+    padding:0;
+    display:grid;
+    place-items:center;
+  }
+  #sidebar .brand-logo {
+    display:block;
+    width:104px;
+    height:auto;
+    margin:0;
+    filter:none;
+  }
+  #sidebar #nav { margin:0; gap:var(--spacing-4,4px); }
+  #sidebar #nav button {
+    margin:0;
+    min-height:44px;
+    padding:var(--spacing-12,12px);
+    border-radius:var(--radius-links);
+    transform:none!important;
+  }
+  #sidebar #nav button[data-dock-near="true"],
+  #sidebar #nav button.active {
+    background:var(--color-obsidian);
+    border-color:var(--color-smoke);
+  }
+  #sidebar .sidebar-footer { padding:var(--spacing-16,16px) var(--spacing-12,12px) 0; }
+  #logout-btn { color:var(--color-platinum)!important; font-size:var(--text-nav-item,12px); }
+
+  #main { padding-top:var(--spacing-28,28px); }
+  #workspace-nav { margin-bottom:var(--spacing-24,24px); }
+  .wf-subnav,.wf-tabs,.tabbar { margin-bottom:var(--spacing-24,24px); }
+  .view-header { margin-bottom:var(--spacing-24,24px); }
+  .view-title { font-size:var(--text-heading-lg,32px); }
+  .wf-demo { font-size:var(--text-caption,10px); }
+
+  .card,.stat-card,.wf-section,.wf-record,.wf-summary,.ops-kpi,
+  .ops-project,.ops-focus-item,.attention-item,.day-cell,.ops-cal-day,
+  .kanban-col,.kanban-card,.channel-tile,.eng-result-hero,.eng-alt,
+  .eng-reason,.section-collapse,.modal-box,.palette,.login-card,
+  .note-item,.followup-item,.receipt-mini {
+    border-radius:var(--radius-links)!important;
+    box-shadow:none!important;
+  }
+  .card,.stat-card,.quick-action,.ops-project,.attention-item,.day-cell,
+  .ops-focus-item,.btn { animation:none!important; }
+  .card:hover,.stat-card:hover,.quick-action:hover,.ops-project:hover,
+  .attention-item:hover,.day-cell:hover,.ops-focus-item:hover {
+    transform:none!important;
+    box-shadow:none!important;
+  }
+
+  .toolbar input[type=search],.ops-toolbar input[type=search],
+  .toolbar input[type=search]:focus,.toolbar input[type=search]:not(:placeholder-shown) {
+    width:280px!important;
+    max-width:100%;
+    min-height:44px;
+    padding:var(--spacing-12,12px)!important;
+    border-radius:var(--radius-links);
+    background-image:none;
+    transition:border-color .15s ease,background .15s ease;
+  }
+  .wf-search {
+    display:block;
+    width:280px;
+    max-width:100%;
+    min-height:44px;
+    margin:0 0 var(--spacing-24,24px);
+    padding:var(--spacing-12,12px);
+    border:1px solid var(--color-smoke);
+    border-radius:var(--radius-links);
+    background:var(--color-carbon);
+    color:var(--color-frost-white);
+    font:inherit;
+  }
+  .wf-search:focus {
+    outline:2px solid var(--color-halo-blue);
+    outline-offset:2px;
+  }
+
+  /* Fixed labels replace the overlapping floating-label treatment. */
+  .field .input-group {
+    display:flex;
+    flex-direction:column;
+    gap:var(--spacing-4,4px);
+  }
+  .field .input-group>label,
+  .field .input-group.is-floating>label,
+  .field .input-group:focus-within>label,
+  .field .input-group select+label {
+    position:static;
+    order:-1;
+    padding:0;
+    color:var(--color-platinum);
+    background:transparent;
+    font-size:var(--text-caption,10px);
+    font-weight:600;
+    line-height:var(--leading-caption,1.83);
+    text-transform:none;
+    transform:none;
+  }
+  .field .input-group>input,.field .input-group>select,
+  .field .input-group>textarea {
+    min-height:44px;
+    padding:var(--spacing-12,12px);
+    border-radius:var(--radius-links);
+  }
+  .field .input-group>textarea { padding-top:var(--spacing-12,12px); }
+  .field .input-group select { border-radius:var(--radius-links); }
+
+  .eng-grid {
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    gap:var(--spacing-20,20px);
+  }
+  .eng-grid>.card { padding:var(--spacing-24,24px); }
+  .eng-grid .form-grid { gap:var(--spacing-12,12px); }
+  .eng-grid .form-grid.cols-3 { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .eng-grid .field { gap:var(--spacing-4,4px); margin-bottom:var(--spacing-12,12px); }
+  .eng-grid .field label {
+    position:static;
+    color:var(--color-platinum);
+    text-transform:none;
+  }
+  .eng-grid .field input,.eng-grid .field select {
+    min-height:44px;
+    padding:var(--spacing-12,12px);
+    border-radius:var(--radius-links);
+  }
+  .eng-section-title {
+    margin:var(--spacing-24,24px) 0 var(--spacing-16,16px);
+    padding-bottom:var(--spacing-8,8px);
+    border-bottom:1px solid var(--color-smoke);
+    font-size:var(--text-nav-item,12px);
+    font-weight:600;
+  }
+  .eng-section-title:first-child { margin-top:0; }
+  .eng-result-hero { padding:var(--spacing-24,24px); background:var(--color-carbon); }
+  .eng-result-hero:after { display:none; }
+  .eng-score { font-size:var(--text-watch-time,44px); font-weight:700; }
+  .eng-material-name { font-size:var(--text-heading,24px); font-weight:700; }
+  .eng-row { padding:var(--spacing-12,12px) 0; }
+  .note-banner { border-radius:var(--radius-links); }
+
+  @media(max-width:900px) {
+    #sidebar { width:100%; padding:var(--spacing-16,16px); }
+    #sidebar .brand { min-height:76px; margin-bottom:var(--spacing-16,16px); }
+    #sidebar .brand-logo { width:80px; }
+    .eng-grid { grid-template-columns:minmax(0,1fr); }
+  }
+  @media(max-width:600px) {
+    .eng-grid .form-grid,.eng-grid .form-grid.cols-3 { grid-template-columns:minmax(0,1fr); }
+    .toolbar input[type=search],.ops-toolbar input[type=search],
+    .toolbar input[type=search]:focus,.toolbar input[type=search]:not(:placeholder-shown) { width:100%!important; }
+    .wf-search { width:100%; }
+  }
+}
+</style>
 </head>
 <body>
 <a class="skip-link" href="#workspace-view">Pular para o conteúdo</a>
@@ -2519,7 +2699,7 @@ function legacyRenderEngineering(main){
       <div><div class="view-title">Engenharia de Materiais</div><div class="view-sub">Decision Engine Pro — requisitos → filtros → cálculo → ranking → justificativa</div></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-ghost" id="eng-report">Relatório técnico</button><button class="btn btn-primary" id="eng-save">Salvar análise</button></div>
     </div>
-    <div class="note-banner"><strong>Princípio de projeto:</strong> o sistema não trata “filamento” como uma propriedade isolada. A recomendação considera material + condição do material + processo + geometria + orientação + ambiente + carregamento. Os números de datasheet são referência de triagem, não tensões admissíveis certificadas para a peça FFF final.</div>
+    <div class="note-banner"><strong>Triagem técnica:</strong> confirme material, processo e carregamento antes de fabricar.</div>
     <div class="eng-grid">
       <div class="card">
         <div class="eng-section-title">1. Requisito da aplicação</div>
@@ -2561,11 +2741,10 @@ function legacyRenderEngineering(main){
         <div class="form-grid cols-3"><div class="field"><label>Nº de paredes</label><input id="eng-walls" type="number" step="1" value="${defaults.walls??""}" placeholder="5"></div><div class="field"><label>Infill (%)</label><input id="eng-infill" type="number" step="1" value="${defaults.infill??""}" placeholder="40"></div><div class="field"><label>Altura de camada (mm)</label><input id="eng-layer" type="number" step="0.01" value="${defaults.layerHeight??""}" placeholder="0.20"></div></div>
         <div class="form-grid cols-2"><div class="field"><label>Diâmetro do bico (mm)</label><input id="eng-nozzle-d" type="number" step="0.1" value="${defaults.nozzleDiameter??""}" placeholder="0.4"></div><div class="field"><label>Bico endurecido</label><select id="eng-nozzle">${option("yes","Sim",defaults.nozzleHardened||"yes")}${option("no","Não",defaults.nozzleHardened||"yes")}</select></div></div>
         <div class="form-grid cols-2"><div class="field"><label>Câmara</label><select id="eng-chamber">${option("unknown","Não informado",defaults.chamber||"unknown")}${option("open","Aberta",defaults.chamber||"unknown")}${option("closed","Fechada",defaults.chamber||"unknown")}${option("high-temp","Alta temperatura",defaults.chamber||"unknown")}</select></div><div class="field"><label>Filamento seco?</label><select id="eng-drying">${option("unknown","Não confirmado",defaults.drying||"unknown")}${option("yes","Sim / controlado",defaults.drying||"unknown")}${option("no","Não",defaults.drying||"unknown")}</select></div></div>
-        <div class="note-banner" style="margin-bottom:0"><strong>Regra:</strong> processo faz parte da especificação da peça. Para compósitos, bico endurecido e orientação não são detalhes secundários.</div>
+        <div class="note-banner" style="margin-bottom:0">Compósitos exigem bico endurecido e orientação validada.</div>
       </div>
       <div id="eng-results"></div>
     </div>
-    <div class="card" style="margin-top:18px"><div class="eng-section-title">Histórico recente</div>${last.length?last.slice(0,8).map(p=>`<div class="eng-row"><span>${escapeHTML(p.name||"Análise sem nome")} <span class="eng-badge">${escapeHTML(p.recommendationName||"—")} · ${p.score??"—"}/100</span></span><strong>${fmtDate((p.updatedAt||"").slice(0,10))}</strong></div>`).join(""):"<div class='empty-state'>Nenhuma análise salva ainda.</div>"}</div>
   `;
 
   const readInput=()=>({
@@ -6140,11 +6319,11 @@ function editOrder(existing){
 }
 function renderOrders(main){
   const selected=state.orders.find(o=>o.id===activeOrderId);if(selected){renderOrder(main,selected);return;}
-  main.innerHTML=`<div class="view-header"><div><div class="view-title">Pedidos</div><div class="view-sub">Do primeiro contato à entrega. Todo o histórico em um lugar.</div></div><button class="btn btn-primary" id="new-order">Novo pedido</button></div><label class="wf-field">Buscar pedido ou cliente<input type="search" id="order-search" placeholder="Nome, número ou cliente"></label><div id="order-list"></div>`;
-  const draw=q=>{const rows=state.orders.filter(o=>(o.title+' '+o.number+' '+clientName(o.clientId)).toLowerCase().includes(q.toLowerCase()));document.getElementById('order-list').innerHTML=rows.length?rows.map(o=>{const runs=orderRows(o),due=orderInvoices(o).reduce((n,i)=>n+balanceDue(i),0);return `<button type="button" class="wf-record" data-order="${o.id}"><span><small>${h(o.number)} · ${h(clientName(o.clientId))}</small><strong>${h(o.title)}</strong><span>${runs.length?runs.every(c=>c.stage==='entregue')?'Produção entregue':runs.length+' ordem(ns) de produção':'Em definição'} · ${o.deliveryDate?'Entrega '+fmtDate(o.deliveryDate):'Entrega a combinar'}</span></span><span class="wf-amount">${fmtMoney(due)}<small>a receber →</small></span></button>`;}).join(''):'<div class="empty-state">Nenhum pedido encontrado. Crie um pedido ou aprove um orçamento.</div>';main.querySelectorAll('[data-order]').forEach(b=>b.onclick=()=>orderOpen(b.dataset.order));};
+  main.innerHTML=`<div class="view-header"><div><div class="view-title">Pedidos</div></div><button class="btn btn-primary" id="new-order">Novo pedido</button></div><input class="wf-search" type="search" id="order-search" aria-label="Buscar pedido ou cliente" placeholder="Buscar pedido ou cliente"><div id="order-list"></div>`;
+  const draw=q=>{const rows=state.orders.filter(o=>(o.title+' '+o.number+' '+clientName(o.clientId)).toLowerCase().includes(q.toLowerCase()));document.getElementById('order-list').innerHTML=rows.length?rows.map(o=>{const runs=orderRows(o),due=orderInvoices(o).reduce((n,i)=>n+balanceDue(i),0);return `<button type="button" class="wf-record" data-order="${o.id}"><span><small>${h(o.number)} · ${h(clientName(o.clientId))}</small><strong>${h(o.title)}</strong><span>${runs.length?runs.every(c=>c.stage==='entregue')?'Produção entregue':runs.length+' ordem(ns) de produção':'Em definição'} · ${o.deliveryDate?'Entrega '+fmtDate(o.deliveryDate):'Entrega a combinar'}</span></span><span class="wf-amount">${fmtMoney(due)}<small>a receber →</small></span></button>`;}).join(''):'<div class="empty-state">Nenhum pedido.</div>';main.querySelectorAll('[data-order]').forEach(b=>b.onclick=()=>orderOpen(b.dataset.order));};
   document.getElementById('new-order').onclick=()=>editOrder();document.getElementById('order-search').oninput=e=>draw(e.target.value);draw('');
   const unlinked=state.pipeline.filter(c=>!c.orderId).length;
-  if(unlinked){const note=document.createElement('p');note.className='wf-note';note.textContent=unlinked+' processo(s) anterior(es) ainda sem pedido. Abra-os em Produção para vincular sem duplicar.';main.append(note);}
+  if(unlinked){const note=document.createElement('p');note.className='wf-note';note.textContent=unlinked+' processo(s) sem pedido.';main.append(note);}
 }
 function renderOrder(main,o){
   const tabs=['Resumo','Peças','Engenharia','Orçamento','Produção','Entrega','Financeiro'];
