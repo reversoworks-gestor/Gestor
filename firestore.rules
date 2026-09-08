@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function workspaceExists() {
+      return exists(/databases/$(database)/documents/workspaces/reverso-private);
+    }
+
+    function isWorkspaceMember() {
+      return signedIn()
+        && workspaceExists()
+        && request.auth.token.email != null
+        && request.auth.token.email.lower() in get(/databases/$(database)/documents/workspaces/reverso-private).data.allowedEmails;
+    }
+
+    function isWorkspaceOwner() {
+      return signedIn()
+        && workspaceExists()
+        && get(/databases/$(database)/documents/workspaces/reverso-private).data.ownerUid == request.auth.uid;
+    }
+
+    match /workspaces/reverso-private {
+      allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid;
+      allow read: if signedIn() && (!workspaceExists() || isWorkspaceMember());
+      allow update, delete: if isWorkspaceOwner();
+
+      match /{document=**} {
+        allow read, write: if isWorkspaceMember();
+      }
+    }
+
+    match /users/{userId}/{document=**} {
+      allow read: if signedIn() && request.auth.uid == userId;
+    }
+  }
+}
