@@ -1,0 +1,24 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function workspaceExists() {
+      return firestore.exists(/databases/(default)/documents/workspaces/reverso-private);
+    }
+
+    function isWorkspaceMember() {
+      return request.auth != null
+        && request.auth.token.email != null
+        && workspaceExists()
+        && request.auth.token.email.lower() in firestore.get(/databases/(default)/documents/workspaces/reverso-private).data.allowedEmails;
+    }
+
+    // Images are stored outside Firestore so they do not consume document space.
+    // The path is scoped to the same private workspace used by firestore.rules.
+    match /workspaces/reverso-private/orders/{orderId}/{fileName} {
+      allow read: if isWorkspaceMember();
+      allow write: if isWorkspaceMember()
+        && request.resource.size < 25 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp)');
+    }
+  }
+}
