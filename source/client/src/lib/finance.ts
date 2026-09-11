@@ -11,7 +11,7 @@ export type OrderTotals = {
   totalCents: number;
 };
 
-function toCents(value: number) {
+export function toCents(value: number) {
   if (!Number.isFinite(value) || value < 0) return 0;
   return Math.round(value * 100);
 }

@@ -11,8 +11,12 @@ service firebase.storage {
         && request.auth.token.email.lower() in get(/databases/(default)/documents/workspaces/reverso-private).data.allowedEmails;
     }
     match /workspaces/reverso-private/stl/{fileName} {
-      allow read, write: if workspaceMember()
-        && request.resource == null || (workspaceMember() && request.resource.size < 50 * 1024 * 1024 && request.resource.contentType == 'model/stl');
+      allow read: if workspaceMember();
+      allow write: if workspaceMember()
+        && request.resource != null
+        && request.resource.size < 50 * 1024 * 1024
+        && request.resource.contentType == 'model/stl';
+      allow delete: if workspaceMember();
     }
   }
 }

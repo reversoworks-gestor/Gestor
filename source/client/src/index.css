@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -182,3 +182,72 @@ select { appearance: auto; }
 @media (max-width: 1050px) { .sidebar { width: 68px; padding: 18px 9px; }.brand { justify-content: center; padding: 4px 0 29px; }.brand > span:last-child, .sidebar-label, .sidebar nav span, .profile-chip > div, .sidebar-logout { display: none; }.sidebar nav button { justify-content: center; padding: 11px; }.sidebar-bottom { border: 0; }.profile-chip { justify-content: center; padding: 8px 0; }.main-content { width: calc(100% - 68px); margin-left: 68px; }.hero-grid, .overview-bottom { grid-template-columns: 1.25fr .75fr; }.command-orbit { width: 92px; height: 92px; }.command-card { padding: 26px; }.metric-grid { grid-template-columns: repeat(2, 1fr); }.quick-cards { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 760px) { .login-page { display: block; }.login-brand { min-height: auto; padding: 45px 27px 70px; }.login-brand h1 { font-size: 45px; }.login-ambient { right: 20px; bottom: -56px; transform: scale(.7); }.login-panel-wrap { min-height: 510px; padding: 24px; }.login-panel { padding: 25px; }.sidebar { width: min(280px, 83vw); transform: translateX(-105%); box-shadow: 22px 0 45px rgba(0,0,0,.35); transition: transform 240ms cubic-bezier(.23,1,.32,1); }.sidebar-open { transform: translateX(0); }.sidebar-open .brand > span:last-child, .sidebar-open .sidebar-label, .sidebar-open .sidebar nav span, .sidebar-open .profile-chip > div, .sidebar-open .sidebar-logout { display: block; }.sidebar-open .brand { justify-content: flex-start; padding: 4px 8px 29px; }.sidebar-open .sidebar nav button { justify-content: flex-start; }.sidebar-open .sidebar-bottom { border-top: 1px solid rgba(234,248,243,.08); }.sidebar-open .profile-chip { justify-content: flex-start; padding: 9px 7px; }.sidebar-open .sidebar-logout { display: flex; }.mobile-scrim { position: fixed; z-index: 15; inset: 0; display: block; border: 0; background: rgba(0,0,0,.54); }.main-content { width: 100%; margin-left: 0; padding-bottom: 68px; }.topbar { min-height: 65px; padding: 0 16px; }.mobile-menu { display: grid; }.topbar-title b { font-size: 12px; }.topbar-actions .button-quiet { display: none; }.topbar-actions .button-primary { min-height: 36px; padding: 8px 10px; font-size: 11px; }.view { padding: 27px 16px 37px; }.section-header { display: grid; align-items: start; margin-bottom: 20px; }.section-header h1 { font-size: 31px; }.section-description { margin-top: 10px; font-size: 12px; }.hero-grid, .overview-bottom, .triage-layout, .calendar-layout, .settings-grid, .document-grid { grid-template-columns: 1fr; }.command-card { min-height: 280px; padding: 23px; }.command-card h2 { max-width: 300px; font-size: 30px; }.command-card p { max-width: 300px; font-size: 12px; }.command-orbit { position: absolute; right: 0; bottom: 16px; width: 77px; height: 77px; opacity: .7; }.triage-shortcut { min-height: 180px; }.shortcut-icon { margin-bottom: 16px; }.metric-grid { grid-template-columns: 1fr 1fr; gap: 9px; }.metric-card { padding: 14px; }.metric-card strong { font-size: 27px; }.agenda-panel, .printer-summary, .triage-form-card, .triage-history, .calendar-card, .calendar-guide, .settings-grid .panel-card { padding: 17px; }.empty-state { flex-wrap: wrap; }.empty-state .button { margin-left: 52px; }.quick-cards { grid-template-columns: repeat(4, 1fr); gap: 7px; }.quick-cards button { min-height: 77px; padding: 10px; }.quick-cards button svg { width: 16px; }.quick-cards small { display: none; }.quick-cards span { font-size: 10px; }.mobile-nav { position: fixed; z-index: 12; right: 0; bottom: 0; left: 0; display: grid; grid-template-columns: repeat(5, 1fr); padding: 7px 4px calc(7px + env(safe-area-inset-bottom)); border-top: 1px solid rgba(229,245,240,.1); background: rgba(16,22,23,.96); backdrop-filter: blur(12px); }.mobile-nav button { display: grid; justify-items: center; gap: 4px; padding: 5px 2px; border: 0; color: #82928e; background: transparent; font-size: 8px; font-weight: 700; }.mobile-nav button.mobile-active { color: #92edda; }.mobile-nav button.mobile-active svg { filter: drop-shadow(0 0 7px rgba(121,235,214,.55)); }.client-grid, .inventory-grid, .printer-grid { grid-template-columns: 1fr; }.client-card { min-height: 128px; }.form-grid, .dialog-form { grid-template-columns: 1fr; }.field-span { grid-column: auto; }.modal-backdrop { align-items: end; padding: 0; }.modal-panel, .modal-wide { width: 100%; max-height: 92vh; padding: 21px 16px calc(20px + env(safe-area-inset-bottom)); border-radius: 20px 20px 0 0; }.modal-heading h2 { font-size: 23px; }.dialog-actions { position: sticky; bottom: -20px; padding: 13px 0 0; background: #121919; }.dialog-actions .button { flex: 1; }.order-type-toggle { width: 100%; }.order-type-toggle button { flex: 1; justify-content: center; }.material-info { grid-template-columns: 1fr 1fr; }.material-info > div:first-child { grid-column: 1 / -1; }.line-item { grid-template-columns: 1fr 1fr 32px; gap: 7px; }.line-item strong { grid-column: 1 / -1; }.line-item > input { grid-column: 1 / -1; }.line-item label { min-width: 0; }.line-item b { align-self: end; }.calendar-event { grid-template-columns: 58px 10px minmax(0, 1fr); }.event-tag { display: none; }.team-form { display: grid; }.order-card { grid-template-columns: 39px minmax(0, 1fr); }.order-value { grid-column: 2; justify-items: start; }.printer-facts { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; scroll-behavior: auto !important; } }
+
+/* Comando Técnico — Sistema Operacional: overrides oficiais */
+:root { color: #F5F7FA; background: #07080D; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+body, .app-shell { background: #07080D; }
+.sidebar, .panel-card, .metric-card, .triage-shortcut, .command-card, .modal-panel { background: #171920; border-color: #FFFFFF16; }
+.topbar { background: rgba(7,8,13,.88); border-color: #FFFFFF16; }
+.brand b, .brand em, .topbar-title b, h1, h2, h3, h4, strong { font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+.eyebrow, .topbar-title span, .order-title span, .order-value span, .profile-chip small, .sidebar-label { font-family: "DM Mono", ui-monospace, monospace; }
+button, input, textarea, select { font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+.button-primary { background: linear-gradient(135deg, #71DED0, #5FB8C3); color: #07080D; }
+.global-search { display:flex; align-items:center; gap:8px; width:min(360px, 32vw); color:#70E9D7; }
+.global-search input { min-height:36px; padding:8px 10px; background:#171920; border-color:#FFFFFF16; }
+.order-actions { display:flex; gap:6px; align-items:center; }
+.document-notes-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; }
+.payment-strip, .payment-row { display:flex; align-items:center; gap:10px; padding:12px 0; border-top:1px solid #FFFFFF16; }
+.payment-strip > div { flex:1; display:grid; gap:3px; }
+.payment-strip small { color:#A4A9B5; }
+.payment-row input { min-height:36px; }
+.payment-row input:nth-child(1) { flex:1; }
+.payment-row input:nth-child(2) { width:130px; }
+.payment-row input:nth-child(3) { width:150px; }
+@media (max-width: 760px) { .global-search { display:none; } .document-notes-grid { grid-template-columns:1fr; } .payment-strip { align-items:flex-start; flex-wrap:wrap; } .payment-strip > div { min-width:100%; } .payment-row { display:grid; grid-template-columns:1fr 1fr; } .payment-row input:nth-child(1) { grid-column:1 / -1; width:100%; } .payment-row input:nth-child(2), .payment-row input:nth-child(3) { width:100%; } }
+@media (prefers-reduced-motion: reduce) { .opening-orb { animation:none; } }
+
+/* Comando Técnico — Sistema Operacional: overrides oficiais */
+:root { color: #F5F7FA; background: #07080D; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+body, .app-shell { background: #07080D; }
+.sidebar, .panel-card, .metric-card, .triage-shortcut, .command-card, .modal-panel { background: #171920; border-color: #FFFFFF16; }
+.topbar { background: rgba(7,8,13,.88); border-color: #FFFFFF16; }
+.brand b, .brand em, .topbar-title b, h1, h2, h3, h4, strong { font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+.eyebrow, .topbar-title span, .order-title span, .order-value span, .profile-chip small, .sidebar-label { font-family: "DM Mono", ui-monospace, monospace; }
+button, input, textarea, select { font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+.button-primary { background: linear-gradient(135deg, #71DED0, #5FB8C3); color: #07080D; }
+.global-search { display:flex; align-items:center; gap:8px; width:min(360px, 32vw); color:#70E9D7; }
+.global-search input { min-height:36px; padding:8px 10px; background:#171920; border-color:#FFFFFF16; }
+.order-actions { display:flex; gap:6px; align-items:center; }
+.document-notes-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; }
+.payment-strip, .payment-row { display:flex; align-items:center; gap:10px; padding:12px 0; border-top:1px solid #FFFFFF16; }
+.payment-strip > div { flex:1; display:grid; gap:3px; }
+.payment-strip small { color:#A4A9B5; }
+.payment-row input { min-height:36px; }
+.payment-row input:nth-child(1) { flex:1; }
+.payment-row input:nth-child(2) { width:130px; }
+.payment-row input:nth-child(3) { width:150px; }
+@media (max-width: 760px) { .global-search { display:none; } .document-notes-grid { grid-template-columns:1fr; } .payment-strip { align-items:flex-start; flex-wrap:wrap; } .payment-strip > div { min-width:100%; } .payment-row { display:grid; grid-template-columns:1fr 1fr; } .payment-row input:nth-child(1) { grid-column:1 / -1; width:100%; } .payment-row input:nth-child(2), .payment-row input:nth-child(3) { width:100%; } }
+@media (prefers-reduced-motion: reduce) { .opening-orb { animation:none; } }
+
+/* Comando Técnico — Sistema Operacional: overrides oficiais */
+:root { color: #F5F7FA; background: #07080D; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+body, .app-shell { background: #07080D; }
+.sidebar, .panel-card, .metric-card, .triage-shortcut, .command-card, .modal-panel { background: #171920; border-color: #FFFFFF16; }
+.topbar { background: rgba(7,8,13,.88); border-color: #FFFFFF16; }
+.brand b, .brand em, .topbar-title b, h1, h2, h3, h4, strong { font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+.eyebrow, .topbar-title span, .order-title span, .order-value span, .profile-chip small, .sidebar-label { font-family: "DM Mono", ui-monospace, monospace; }
+button, input, textarea, select { font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+.button-primary { background: linear-gradient(135deg, #71DED0, #5FB8C3); color: #07080D; }
+.global-search { display:flex; align-items:center; gap:8px; width:min(360px, 32vw); color:#70E9D7; }
+.global-search input { min-height:36px; padding:8px 10px; background:#171920; border-color:#FFFFFF16; }
+.order-actions { display:flex; gap:6px; align-items:center; }
+.document-notes-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; }
+.payment-strip, .payment-row { display:flex; align-items:center; gap:10px; padding:12px 0; border-top:1px solid #FFFFFF16; }
+.payment-strip > div { flex:1; display:grid; gap:3px; }
+.payment-strip small { color:#A4A9B5; }
+.payment-row input { min-height:36px; }
+.payment-row input:nth-child(1) { flex:1; }
+.payment-row input:nth-child(2) { width:130px; }
+.payment-row input:nth-child(3) { width:150px; }
+@media (max-width: 760px) { .global-search { display:none; } .document-notes-grid { grid-template-columns:1fr; } .payment-strip { align-items:flex-start; flex-wrap:wrap; } .payment-strip > div { min-width:100%; } .payment-row { display:grid; grid-template-columns:1fr 1fr; } .payment-row input:nth-child(1) { grid-column:1 / -1; width:100%; } .payment-row input:nth-child(2), .payment-row input:nth-child(3) { width:100%; } }
+@media (prefers-reduced-motion: reduce) { .opening-orb { animation:none; } }

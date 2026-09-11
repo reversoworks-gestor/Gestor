@@ -69,6 +69,18 @@ export type OrderLine = {
   description: string;
 };
 
+export type Payment = {
+  id: string;
+  method: string;
+  amount: number;
+  date: string;
+};
+export type Attachment = {
+  name: string;
+  storagePath?: string;
+  size?: number;
+  contentType?: string;
+};
 export type Order = {
   id: string;
   documentType: "Orçamento" | "Invoice";
@@ -89,6 +101,8 @@ export type Order = {
   taxRate?: number;
   publicNote?: string;
   privateNote?: string;
+  payments?: Payment[];
+  attachments?: Attachment[];
   invoiceId?: string;
   createdAt: string;
 };
