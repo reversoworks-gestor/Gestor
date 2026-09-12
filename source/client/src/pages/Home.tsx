@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import type { User } from "firebase/auth";
 import {
-  addDoc,
   doc,
   onSnapshot,
   serverTimestamp,
   setDoc,
   updateDoc,
+  writeBatch,
 } from "firebase/firestore";
 import {
   AlertCircle,
@@ -27,6 +27,7 @@ import {
   LogOut,
   Menu,
   PackageOpen,
+  Paperclip,
   Pencil,
   Plus,
   Printer,
@@ -45,17 +46,25 @@ import {
   addWorkspaceEmail,
   auth,
   db,
+  uploadStlAttachment,
   workspaceCollection,
 } from "@/lib/firebase";
-import { currency, dateTimeLabel, dayLabel, displayName, formatUsPhone } from "@/lib/formatters";
-import { calculateOrderTotals, centsToAmount, printServicePrice } from "@/lib/finance";
+import { currency, dayLabel, displayName, formatUsPhone, greetingForEmail, splitClientName } from "@/lib/formatters";
+import { calculateOrderTotals, centsToAmount, printServicePrice, toCents, validatePayments } from "@/lib/finance";
+import { createInvoiceFromEstimate, isEstimate, nextFutureOrder, normalizeExpense, normalizeOrderMoney, unifiedSearch } from "@/lib/documents";
+import { downloadInvoicePdf } from "@/lib/pdf";
+import DocumentDialog, { NewDocumentDialog } from "@/components/DocumentDialog";
 import type {
+  Attachment,
   CalendarEvent,
   Client,
+  Expense,
   MaintenanceEntry,
   Material,
   Order,
   OrderLine,
+  Part,
+  PartRevision,
   Payment,
   Printer as PrinterModel,
   Triage,
@@ -120,6 +129,7 @@ const serviceLabels: Record<OrderLine["service"], string> = {
   post: "Pós-processamento",
   hardware: "Hardware / componentes",
   shipping: "Envio",
+  custom: "Personalizado",
 };
 
 function id(prefix: string) {
@@ -252,10 +262,10 @@ function calendarTemplate(): CalendarEvent {
   };
 }
 
-function orderTemplate(material: Material): Order {
+function orderTemplate(material: Material, documentType: "Estimativa" | "Invoice" = "Estimativa"): Order {
   return {
     id: id("order"),
-    documentType: "Orçamento",
+    documentType,
     status: "Rascunho",
     clientId: "",
     clientName: "",
@@ -272,8 +282,21 @@ function orderTemplate(material: Material): Order {
     attachments: [],
     lines: [],
     total: 0,
+    totalCents: 0,
     createdAt: nowIso(),
   };
+}
+
+function expenseTemplate(): Expense {
+  return { id: id("expense"), title: "", category: "Operação", vendor: "", amount: 0, amountCents: 0, date: todayInputValue(), notes: "", createdAt: nowIso() };
+}
+
+function partTemplate(): Part {
+  return { id: id("part"), name: "", invoiceIds: [], createdAt: nowIso() };
+}
+
+function revisionTemplate(partId: string): PartRevision {
+  return { id: id("revision"), partId, title: "", version: "1", notes: "", attachments: [], invoiceIds: [], createdAt: nowIso() };
 }
 
 function TriageField({
@@ -309,7 +332,7 @@ export default function Home({
 }) {
   const [view, setView] = useState<ViewId>(() => {
     const requested = new URLSearchParams(window.location.search).get("view") as ViewId;
-    const validViews: ViewId[] = ["overview", "orders", "triage", "clients", "calendar", "inventory", "printers", "settings"];
+    const validViews: ViewId[] = ["overview", "estimates", "invoices", "orders", "production", "triage", "clients", "calendar", "inventory", "printers", "parts", "finance", "expenses", "more", "settings"];
     return preview && validViews.includes(requested) ? requested : "overview";
   });
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -319,11 +342,18 @@ export default function Home({
   const [triages, setTriages] = useState<Triage[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [printers, setPrinters] = useState<PrinterModel[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [parts, setParts] = useState<Part[]>([]);
+  const [revisions, setRevisions] = useState<PartRevision[]>([]);
   const [clientModal, setClientModal] = useState<Client | null>(null);
   const [materialModal, setMaterialModal] = useState<Material | null>(null);
   const [calendarModal, setCalendarModal] = useState<CalendarEvent | null>(null);
   const [maintenancePrinter, setMaintenancePrinter] = useState<PrinterModel | null>(null);
   const [orderModal, setOrderModal] = useState<Order | null>(null);
+  const [newDocumentModal, setNewDocumentModal] = useState(false);
+  const [expenseModal, setExpenseModal] = useState<Expense | null>(null);
+  const [partModal, setPartModal] = useState<Part | null>(null);
+  const [revisionModal, setRevisionModal] = useState<PartRevision | null>(null);
   const [triageErrors, setTriageErrors] = useState<string[]>([]);
   const [triageForm, setTriageForm] = useState({
     piece: "",
@@ -341,6 +371,7 @@ export default function Home({
   const activeMaterials = materials.length ? materials : defaultMaterials;
   const activePrinters = printers.length ? printers : defaultPrinters;
   const userName = displayName(user?.email);
+  const greeting = greetingForEmail(user?.email);
 
   useEffect(() => {
     if (!user || preview) return;
@@ -351,6 +382,9 @@ export default function Home({
       ["triages", setTriages],
       ["calendar", setEvents],
       ["printers", setPrinters],
+      ["expenses", setExpenses],
+      ["parts", setParts],
+      ["partRevisions", setRevisions],
     ].map(([name, setter]) =>
       onSnapshot(
         workspaceCollection(name as string),
@@ -371,11 +405,7 @@ export default function Home({
     return () => window.clearTimeout(timeout);
   }, [notice]);
 
-  const matchingClients = useMemo(() => {
-    const term = globalSearch.trim().toLocaleLowerCase();
-    if (term.length < 2) return clients;
-    return clients.filter((client) => `${client.name} ${client.email} ${client.company}`.toLocaleLowerCase().includes(term));
-  }, [clients, globalSearch]);
+  const searchResults = useMemo(() => unifiedSearch(globalSearch, clients, orders), [clients, globalSearch, orders]);
   const schedule = useMemo(
     () => [...events].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
     [events],
@@ -384,6 +414,11 @@ export default function Home({
   const outstanding = orders
     .filter((order) => order.status !== "Aprovado" && order.status !== "Em produção")
     .reduce((sum, order) => sum + Number(order.total || 0), 0);
+  const nextAction = useMemo(() => nextFutureOrder(orders), [orders]);
+  const stlAttachments = useMemo(() => orders.flatMap((order) => (order.attachments ?? []).filter((attachment) => attachment.name.toLowerCase().endsWith(".stl")).map((attachment) => ({ order, attachment }))), [orders]);
+  const invoiceTotalCents = orders.filter((order) => order.documentType === "Invoice").reduce((sum, order) => sum + (order.totalCents ?? toCents(order.total)), 0);
+  const receivedTotalCents = orders.filter((order) => order.documentType === "Invoice").flatMap((order) => order.payments ?? []).reduce((sum, payment) => sum + (payment.amountCents ?? toCents(payment.amount)), 0);
+  const expenseTotalCents = expenses.reduce((sum, expense) => sum + (expense.amountCents ?? toCents(expense.amount)), 0);
 
   useEffect(() => {
     if (!preview) return;
@@ -393,7 +428,8 @@ export default function Home({
 
   async function saveRecord(collectionName: string, record: { id: string; [key: string]: unknown }) {
     if (preview) return;
-    const { id: recordId, ...data } = record;
+    const { id: recordId, ...rawData } = record;
+    const data = JSON.parse(JSON.stringify(rawData)) as Record<string, unknown>;
     await setDoc(doc(workspaceCollection(collectionName), recordId), {
       ...data,
       updatedAt: serverTimestamp(),
@@ -426,7 +462,8 @@ export default function Home({
       setNotice("Informe o nome do cliente para salvar o cadastro.");
       return;
     }
-    const saved = { ...client, phone: formatUsPhone(client.phone), updatedAt: nowIso() };
+    const nameParts = splitClientName(client.name);
+    const saved = { ...client, ...nameParts, phone: formatUsPhone(client.phone), updatedAt: nowIso() };
     try {
       if (preview) {
         setClients((current) => {
@@ -525,6 +562,7 @@ export default function Home({
       service,
       kind: "service",
       taxable: false,
+      unit: "horas",
       label: serviceLabels[service],
       quantity: 1,
       unitPrice: 0,
@@ -532,55 +570,118 @@ export default function Home({
     };
     if (service === "scan") return { ...basic, quantity: 1, unitPrice: 85, description: "1 hora de escaneamento" };
     if (service === "cad") return { ...basic, quantity: 1, unitPrice: 75, description: "1 hora de CAD" };
-    if (service === "print") return { ...basic, quantity: 1, unitPrice: centsToAmount(printServicePrice({ pricePerGram: material.pricePerGram, weightGrams: 100, hours: 1 })), description: "1 h de máquina + 100 g de material" };
+    if (service === "print") {
+      const unitPriceCents = printServicePrice({ pricePerGram: material.pricePerGram, weightGrams: 100, hours: 1 });
+      return { ...basic, quantity: 1, unitPrice: centsToAmount(unitPriceCents), unitPriceCents, materialId: material.id, pricePerGram: material.pricePerGram, weightGrams: 100, printHours: 1, hourlyRate: 2.5, hourlyRateCents: 250, description: "1 h de máquina + 100 g de material" };
+    }
     if (service === "post") return { ...basic, quantity: 1, unitPrice: 45, description: "Acabamento e preparação" };
-    if (service === "hardware") return { ...basic, quantity: 1, unitPrice: 0, description: "Componentes aplicados no preenchimento" };
-    return { ...basic, quantity: 1, unitPrice: 0, description: "Frete definido no preenchimento" };
+    if (service === "hardware") return { ...basic, kind: "item", taxable: true, unit: "unidades", quantity: 1, unitPrice: 0, description: "Componentes aplicados no preenchimento" };
+    if (service === "shipping") return { ...basic, quantity: 1, unitPrice: 0, description: "Frete definido no preenchimento" };
+    return basic;
   }
 
-  async function saveOrder(order: Order) {
+  function prepareOrder(order: Order) {
     if (!order.clientId || !order.title.trim()) {
       setNotice("Selecione o cliente e descreva o item para salvar o documento.");
-      return;
+      return null;
     }
     const material = activeMaterials.find((item) => item.id === order.materialId) ?? activeMaterials[0];
     const client = clients.find((item) => item.id === order.clientId);
-    const totals = calculateOrderTotals(order.lines, order.taxRate ?? 0);
-    const total = centsToAmount(totals.totalCents);
-    const saved: Order = {
+    const normalized = normalizeOrderMoney({
       ...order,
       clientName: client?.name ?? order.clientName,
+      clientSnapshot: client ? {
+        name: client.name,
+        firstName: client.firstName,
+        lastName: client.lastName,
+        email: client.email,
+        phone: client.phone,
+        company: client.company,
+        address: client.address,
+      } : order.clientSnapshot,
       materialName: material.name,
-      subtotal: centsToAmount(totals.subtotalCents),
-      tax: centsToAmount(totals.taxCents),
-      total,
       createdAt: order.createdAt || nowIso(),
-    };
+      updatedAt: nowIso(),
+    });
+    const paymentError = validatePayments(normalized.totalCents ?? 0, normalized.payments ?? []);
+    if (paymentError) {
+      setNotice(paymentError);
+      return null;
+    }
+    return { saved: normalized, material };
+  }
+
+  async function saveOrder(order: Order): Promise<boolean> {
+    const prepared = prepareOrder(order);
+    if (!prepared) return false;
+    const { saved, material } = prepared;
+    const previous = orders.find((item) => item.id === saved.id);
+    const materialDelta = saved.materialGrams - (previous?.materialGrams ?? 0);
     try {
-      if (preview) setOrders((current) => [saved, ...current]);
+      if (preview) setOrders((current) => current.some((item) => item.id === saved.id) ? current.map((item) => item.id === saved.id ? saved : item) : [saved, ...current]);
       else {
         if (!materials.some((item) => item.id === material.id)) await saveRecord("materials", material);
         await saveRecord("orders", saved);
-        if (saved.materialGrams > 0) {
+        if (materialDelta !== 0) {
           await updateDoc(doc(db, "workspaces", "reverso-private", "materials", material.id), {
-            availableGrams: Math.max(0, material.availableGrams - saved.materialGrams),
+            availableGrams: Math.max(0, material.availableGrams - materialDelta),
             updatedAt: serverTimestamp(),
           });
         }
       }
       await recordProcess(
         "order",
-        `${saved.documentType} criado: ${saved.title}`,
-        `${saved.clientName} · ${currency(total)} · ${saved.materialGrams || 0} g de ${material.name}.`,
+        `${saved.documentType} ${previous ? "atualizada" : "criada"}: ${saved.title}`,
+        `${saved.clientName} · ${currency(saved.total)} · ${saved.materialGrams || 0} g de ${material.name}.`,
       );
-      if (saved.materialGrams > 0) {
-        await recordProcess("inventory", `Consumo reservado: ${material.name}`, `${saved.materialGrams} g alocados ao documento ${saved.title}.`);
+      if (materialDelta !== 0) {
+        await recordProcess("inventory", `Reserva ajustada: ${material.name}`, `${materialDelta > 0 ? "+" : ""}${materialDelta} g no documento ${saved.title}.`);
       }
       setOrderModal(null);
-      setNotice(`${saved.documentType} salvo; consumo e processo registrados visualmente no calendário.`);
+      setNotice(`${saved.documentType} salva com valores normalizados em centavos.`);
+      return true;
     } catch {
       setNotice("Não foi possível salvar o documento. Verifique o material e sua conexão.");
+      return false;
     }
+  }
+
+  async function convertOrderToInvoice(order: Order): Promise<boolean> {
+    const prepared = prepareOrder(order);
+    if (!prepared || !isEstimate(prepared.saved)) return false;
+    const existingInvoice = prepared.saved.invoiceId ? orders.find((item) => item.id === prepared.saved.invoiceId) : undefined;
+    if (existingInvoice) {
+      setOrderModal({ ...existingInvoice });
+      setNotice("Esta estimativa já possui uma invoice vinculada.");
+      return true;
+    }
+    const converted = createInvoiceFromEstimate(prepared.saved, id("invoice"), nowIso());
+    try {
+      if (preview) {
+        setOrders((current) => [converted.invoice, ...current.filter((item) => item.id !== converted.estimate.id), converted.estimate]);
+      } else {
+        const batch = writeBatch(db);
+        const estimateData = JSON.parse(JSON.stringify((({ id: _estimateId, ...data }: Order) => data)(converted.estimate)));
+        const invoiceData = JSON.parse(JSON.stringify((({ id: _invoiceId, ...data }: Order) => data)(converted.invoice)));
+        batch.set(doc(workspaceCollection("orders"), converted.estimate.id), { ...estimateData, updatedAt: serverTimestamp() }, { merge: true });
+        batch.set(doc(workspaceCollection("orders"), converted.invoice.id), { ...invoiceData, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+        await batch.commit();
+      }
+      await recordProcess("order", `Invoice criada: ${converted.invoice.title}`, `Convertida da estimativa ${converted.estimate.id}, preservando pagamentos, notas e anexos.`);
+      setOrderModal({ ...converted.invoice });
+      setNotice("Invoice criada e vinculada à estimativa sem perda de dados.");
+      return true;
+    } catch {
+      setNotice("Não foi possível converter a estimativa em invoice.");
+      return false;
+    }
+  }
+
+  async function attachStl(order: Order, file: File): Promise<Attachment> {
+    if (preview) return { id: id("attachment"), name: file.name, size: file.size, contentType: "model/stl", uploadedAt: nowIso() };
+    const attachment = await uploadStlAttachment(order.id, file);
+    setNotice("Arquivo .STL enviado. Salve o documento para persistir o vínculo.");
+    return attachment;
   }
 
   async function saveCalendarEvent(event: CalendarEvent) {
@@ -619,6 +720,56 @@ export default function Home({
     }
   }
 
+  async function saveExpense(expense: Expense) {
+    if (!expense.title.trim() || !expense.date || !Number.isFinite(expense.amount) || expense.amount < 0) {
+      setNotice("Informe título, data e um valor de despesa válido.");
+      return;
+    }
+    const saved = { ...normalizeExpense(expense), updatedAt: nowIso() };
+    try {
+      if (preview) setExpenses((current) => current.some((item) => item.id === saved.id) ? current.map((item) => item.id === saved.id ? saved : item) : [saved, ...current]);
+      else await saveRecord("expenses", saved);
+      setExpenseModal(null);
+      setNotice("Despesa salva e persistida.");
+    } catch {
+      setNotice("Não foi possível salvar a despesa.");
+    }
+  }
+
+  async function savePart(part: Part) {
+    if (!part.name.trim()) {
+      setNotice("Informe o nome do objeto.");
+      return;
+    }
+    const saved = { ...part, updatedAt: nowIso() };
+    try {
+      if (preview) setParts((current) => current.some((item) => item.id === saved.id) ? current.map((item) => item.id === saved.id ? saved : item) : [saved, ...current]);
+      else await saveRecord("parts", saved);
+      setPartModal(null);
+      setNotice("Peça salva com seus vínculos de invoice.");
+    } catch {
+      setNotice("Não foi possível salvar a peça.");
+    }
+  }
+
+  async function saveRevision(revision: PartRevision) {
+    if (!revision.partId || !revision.title.trim() || !revision.version.trim()) {
+      setNotice("Selecione a peça e informe título e versão.");
+      return;
+    }
+    const saved = { ...revision, updatedAt: nowIso() };
+    try {
+      if (preview) setRevisions((current) => current.some((item) => item.id === saved.id) ? current.map((item) => item.id === saved.id ? saved : item) : [saved, ...current]);
+      else await saveRecord("partRevisions", saved);
+      const part = parts.find((item) => item.id === revision.partId);
+      if (part) await savePart({ ...part, currentRevisionId: revision.id, invoiceIds: Array.from(new Set([...part.invoiceIds, ...revision.invoiceIds])) });
+      setRevisionModal(null);
+      setNotice("Revisão salva com arquivo, notas e vínculos.");
+    } catch {
+      setNotice("Não foi possível salvar a revisão.");
+    }
+  }
+
   async function authorizeTeamMember() {
     if (!teamEmail.trim()) return;
     try {
@@ -631,15 +782,18 @@ export default function Home({
   }
 
   const navigation: { id: ViewId; label: string; icon: typeof Box }[] = [
-    { id: "overview", label: "Visão geral", icon: Box },
-    { id: "orders", label: "Estimativas / Invoices", icon: FileText },
+    { id: "overview", label: "Início", icon: Box },
+    { id: "estimates", label: "Estimativas", icon: FileText },
+    { id: "invoices", label: "Invoices", icon: CircleDollarSign },
+    { id: "production", label: "Produção", icon: HardHat },
     { id: "triage", label: "Triagem técnica", icon: ClipboardCheck },
-    { id: "clients", label: "Clientes", icon: UsersRound },
-    { id: "calendar", label: "Calendário", icon: CalendarDays },
-    { id: "inventory", label: "Estoque", icon: Layers3 },
-    { id: "printers", label: "Impressoras", icon: Printer },
-    { id: "settings", label: "Ajustes", icon: Settings2 },
+    { id: "more", label: "Mais", icon: Menu },
   ];
+  const mobileNavigation = navigation.filter((item) => ["overview", "production", "estimates", "triage", "more"].includes(item.id));
+  const viewLabels: Partial<Record<ViewId, string>> = {
+    clients: "Clientes", calendar: "Calendário", inventory: "Estoque", printers: "Impressoras",
+    parts: "Peças e revisões", finance: "Financeiro", expenses: "Despesas", settings: "Ajustes", orders: "Estimativas",
+  };
 
   return (
     <div className="app-shell">
@@ -667,21 +821,30 @@ export default function Home({
       <main className="main-content">
         <header className="topbar">
           <button type="button" className="mobile-menu icon-button" aria-label="Abrir menu" onClick={() => setMobileOpen(true)}><Menu size={20} /></button>
-          <div className="topbar-title"><span>COMANDO TÉCNICO / 01</span><b>{navigation.find((item) => item.id === view)?.label}</b></div>
+          <div className="topbar-title"><span>COMANDO TÉCNICO / 01</span><b>{navigation.find((item) => item.id === view)?.label ?? viewLabels[view]}</b></div>
           <label className="global-search"><Search size={15} /><input aria-label="Busca unificada" value={globalSearch} onChange={(event) => setGlobalSearch(event.target.value)} placeholder="Buscar estimativas, invoices ou clientes" /></label>
           <div className="topbar-actions">
             <button type="button" className="button button-quiet" onClick={() => navigate("calendar")}><CalendarDays size={17} /><span>Calendário</span></button>
-            <button type="button" className="button button-primary" onClick={() => setOrderModal(orderTemplate(activeMaterials[0]))}><Plus size={18} /> Novo pedido</button>
+            <button type="button" className="button button-primary" onClick={() => setNewDocumentModal(true)}><Plus size={18} /> Novo pedido</button>
           </div>
         </header>
+
+        {globalSearch.trim().length >= 2 && (
+          <section className="view">
+            <article className="panel-card">
+              <div className="panel-title"><div><p className="eyebrow">Busca unificada</p><h3>Estimativas, invoices e clientes</h3></div><button type="button" className="icon-button" aria-label="Limpar busca" onClick={() => setGlobalSearch("")}><X size={16} /></button></div>
+              {searchResults.length ? <div className="stack-list">{searchResults.map((result) => <button type="button" className="inline-action" key={`${result.kind}-${result.id}`} onClick={() => { if (result.kind === "client") setClientModal({ ...result.record }); else setOrderModal({ ...result.record }); setGlobalSearch(""); }}><span><b>{result.label}</b><small>{result.detail}</small></span><ChevronRight size={16} /></button>)}</div> : <p className="muted-copy">Nenhum resultado encontrado.</p>}
+            </article>
+          </section>
+        )}
 
         {view === "overview" && (
           <section className="view overview-view">
             <SectionHeader
-              eyebrow={`Olá, ${userName}`}
+              eyebrow={greeting}
               title="Controle a operação sem perder o ritmo."
               description="Pedidos, produção e memória técnica conectados em um único espaço de trabalho."
-              action={<button type="button" className="button button-primary" onClick={() => setOrderModal(orderTemplate(activeMaterials[0]))}><FilePlus2 size={18} /> Novo documento</button>}
+              action={<button type="button" className="button button-primary" onClick={() => setNewDocumentModal(true)}><FilePlus2 size={18} /> Novo pedido</button>}
             />
             <div className="hero-grid">
               <article className="command-card">
@@ -690,7 +853,7 @@ export default function Home({
                   <h2>Da referência física à peça possível.</h2>
                   <p>Inicie um documento, registre uma triagem ou acompanhe o que a operação pede hoje.</p>
                   <div className="command-actions">
-                    <button type="button" className="button button-primary" onClick={() => setOrderModal(orderTemplate(activeMaterials[0]))}>Criar pedido <ChevronRight size={16} /></button>
+                    <button type="button" className="button button-primary" onClick={() => setNewDocumentModal(true)}>Novo pedido <ChevronRight size={16} /></button>
                     <button type="button" className="button button-secondary" onClick={() => navigate("triage")}><ClipboardCheck size={16} /> Executar triagem</button>
                   </div>
                 </div>
@@ -713,6 +876,7 @@ export default function Home({
             <div className="overview-bottom">
               <article className="panel-card agenda-panel">
                 <div className="panel-title"><div><p className="eyebrow">Agenda de produção</p><h3>Últimos movimentos</h3></div><button type="button" className="button button-quiet" onClick={() => navigate("calendar")}>Ver calendário</button></div>
+                {nextAction && <div className="empty-state"><div className="empty-icon"><Clock3 size={20} /></div><div><strong>Próxima ação · {nextAction.dueDate}</strong><p>{nextAction.clientName} · {nextAction.title}</p></div><button type="button" className="button button-secondary" onClick={() => setOrderModal({ ...nextAction })}>Continuar pedido</button></div>}
                 {schedule.length ? <div className="timeline-list">{schedule.slice(0, 4).map((event) => <div className="timeline-item" key={event.id}><span className={`event-dot event-${event.type}`} /><div><b>{event.title}</b><p>{event.detail}</p></div><time>{dayLabel(event.date)}</time></div>)}</div> : <EmptyState icon={CalendarDays} title="Sua agenda está livre" body="Todo pedido, triagem, consumo ou manutenção aparecerá aqui como registro visual." action={<button type="button" className="button button-secondary" onClick={() => setCalendarModal(calendarTemplate())}>Adicionar evento</button>} />}
               </article>
               <article className="panel-card printer-summary">
@@ -723,7 +887,7 @@ export default function Home({
             </div>
             <div className="quick-cards">
               <button type="button" onClick={() => navigate("clients")}><UsersRound size={18} /><span>Clientes</span><small>{clients.length} cadastrados</small></button>
-              <button type="button" onClick={() => navigate("inventory")}><PackageOpen size={18} /><span>Estoque</span><small>{activeMaterials.length} materiais</small></button>
+              <button type="button" onClick={() => navigate("parts")}><PackageOpen size={18} /><span>Peças</span><small>{stlAttachments.length} arquivos .STL</small></button>
               <button type="button" onClick={() => navigate("calendar")}><CalendarDays size={18} /><span>Calendário</span><small>{events.length} logs</small></button>
               <button type="button" onClick={() => navigate("settings")}><Settings2 size={18} /><span>Ajustes</span><small>Equipe e acesso</small></button>
             </div>
@@ -761,16 +925,24 @@ export default function Home({
           </section>
         )}
 
-        {view === "orders" && (
+        {(view === "orders" || view === "estimates" || view === "invoices") && (
           <section className="view">
-            <SectionHeader eyebrow="Comercial e produção" title="Pedidos, orçamentos e invoices" description="Cada documento conecta cliente, escopo, material, datas e custo técnico." action={<button type="button" className="button button-primary" onClick={() => setOrderModal(orderTemplate(activeMaterials[0]))}><Plus size={17} /> Novo documento</button>} />
+            <SectionHeader eyebrow="Comercial" title={view === "invoices" ? "Invoices" : "Estimativas"} description="Documentos conectados ao cliente, itens, serviços, pagamentos, notas e arquivos." action={<button type="button" className="button button-primary" onClick={() => setNewDocumentModal(true)}><Plus size={17} /> Novo pedido</button>} />
             <div className="order-list">
               {orders.filter((order) => {
                 const term = globalSearch.trim().toLocaleLowerCase();
-                return !term || `${order.title} ${order.clientName} ${order.documentType}`.toLocaleLowerCase().includes(term);
-              }).map((order) => <article className="order-card" key={order.id}><div className="order-symbol">{order.documentType === "Invoice" ? <CircleDollarSign size={21} /> : <FileText size={21} />}</div><div className="order-main"><div className="order-title"><span>{order.documentType}</span><h3>{order.title}</h3></div><p>{order.clientName} · {order.materialName || "Material não definido"}</p><small><Clock3 size={13} /> Entrega: {order.dueDate || "a definir"}</small></div><div className="order-value"><strong>{currency(order.total)}</strong><span>{order.status}</span></div><div className="order-actions"><button className="icon-button" type="button" aria-label="Abrir documento" onClick={() => setOrderModal(order)}><Eye size={16} /></button><button className="icon-button" type="button" aria-label="Imprimir documento" onClick={() => window.print()}><FileDown size={16} /></button></div></article>)}
-              {!orders.length && <EmptyState icon={FilePlus2} title="Nenhum documento criado" body="Crie um orçamento ou invoice com serviços, material, datas e notas do processo." action={<button type="button" className="button button-primary" onClick={() => setOrderModal(orderTemplate(activeMaterials[0]))}>Criar documento</button>} />}
+                const typeMatches = view === "invoices" ? order.documentType === "Invoice" : isEstimate(order);
+                return typeMatches && (!term || `${order.title} ${order.clientName} ${order.documentType}`.toLocaleLowerCase().includes(term));
+              }).map((order) => <article className="order-card" key={order.id}><div className="order-symbol">{order.documentType === "Invoice" ? <CircleDollarSign size={21} /> : <FileText size={21} />}</div><div className="order-main"><div className="order-title"><span>{isEstimate(order) ? "Estimativa" : "Invoice"}</span><h3>{order.title}</h3></div><p>{order.clientName} · {order.materialName || "Material não definido"}</p><small><Clock3 size={13} /> Entrega: {order.dueDate || "a definir"}</small></div><div className="order-value"><strong>{currency(order.total)}</strong><span>{order.status}</span></div><div className="order-actions"><button className="icon-button" type="button" aria-label="Abrir documento" onClick={() => setOrderModal({ ...order })}><Eye size={16} /></button>{order.documentType === "Invoice" && <button className="icon-button" type="button" aria-label="Imprimir invoice" onClick={() => downloadInvoicePdf(order)}><FileDown size={16} /></button>}</div></article>)}
+              {!orders.some((order) => view === "invoices" ? order.documentType === "Invoice" : isEstimate(order)) && <EmptyState icon={FilePlus2} title={`Nenhuma ${view === "invoices" ? "invoice" : "estimativa"} criada`} body="Crie um documento com itens, serviços, pagamentos, notas e anexos." action={<button type="button" className="button button-primary" onClick={() => setNewDocumentModal(true)}>Criar documento</button>} />}
             </div>
+          </section>
+        )}
+
+        {view === "production" && (
+          <section className="view">
+            <SectionHeader eyebrow="Produção" title="Invoices em produção" description="Selecione uma invoice para abrir detalhes completos, modificar, anexar arquivos ou imprimir." />
+            <div className="order-list">{orders.filter((order) => order.documentType === "Invoice").map((order) => <article className="order-card" key={order.id}><div className="order-symbol"><HardHat size={21} /></div><div className="order-main"><div className="order-title"><span>{order.status}</span><h3>{order.title}</h3></div><p>{order.clientName}</p><small><Clock3 size={13} /> Entrega: {order.dueDate || "a definir"}</small></div><div className="order-value"><strong>{currency(order.total)}</strong><span>{(order.attachments ?? []).length} anexo(s)</span></div><div className="order-actions"><button className="icon-button" type="button" aria-label="Abrir invoice" onClick={() => setOrderModal({ ...order })}><Eye size={16} /></button><button className="icon-button" type="button" aria-label="Imprimir invoice" onClick={() => downloadInvoicePdf(order)}><FileDown size={16} /></button></div></article>)}</div>
           </section>
         )}
 
@@ -800,6 +972,39 @@ export default function Home({
           </section>
         )}
 
+        {view === "parts" && (
+          <section className="view">
+            <SectionHeader eyebrow="Memória técnica" title="Peças e revisões" description="Objetos, versões, arquivos .STL, notas e invoices relacionados." action={<button type="button" className="button button-primary" onClick={() => setPartModal(partTemplate())}><Plus size={17} /> Nova peça</button>} />
+            <div className="order-list">
+              {parts.map((part) => <article className="panel-card" key={part.id}><div className="panel-title"><div><p className="eyebrow">Objeto</p><h3>{part.name}</h3></div><div className="order-actions"><button type="button" className="button button-secondary" onClick={() => setRevisionModal(revisionTemplate(part.id))}><Plus size={15} /> Revisão</button><button type="button" className="icon-button" aria-label={`Modificar ${part.name}`} onClick={() => setPartModal({ ...part })}><Pencil size={16} /></button></div></div><div className="stack-list">{revisions.filter((revision) => revision.partId === part.id).map((revision) => <button type="button" className="inline-action" key={revision.id} onClick={() => setRevisionModal({ ...revision, attachments: [...revision.attachments], invoiceIds: [...revision.invoiceIds] })}><span><b>{revision.title} · v{revision.version}</b><small>{revision.notes || "Sem notas"} · {revision.attachments.length} arquivo(s)</small></span><ChevronRight size={16} /></button>)}</div></article>)}
+              {!!stlAttachments.length && <article className="panel-card"><div className="panel-title"><div><p className="eyebrow">Arquivos anexados</p><h3>Peças .STL de invoices</h3></div></div><div className="stack-list">{stlAttachments.filter(({ order }) => order.documentType === "Invoice").map(({ order, attachment }) => <button type="button" className="inline-action" key={`${order.id}-${attachment.id ?? attachment.name}`} onClick={() => setOrderModal({ ...order })}><span><b>{attachment.name}</b><small>{order.clientName} · {order.title}</small></span><ChevronRight size={16} /></button>)}</div></article>}
+              {!parts.length && !stlAttachments.length && <EmptyState icon={PackageOpen} title="Nenhuma peça registrada" body="Crie um objeto ou anexe um .STL a uma invoice para iniciar a memória técnica." />}
+            </div>
+          </section>
+        )}
+
+        {view === "finance" && (
+          <section className="view">
+            <SectionHeader eyebrow="Mais" title="Financeiro" description="Visão preservada de invoices, recebimentos e despesas." />
+            <div className="metric-grid"><article className="metric-card"><span>Invoices</span><strong>{currency(centsToAmount(invoiceTotalCents))}</strong><small>{orders.filter((order) => order.documentType === "Invoice").length} registros</small></article><article className="metric-card"><span>Recebido</span><strong>{currency(centsToAmount(receivedTotalCents))}</strong><small>Pagamentos registrados</small></article><article className="metric-card"><span>A receber</span><strong>{currency(centsToAmount(Math.max(0, invoiceTotalCents - receivedTotalCents)))}</strong><small>Saldo das invoices</small></article><article className="metric-card"><span>Despesas</span><strong>{currency(centsToAmount(expenseTotalCents))}</strong><small>{expenses.length} registros</small></article></div>
+            <div className="quick-cards"><button type="button" onClick={() => navigate("invoices")}><CircleDollarSign size={18} /><span>Invoices</span><small>Abrir documentos</small></button><button type="button" onClick={() => navigate("expenses")}><FileDown size={18} /><span>Despesas</span><small>Criar e modificar</small></button></div>
+          </section>
+        )}
+
+        {view === "expenses" && (
+          <section className="view">
+            <SectionHeader eyebrow="Financeiro" title="Despesas" description="Registros persistidos com categoria, fornecedor, valor e data." action={<button type="button" className="button button-primary" onClick={() => setExpenseModal(expenseTemplate())}><Plus size={17} /> Nova despesa</button>} />
+            <div className="order-list">{expenses.map((expense) => <article className="order-card" key={expense.id}><div className="order-symbol"><CircleDollarSign size={21} /></div><div className="order-main"><div className="order-title"><span>{expense.category}</span><h3>{expense.title}</h3></div><p>{expense.vendor || "Sem fornecedor"}</p><small>{expense.date}</small></div><div className="order-value"><strong>{currency(centsToAmount(expense.amountCents ?? toCents(expense.amount)))}</strong></div><button type="button" className="icon-button" aria-label={`Modificar ${expense.title}`} onClick={() => setExpenseModal({ ...expense })}><Pencil size={16} /></button></article>)}</div>
+          </section>
+        )}
+
+        {view === "more" && (
+          <section className="view">
+            <SectionHeader eyebrow="Navegação" title="Mais" description="Cadastros, financeiro, memória técnica e operação de apoio." />
+            <div className="quick-cards"><button type="button" onClick={() => navigate("clients")}><UsersRound size={18} /><span>Clientes</span><small>{clients.length} cadastrados</small></button><button type="button" onClick={() => navigate("finance")}><CircleDollarSign size={18} /><span>Financeiro</span><small>Invoices e despesas</small></button><button type="button" onClick={() => navigate("parts")}><PackageOpen size={18} /><span>Peças e revisões</span><small>{parts.length} objetos</small></button><button type="button" onClick={() => navigate("calendar")}><CalendarDays size={18} /><span>Calendário</span><small>{events.length} eventos</small></button><button type="button" onClick={() => navigate("inventory")}><Layers3 size={18} /><span>Estoque</span><small>{activeMaterials.length} materiais</small></button><button type="button" onClick={() => navigate("printers")}><Printer size={18} /><span>Impressoras</span><small>{activePrinters.length} máquinas</small></button><button type="button" onClick={() => navigate("settings")}><Settings2 size={18} /><span>Ajustes</span><small>Equipe e acesso</small></button></div>
+          </section>
+        )}
+
         {view === "settings" && (
           <section className="view">
             <SectionHeader eyebrow="Acesso privado" title="Equipe e configuração" description="Somente e-mails autorizados podem abrir os dados operacionais deste espaço." />
@@ -808,19 +1013,56 @@ export default function Home({
         )}
       </main>
 
-      <nav className="mobile-nav" aria-label="Navegação móvel">{navigation.slice(0, 5).map(({ id: navId, label, icon: Icon }) => <button key={navId} className={view === navId ? "mobile-active" : ""} type="button" onClick={() => navigate(navId)}><Icon size={19} /><span>{label === "Visão geral" ? "Início" : label.replace(" técnica", "")}</span></button>)}</nav>
+      <nav className="mobile-nav" aria-label="Navegação móvel">{mobileNavigation.map(({ id: navId, label, icon: Icon }) => <button key={navId} className={view === navId ? "mobile-active" : ""} type="button" onClick={() => navigate(navId)}><Icon size={19} /><span>{label.replace(" técnica", "")}</span></button>)}</nav>
 
       {clientModal && <ClientDialog client={clientModal} onChange={setClientModal} onClose={() => setClientModal(null)} onSave={saveClient} />}
       {materialModal && <MaterialDialog material={materialModal} onChange={setMaterialModal} onClose={() => setMaterialModal(null)} onSave={saveMaterial} />}
       {calendarModal && <CalendarDialog event={calendarModal} onChange={setCalendarModal} onClose={() => setCalendarModal(null)} onSave={saveCalendarEvent} />}
       {maintenancePrinter && <MaintenanceDialog printer={maintenancePrinter} onClose={() => setMaintenancePrinter(null)} onSave={saveMaintenance} />}
-      {orderModal && <OrderDialog order={orderModal} clients={clients} materials={activeMaterials} onChange={setOrderModal} onClose={() => setOrderModal(null)} onSave={saveOrder} createLine={createLine} />}
+      {newDocumentModal && <NewDocumentDialog onClose={() => setNewDocumentModal(false)} onSelect={(documentType) => { setNewDocumentModal(false); setOrderModal(orderTemplate(activeMaterials[0], documentType)); }} />}
+      {orderModal && <DocumentDialog order={orderModal} existing={orders.some((item) => item.id === orderModal.id)} authenticated={Boolean(user) && !preview} clients={clients} materials={activeMaterials} onChange={setOrderModal} onClose={() => setOrderModal(null)} onSave={saveOrder} onConvert={convertOrderToInvoice} onPrint={downloadInvoicePdf} onAttach={attachStl} createLine={createLine} />}
+      {expenseModal && <ExpenseDialog expense={expenseModal} onChange={setExpenseModal} onClose={() => setExpenseModal(null)} onSave={saveExpense} />}
+      {partModal && <PartDialog part={partModal} invoices={orders.filter((order) => order.documentType === "Invoice")} onChange={setPartModal} onClose={() => setPartModal(null)} onSave={savePart} />}
+      {revisionModal && <RevisionDialog revision={revisionModal} parts={parts} invoices={orders.filter((order) => order.documentType === "Invoice")} preview={preview} onChange={setRevisionModal} onClose={() => setRevisionModal(null)} onSave={saveRevision} />}
     </div>
   );
 }
 
+function ExpenseDialog({ expense, onChange, onClose, onSave }: { expense: Expense; onChange: (expense: Expense) => void; onClose: () => void; onSave: (expense: Expense) => Promise<void> }) {
+  return <Modal title={expense.title ? "Modificar despesa" : "Nova despesa"} onClose={onClose}><div className="dialog-form"><label className="field-stack field-span"><span>Título *</span><input value={expense.title} onChange={(event) => onChange({ ...expense, title: event.target.value })} /></label><label className="field-stack"><span>Categoria</span><input value={expense.category} onChange={(event) => onChange({ ...expense, category: event.target.value })} /></label><label className="field-stack"><span>Fornecedor</span><input value={expense.vendor} onChange={(event) => onChange({ ...expense, vendor: event.target.value })} /></label><label className="field-stack"><span>Valor *</span><input type="number" min="0" step="0.01" value={expense.amount || ""} onChange={(event) => onChange({ ...expense, amount: Number(event.target.value), amountCents: toCents(event.target.value) })} /></label><label className="field-stack"><span>Data *</span><input type="date" value={expense.date} onChange={(event) => onChange({ ...expense, date: event.target.value })} /></label><label className="field-stack field-span"><span>Notas</span><textarea value={expense.notes} onChange={(event) => onChange({ ...expense, notes: event.target.value })} /></label></div><div className="dialog-actions"><button type="button" className="button button-secondary" onClick={onClose}>Cancelar</button><button type="button" className="button button-primary" onClick={() => void onSave(expense)}>Salvar</button></div></Modal>;
+}
+
+function PartDialog({ part, invoices, onChange, onClose, onSave }: { part: Part; invoices: Order[]; onChange: (part: Part) => void; onClose: () => void; onSave: (part: Part) => Promise<void> }) {
+  return <Modal title={part.name ? "Modificar peça" : "Nova peça"} onClose={onClose}><div className="dialog-form"><label className="field-stack field-span"><span>Nome do objeto *</span><input value={part.name} onChange={(event) => onChange({ ...part, name: event.target.value })} /></label><div className="field-stack field-span"><span>Invoices relacionadas</span>{invoices.map((invoice) => <label key={invoice.id}><input type="checkbox" checked={part.invoiceIds.includes(invoice.id)} onChange={(event) => onChange({ ...part, invoiceIds: event.target.checked ? [...part.invoiceIds, invoice.id] : part.invoiceIds.filter((idValue) => idValue !== invoice.id) })} /> {invoice.clientName} · {invoice.title}</label>)}</div></div><div className="dialog-actions"><button type="button" className="button button-secondary" onClick={onClose}>Cancelar</button><button type="button" className="button button-primary" onClick={() => void onSave(part)}>Salvar</button></div></Modal>;
+}
+
+function RevisionDialog({ revision, parts, invoices, preview, onChange, onClose, onSave }: { revision: PartRevision; parts: Part[]; invoices: Order[]; preview: boolean; onChange: (revision: PartRevision) => void; onClose: () => void; onSave: (revision: PartRevision) => Promise<void> }) {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
+  async function attach(file?: File) {
+    if (!file) return;
+    setUploading(true);
+    setError("");
+    try {
+      const attachment = preview ? { id: id("attachment"), name: file.name, size: file.size, contentType: "model/stl", uploadedAt: nowIso() } : await uploadStlAttachment(revision.id, file);
+      onChange({ ...revision, attachments: [...revision.attachments, attachment] });
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : "Não foi possível anexar o arquivo.");
+    } finally {
+      setUploading(false);
+    }
+  }
+  return <Modal title="Detalhes da revisão" onClose={onClose}><div className="dialog-form"><label className="field-stack"><span>Peça *</span><select value={revision.partId} onChange={(event) => onChange({ ...revision, partId: event.target.value })}>{parts.map((part) => <option key={part.id} value={part.id}>{part.name}</option>)}</select></label><label className="field-stack"><span>Versão *</span><input value={revision.version} onChange={(event) => onChange({ ...revision, version: event.target.value })} /></label><label className="field-stack field-span"><span>Título da versão *</span><input value={revision.title} onChange={(event) => onChange({ ...revision, title: event.target.value })} /></label><label className="field-stack field-span"><span>Notas</span><textarea value={revision.notes} onChange={(event) => onChange({ ...revision, notes: event.target.value })} /></label><div className="field-stack field-span"><span>Invoices relacionadas</span>{invoices.map((invoice) => <label key={invoice.id}><input type="checkbox" checked={revision.invoiceIds.includes(invoice.id)} onChange={(event) => onChange({ ...revision, invoiceIds: event.target.checked ? [...revision.invoiceIds, invoice.id] : revision.invoiceIds.filter((idValue) => idValue !== invoice.id) })} /> {invoice.clientName} · {invoice.title}</label>)}</div><label className="button button-secondary field-span"><Paperclip size={16} /> {uploading ? "Enviando…" : "Anexar arquivo .STL"}<input hidden type="file" accept=".stl,model/stl" disabled={uploading} onChange={(event) => void attach(event.target.files?.[0])} /></label>{error && <small className="inline-warning field-span">{error}</small>}<div className="stack-list field-span">{revision.attachments.map((attachment) => <a key={attachment.id ?? attachment.name} href={attachment.downloadUrl} target="_blank" rel="noreferrer">{attachment.name}</a>)}</div></div><div className="dialog-actions"><button type="button" className="button button-secondary" onClick={onClose}>Cancelar</button><button type="button" className="button button-primary" disabled={uploading} onClick={() => void onSave(revision)}>Salvar revisão</button></div></Modal>;
+}
+
 function ClientDialog({ client, onChange, onClose, onSave }: { client: Client; onChange: (client: Client) => void; onClose: () => void; onSave: (client: Client) => Promise<void> }) {
-  return <Modal title={client.name ? "Editar cliente" : "Novo cliente"} onClose={onClose}><div className="dialog-form"><label className="field-stack field-span"><span>Nome completo *</span><input value={client.name} onChange={(event) => onChange({ ...client, name: event.target.value })} placeholder="Nome do cliente" /></label><label className="field-stack"><span>Empresa</span><input value={client.company} onChange={(event) => onChange({ ...client, company: event.target.value })} placeholder="Opcional" /></label><label className="field-stack"><span>E-mail</span><input type="email" value={client.email} onChange={(event) => onChange({ ...client, email: event.target.value })} placeholder="cliente@email.com" /></label><label className="field-stack"><span>Telefone</span><input inputMode="tel" value={client.phone} onChange={(event) => onChange({ ...client, phone: formatUsPhone(event.target.value) })} placeholder="(000) 000-0000" /></label><label className="field-stack field-span"><span>Endereço</span><input value={client.address} onChange={(event) => onChange({ ...client, address: event.target.value })} placeholder="Endereço completo" /></label><label className="field-stack field-span"><span>Notas internas</span><textarea value={client.notes} onChange={(event) => onChange({ ...client, notes: event.target.value })} placeholder="Preferências, histórico, instruções…" /></label></div><div className="dialog-actions"><button type="button" className="button button-secondary" onClick={onClose}>Cancelar</button><button type="button" className="button button-primary" onClick={() => void onSave(client)}>Salvar todas as alterações</button></div></Modal>;
+  const fallback = splitClientName(client.name);
+  const firstName = client.firstName ?? fallback.firstName;
+  const lastName = client.lastName ?? fallback.lastName;
+  function updateName(nextFirstName: string, nextLastName: string) {
+    onChange({ ...client, firstName: nextFirstName, lastName: nextLastName, name: `${nextFirstName} ${nextLastName}`.trim() });
+  }
+  return <Modal title={client.name ? "Editar cliente" : "Novo cliente"} onClose={onClose}><div className="dialog-form"><label className="field-stack"><span>Primeiro nome *</span><input value={firstName} onChange={(event) => updateName(event.target.value, lastName)} placeholder="Nome" /></label><label className="field-stack"><span>Último nome</span><input value={lastName} onChange={(event) => updateName(firstName, event.target.value)} placeholder="Sobrenome" /></label><label className="field-stack"><span>Empresa</span><input value={client.company} onChange={(event) => onChange({ ...client, company: event.target.value })} placeholder="Opcional" /></label><label className="field-stack"><span>E-mail</span><input type="email" value={client.email} onChange={(event) => onChange({ ...client, email: event.target.value })} placeholder="cliente@email.com" /></label><label className="field-stack field-span"><span>Telefone</span><input inputMode="tel" value={client.phone} onChange={(event) => onChange({ ...client, phone: formatUsPhone(event.target.value) })} placeholder="(000) 000-0000" /></label><label className="field-stack field-span"><span>Endereço</span><input value={client.address} onChange={(event) => onChange({ ...client, address: event.target.value })} placeholder="Endereço completo" /></label><label className="field-stack field-span"><span>Notas internas</span><textarea value={client.notes} onChange={(event) => onChange({ ...client, notes: event.target.value })} placeholder="Preferências, histórico, instruções…" /></label></div><div className="dialog-actions"><button type="button" className="button button-secondary" onClick={onClose}>Cancelar</button><button type="button" className="button button-primary" onClick={() => void onSave(client)}>Salvar todas as alterações</button></div></Modal>;
 }
 
 function MaterialDialog({ material, onChange, onClose, onSave }: { material: Material; onChange: (material: Material) => void; onClose: () => void; onSave: (material: Material) => Promise<void> }) {

@@ -34,5 +34,18 @@ export function displayName(email?: string | null) {
   const normalized = email?.trim().toLowerCase();
   if (normalized === "lincolnporta@gmail.com") return "Lincoln";
   if (normalized === "eduardaterumi@gmail.com") return "Duda";
-  return normalized?.split("@")[0] || "Membro";
+  return "Membro";
+}
+
+export function greetingForEmail(email?: string | null) {
+  const name = displayName(email);
+  return name === "Membro" ? "Olá" : `Olá, ${name}`;
+}
+
+export function splitClientName(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  return {
+    firstName: parts[0] ?? "",
+    lastName: parts.slice(1).join(" "),
+  };
 }

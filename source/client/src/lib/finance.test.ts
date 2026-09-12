@@ -15,8 +15,16 @@ describe("finance calculations", () => {
   });
 
   it("rejects negative and over-total payments", () => {
-    expect(validatePayments(10000, [{ amount: -1 }])).toBeTruthy();
-    expect(validatePayments(10000, [{ amount: 101 }])).toBeTruthy();
-    expect(validatePayments(10000, [{ amount: 100 }])).toBeNull();
+    const payment = { method: "Pix", date: "2026-09-11" };
+    expect(validatePayments(10000, [{ ...payment, amount: -1 }])).toBeTruthy();
+    expect(validatePayments(10000, [{ ...payment, amount: 101 }])).toBeTruthy();
+    expect(validatePayments(10000, [{ ...payment, amount: 100 }])).toBeNull();
+    expect(validatePayments(10000, [{ amount: 10, method: "", date: "" }])).toBeTruthy();
+  });
+
+  it("keeps fractional quantities and monetary values in integer cents", () => {
+    expect(calculateOrderTotals([
+      { quantity: 1.5, unitPrice: 19.99, kind: "item", taxable: true },
+    ], 0.0825)).toEqual({ subtotalCents: 2999, taxCents: 247, totalCents: 3246 });
   });
 });
