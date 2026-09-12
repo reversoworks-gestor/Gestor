@@ -132,6 +132,27 @@ const serviceLabels: Record<OrderLine["service"], string> = {
   custom: "Personalizado",
 };
 
+const technicalParts = [
+  {
+    title: "Carcaça flangeada",
+    category: "Referência física",
+    description: "Geometria, furação e acabamento para a primeira leitura.",
+    image: `${import.meta.env.BASE_URL}technical-parts/flange-housing.jpg`,
+  },
+  {
+    title: "Conjunto estriado",
+    category: "Conjunto mecânico",
+    description: "Acoplamento, fixação e interface entre componentes.",
+    image: `${import.meta.env.BASE_URL}technical-parts/coupling-shaft.jpg`,
+  },
+  {
+    title: "Medição dimensional",
+    category: "Inspeção",
+    description: "Medidas críticas antes de definir material e processo.",
+    image: `${import.meta.env.BASE_URL}technical-parts/vernier-inspection.jpg`,
+  },
+];
+
 function id(prefix: string) {
   return `${prefix}-${crypto.randomUUID()}`;
 }
@@ -848,6 +869,7 @@ export default function Home({
             />
             <div className="hero-grid">
               <article className="command-card">
+                <img className="command-card-image" src={technicalParts[0].image} alt="" aria-hidden="true" />
                 <div className="command-card-copy">
                   <span className="signal"><Sparkles size={14} /> Centro de comando</span>
                   <h2>Da referência física à peça possível.</h2>
@@ -859,12 +881,15 @@ export default function Home({
                 </div>
                 <div className="command-orbit"><div className="orbit-core"><ScanLine size={29} /><span>ENG</span></div></div>
               </article>
-              <article className="triage-shortcut">
-                <div className="shortcut-icon"><ClipboardCheck size={22} /></div>
-                <p className="eyebrow">Acesso rápido</p>
-                <h3>Triagem técnica</h3>
-                <p>Decida viabilidade, material e prioridade antes de abrir a fila.</p>
-                <button type="button" className="inline-action" onClick={() => navigate("triage")}>Abrir triagem <ChevronRight size={16} /></button>
+              <article className="triage-shortcut triage-shortcut-visual">
+                <img className="triage-shortcut-image" src={technicalParts[2].image} alt="" aria-hidden="true" />
+                <div className="triage-shortcut-content">
+                  <div className="shortcut-icon"><ClipboardCheck size={22} /></div>
+                  <p className="eyebrow">Acesso rápido</p>
+                  <h3>Triagem técnica</h3>
+                  <p>Decida viabilidade, material e prioridade antes de abrir a fila.</p>
+                  <button type="button" className="inline-action" onClick={() => navigate("triage")}>Abrir triagem <ChevronRight size={16} /></button>
+                </div>
               </article>
             </div>
             <div className="metric-grid">
@@ -873,6 +898,19 @@ export default function Home({
               <article className="metric-card"><span>Estoque crítico</span><strong>{lowStock.length}</strong><small><Layers3 size={13} /> filamentos abaixo do limite</small></article>
               <article className="metric-card"><span>Logs recentes</span><strong>{events.length}</strong><small><CalendarDays size={13} /> eventos visuais no calendário</small></article>
             </div>
+            <section className="technical-reference-grid" aria-label="Referências de engenharia">
+              {technicalParts.map((part) => (
+                <button type="button" className="technical-reference-card" key={part.title} aria-label={`Executar triagem para ${part.title}`} onClick={() => navigate("triage")}>
+                  <img src={part.image} alt="" />
+                  <span className="technical-reference-content">
+                    <span className="technical-reference-meta"><ScanLine size={13} /> {part.category}</span>
+                    <strong>{part.title}</strong>
+                    <small>{part.description}</small>
+                    <span className="technical-reference-action">Executar triagem <ChevronRight size={15} /></span>
+                  </span>
+                </button>
+              ))}
+            </section>
             <div className="overview-bottom">
               <article className="panel-card agenda-panel">
                 <div className="panel-title"><div><p className="eyebrow">Agenda de produção</p><h3>Últimos movimentos</h3></div><button type="button" className="button button-quiet" onClick={() => navigate("calendar")}>Ver calendário</button></div>
