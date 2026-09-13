@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { User } from "firebase/auth";
 import {
   doc,
@@ -388,6 +388,8 @@ export default function Home({
   const [teamEmail, setTeamEmail] = useState("");
   const [notice, setNotice] = useState("");
   const [globalSearch, setGlobalSearch] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const activeMaterials = materials.length ? materials : defaultMaterials;
   const activePrinters = printers.length ? printers : defaultPrinters;
@@ -425,6 +427,21 @@ export default function Home({
     const timeout = window.setTimeout(() => setNotice(""), 4500);
     return () => window.clearTimeout(timeout);
   }, [notice]);
+
+  useEffect(() => {
+    if (!searchOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    searchInputRef.current?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSearchOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [searchOpen]);
 
   const searchResults = useMemo(() => unifiedSearch(globalSearch, clients, orders), [clients, globalSearch, orders]);
   const schedule = useMemo(
@@ -842,21 +859,32 @@ export default function Home({
       <main className="main-content">
         <header className="topbar">
           <button type="button" className="mobile-menu icon-button" aria-label="Abrir menu" onClick={() => setMobileOpen(true)}><Menu size={20} /></button>
+          <button type="button" className="mobile-search icon-button" aria-label="Abrir busca" aria-haspopup="dialog" aria-expanded={searchOpen} onClick={() => setSearchOpen(true)}><Search size={19} /></button>
           <div className="topbar-title"><span>COMANDO TÉCNICO / 01</span><b>{navigation.find((item) => item.id === view)?.label ?? viewLabels[view]}</b></div>
-          <label className="global-search"><Search size={15} /><input aria-label="Busca unificada" value={globalSearch} onChange={(event) => setGlobalSearch(event.target.value)} placeholder="Buscar estimativas, invoices ou clientes" /></label>
           <div className="topbar-actions">
             <button type="button" className="button button-quiet" onClick={() => navigate("calendar")}><CalendarDays size={17} /><span>Calendário</span></button>
             <button type="button" className="button button-primary" onClick={() => setNewDocumentModal(true)}><Plus size={18} /> Novo pedido</button>
           </div>
         </header>
 
-        {globalSearch.trim().length >= 2 && (
-          <section className="view">
-            <article className="panel-card">
-              <div className="panel-title"><div><p className="eyebrow">Busca unificada</p><h3>Estimativas, invoices e clientes</h3></div><button type="button" className="icon-button" aria-label="Limpar busca" onClick={() => setGlobalSearch("")}><X size={16} /></button></div>
-              {searchResults.length ? <div className="stack-list">{searchResults.map((result) => <button type="button" className="inline-action" key={`${result.kind}-${result.id}`} onClick={() => { if (result.kind === "client") setClientModal({ ...result.record }); else setOrderModal({ ...result.record }); setGlobalSearch(""); }}><span><b>{result.label}</b><small>{result.detail}</small></span><ChevronRight size={16} /></button>)}</div> : <p className="muted-copy">Nenhum resultado encontrado.</p>}
-            </article>
-          </section>
+        {searchOpen && (
+          <div className="search-modal-backdrop" role="presentation" onMouseDown={() => setSearchOpen(false)}>
+            <section className="search-modal-panel" role="dialog" aria-modal="true" aria-labelledby="global-search-title" onMouseDown={(event) => event.stopPropagation()}>
+              <div className="search-modal-heading">
+                <div><p className="eyebrow">Busca unificada</p><h2 id="global-search-title">Localizar operação</h2></div>
+                <button type="button" className="icon-button" aria-label="Fechar busca" onClick={() => setSearchOpen(false)}><X size={18} /></button>
+              </div>
+              <label className="search-modal-field">
+                <span className="sr-only">Buscar estimativas, pedidos ou clientes</span>
+                <Search size={18} aria-hidden="true" />
+                <input ref={searchInputRef} value={globalSearch} onChange={(event) => setGlobalSearch(event.target.value)} placeholder="Buscar estimativas, pedidos ou clientes" autoComplete="off" />
+                {globalSearch && <button type="button" className="search-clear" aria-label="Limpar busca" onClick={() => setGlobalSearch("")}><X size={16} /></button>}
+              </label>
+              <div className="search-modal-results" aria-live="polite">
+                {globalSearch.trim().length < 2 ? <p className="muted-copy">Digite pelo menos 2 caracteres para buscar.</p> : searchResults.length ? <div className="stack-list">{searchResults.map((result) => <button type="button" className="inline-action" key={`${result.kind}-${result.id}`} onClick={() => { if (result.kind === "client") setClientModal({ ...result.record }); else setOrderModal({ ...result.record }); setGlobalSearch(""); setSearchOpen(false); }}><span><b>{result.label}</b><small>{result.detail}</small></span><ChevronRight size={16} /></button>)}</div> : <p className="muted-copy">Nenhum resultado encontrado.</p>}
+              </div>
+            </section>
+          </div>
         )}
 
         {view === "overview" && (
