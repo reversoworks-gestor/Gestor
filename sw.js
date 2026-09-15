@@ -1,4 +1,4 @@
-const CACHE = "reverso-works-v7";
+const CACHE = "reverso-works-v8";
 
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
