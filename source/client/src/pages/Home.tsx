@@ -887,7 +887,6 @@ export default function Home({
 
       <main className="main-content">
         <header className="topbar">
-          <button type="button" className="mobile-menu icon-button" aria-label="Abrir menu" onClick={() => setMobileOpen(true)}><Menu size={20} /></button>
           <button ref={searchTriggerRef} type="button" className="mobile-search icon-button" aria-label="Buscar" aria-haspopup="dialog" aria-expanded={searchOpen} onClick={() => setSearchOpen(true)}><Search size={19} /></button>
           <div className="topbar-title"><span>COMANDO TÉCNICO / 01</span><b>{navigation.find((item) => item.id === view)?.label ?? viewLabels[view]}</b></div>
           <div className="topbar-actions">
