@@ -954,19 +954,6 @@ export default function Home({
               <article className="metric-card"><span>Estoque crítico</span><strong>{lowStock.length}</strong><small><Layers3 size={13} /> filamentos abaixo do limite</small></article>
               <article className="metric-card"><span>Logs recentes</span><strong>{events.length}</strong><small><CalendarDays size={13} /> eventos visuais no calendário</small></article>
             </div>
-            <section className="technical-reference-grid" aria-label="Referências de engenharia">
-              {technicalParts.map((part) => (
-                <button type="button" className="technical-reference-card" key={part.title} aria-label={`Executar triagem para ${part.title}`} onClick={() => navigate("triage")}>
-                  <img src={part.image} alt="" />
-                  <span className="technical-reference-content">
-                    <span className="technical-reference-meta"><ScanLine size={13} /> {part.category}</span>
-                    <strong>{part.title}</strong>
-                    <small>{part.description}</small>
-                    <span className="technical-reference-action">Executar triagem <ChevronRight size={15} /></span>
-                  </span>
-                </button>
-              ))}
-            </section>
             <div className="overview-bottom">
               <article className="panel-card agenda-panel">
                 <div className="panel-title"><div><p className="eyebrow">Agenda de produção</p><h3>Últimos movimentos</h3></div><button type="button" className="button button-quiet" onClick={() => navigate("calendar")}>Ver calendário</button></div>
