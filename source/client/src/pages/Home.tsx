@@ -390,6 +390,7 @@ export default function Home({
   const [globalSearch, setGlobalSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchTriggerRef = useRef<HTMLButtonElement>(null);
 
   const activeMaterials = materials.length ? materials : defaultMaterials;
   const activePrinters = printers.length ? printers : defaultPrinters;
@@ -431,15 +432,43 @@ export default function Home({
   useEffect(() => {
     if (!searchOpen) return;
     const previousOverflow = document.body.style.overflow;
+    const previousPaddingRight = document.body.style.paddingRight;
+    const previousScrollY = window.scrollY;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
     document.body.style.overflow = "hidden";
-    searchInputRef.current?.focus();
+    if (scrollbarWidth > 0) document.body.style.paddingRight = `${scrollbarWidth}px`;
+    const focusInput = window.requestAnimationFrame(() => searchInputRef.current?.focus());
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setSearchOpen(false);
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setSearchOpen(false);
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const panel = document.querySelector<HTMLElement>(".search-modal-panel");
+      if (!panel) return;
+      const focusable = Array.from(panel.querySelectorAll<HTMLElement>("button, input, [href], select, textarea, [tabindex]:not([tabindex=\"-1\"])"))
+        .filter((element) => !element.hasAttribute("disabled"));
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => {
+      window.cancelAnimationFrame(focusInput);
       document.body.style.overflow = previousOverflow;
+      document.body.style.paddingRight = previousPaddingRight;
+      window.scrollTo(0, previousScrollY);
       window.removeEventListener("keydown", onKeyDown);
+      (previousFocus ?? searchTriggerRef.current)?.focus();
     };
   }, [searchOpen]);
 
@@ -859,7 +888,7 @@ export default function Home({
       <main className="main-content">
         <header className="topbar">
           <button type="button" className="mobile-menu icon-button" aria-label="Abrir menu" onClick={() => setMobileOpen(true)}><Menu size={20} /></button>
-          <button type="button" className="mobile-search icon-button" aria-label="Abrir busca" aria-haspopup="dialog" aria-expanded={searchOpen} onClick={() => setSearchOpen(true)}><Search size={19} /></button>
+          <button ref={searchTriggerRef} type="button" className="mobile-search icon-button" aria-label="Buscar" aria-haspopup="dialog" aria-expanded={searchOpen} onClick={() => setSearchOpen(true)}><Search size={19} /></button>
           <div className="topbar-title"><span>COMANDO TÉCNICO / 01</span><b>{navigation.find((item) => item.id === view)?.label ?? viewLabels[view]}</b></div>
           <div className="topbar-actions">
             <button type="button" className="button button-quiet" onClick={() => navigate("calendar")}><CalendarDays size={17} /><span>Calendário</span></button>
@@ -877,7 +906,7 @@ export default function Home({
               <label className="search-modal-field">
                 <span className="sr-only">Buscar estimativas, pedidos ou clientes</span>
                 <Search size={18} aria-hidden="true" />
-                <input ref={searchInputRef} value={globalSearch} onChange={(event) => setGlobalSearch(event.target.value)} placeholder="Buscar estimativas, pedidos ou clientes" autoComplete="off" />
+                <input ref={searchInputRef} value={globalSearch} onChange={(event) => setGlobalSearch(event.target.value)} placeholder="Buscar pedidos, estimativas ou clientes…" autoComplete="off" inputMode="search" enterKeyHint="search" />
                 {globalSearch && <button type="button" className="search-clear" aria-label="Limpar busca" onClick={() => setGlobalSearch("")}><X size={16} /></button>}
               </label>
               <div className="search-modal-results" aria-live="polite">
