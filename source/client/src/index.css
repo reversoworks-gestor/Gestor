@@ -471,10 +471,7 @@ button, input, textarea, select { font-family: Inter, ui-sans-serif, system-ui, 
 @media (max-width: 760px) {
   .command-card-image { opacity: .58; }
   .triage-shortcut-image { opacity: .30; }
-  .technical-reference-grid { grid-template-columns: 1fr; gap: 10px; }
-  .technical-reference-card { min-height: 184px; }
-  .technical-reference-content { padding: 13px 14px; }
-  .technical-reference-content small { min-height: auto; }
+  .technical-reference-grid { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
