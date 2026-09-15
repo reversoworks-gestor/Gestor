@@ -54,6 +54,7 @@ import { calculateOrderTotals, centsToAmount, printServicePrice, toCents, valida
 import { createInvoiceFromEstimate, isEstimate, nextFutureOrder, normalizeExpense, normalizeOrderMoney, unifiedSearch } from "@/lib/documents";
 import { downloadInvoicePdf } from "@/lib/pdf";
 import DocumentDialog, { NewDocumentDialog } from "@/components/DocumentDialog";
+import MaterialSelector from "@/components/MaterialSelector";
 import type {
   Attachment,
   CalendarEvent,
@@ -751,6 +752,10 @@ export default function Home({
     return attachment;
   }
 
+  async function saveSelectorAnalysis(payload: Record<string, unknown>) {
+    await saveRecord("materialAnalyses", payload as { id: string; [key: string]: unknown });
+  }
+
   async function saveCalendarEvent(event: CalendarEvent) {
     if (!event.title.trim() || !event.date) {
       setNotice("Informe o título e a data do evento.");
@@ -987,22 +992,8 @@ export default function Home({
 
         {view === "triage" && (
           <section className="view triage-view">
-            <SectionHeader eyebrow="Decisão técnica" title="Triagem técnica" description="Faça uma leitura objetiva da peça antes de comprometer horas de engenharia ou material." />
-            <div className="triage-layout">
-              <article className="panel-card triage-form-card">
-                <div className="panel-title"><div><p className="eyebrow">Nova análise</p><h3>Executar triagem</h3></div><span className="score-pill">Pré-produção</span></div>
-                <div className="form-grid">
-                  <TriageField label="Peça ou referência" required error={triageErrors.includes("piece")}><input value={triageForm.piece} onChange={(event) => setTriageForm({ ...triageForm, piece: event.target.value })} placeholder="Ex.: suporte de painel" /></TriageField>
-                  <TriageField label="Objetivo" required error={triageErrors.includes("objective")}><input value={triageForm.objective} onChange={(event) => setTriageForm({ ...triageForm, objective: event.target.value })} placeholder="Repor, adaptar, prototipar…" /></TriageField>
-                  <TriageField label="Material provável" required error={triageErrors.includes("material")}><select value={triageForm.material} onChange={(event) => setTriageForm({ ...triageForm, material: event.target.value })}><option value="">Selecionar material</option>{activeMaterials.map((material) => <option key={material.id} value={material.name}>{material.name}</option>)}</select></TriageField>
-                  <TriageField label="Complexidade" required error={triageErrors.includes("complexity")}><select value={triageForm.complexity} onChange={(event) => setTriageForm({ ...triageForm, complexity: event.target.value })}><option value="">Selecionar</option><option>Baixa</option><option>Média</option><option>Alta</option><option>Crítica</option></select></TriageField>
-                  <TriageField label="Urgência" required error={triageErrors.includes("urgency")}><select value={triageForm.urgency} onChange={(event) => setTriageForm({ ...triageForm, urgency: event.target.value })}><option value="">Selecionar</option><option>Baixa</option><option>Média</option><option>Alta</option><option>Crítica</option></select></TriageField>
-                  <TriageField label="Notas técnicas"><textarea value={triageForm.notes} onChange={(event) => setTriageForm({ ...triageForm, notes: event.target.value })} placeholder="Riscos, medidas disponíveis, acabamento desejado…" /></TriageField>
-                </div>
-                <button type="button" className="button button-primary triage-submit" onClick={() => void saveTriage()}><ClipboardCheck size={18} /> Executar triagem</button>
-              </article>
-              <article className="panel-card triage-history"><p className="eyebrow">Memória técnica</p><h3>Triagens recentes</h3>{triages.length ? <div className="stack-list">{triages.slice(0, 6).map((triage) => <div key={triage.id} className="triage-row"><div><b>{triage.piece}</b><p>{triage.objective}</p></div><span>{triage.score}/8</span></div>)}</div> : <p className="muted-copy">As análises salvas serão mantidas aqui e também registradas no calendário.</p>}</article>
-            </div>
+            <SectionHeader eyebrow="Decisão técnica" title="Seletor de Materiais" description="Reverso Material Selector v3 · material, processo, geometria e ambiente em uma decisão rastreável." />
+            <MaterialSelector stock={activeMaterials} printers={activePrinters} onSave={saveSelectorAnalysis} onNotice={setNotice} />
           </section>
         )}
 
