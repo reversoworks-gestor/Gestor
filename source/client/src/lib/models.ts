@@ -39,6 +39,53 @@ export type Material = {
   nozzleTemp: string;
   bedTemp: string;
   printNotes: string;
+  family?: string;
+  manufacturer?: string;
+  variant?: string;
+  reinforcement?: string;
+  density?: number;
+  tensileStrengthXY?: number;
+  tensileStrengthZ?: number;
+  youngModulus?: number;
+  flexuralStrength?: number;
+  impactStrengthXY?: number;
+  impactStrengthZ?: number;
+  elongationAtBreak?: number;
+  creepResistance?: number;
+  fatigueResistance?: number;
+  glassTransition?: number;
+  hdt045?: number;
+  hdt18?: number;
+  vicat?: number;
+  continuousServiceTemp?: number;
+  peakServiceTemp?: number;
+  uvResistance?: number;
+  waterResistance?: number;
+  moistureSensitivity?: number;
+  oilResistance?: number;
+  gasolineResistance?: number;
+  dieselResistance?: number;
+  coolantResistance?: number;
+  brakeFluidResistance?: number;
+  ipaResistance?: number;
+  acidResistance?: number;
+  alkaliResistance?: number;
+  nozzleMinTemp?: number;
+  nozzleMaxTemp?: number;
+  bedMinTemp?: number;
+  bedMaxTemp?: number;
+  chamberRequirement?: "Aberta" | "Fechada" | "Alta temperatura";
+  dryingTemperature?: number;
+  dryingTimeHours?: number;
+  warpingRisk?: "Baixo" | "Médio" | "Alto";
+  abrasive?: boolean;
+  hardenedNozzleRequired?: boolean;
+  dataSource?: string;
+  datasheetUrl?: string;
+  testStandard?: string;
+  confidenceLevel?: "Baixa" | "Média" | "Alta";
+  lastUpdated?: string;
+  technicalNotes?: string;
 };
 
 export type CalendarEvent = {
@@ -57,6 +104,14 @@ export type Printer = {
   material: string;
   lastMaintenance: string;
   maintenance: MaintenanceEntry[];
+  maxNozzleTemp?: number;
+  maxBedTemp?: number;
+  maxChamberTemp?: number;
+  buildVolume?: string;
+  nozzleDiameter?: number;
+  hardenedNozzle?: boolean;
+  dryingAvailable?: boolean;
+  compatibleMaterials?: string[];
 };
 
 export type MaintenanceEntry = {

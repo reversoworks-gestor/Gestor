@@ -140,8 +140,39 @@ export function calculateSelector(form: SelectorForm, stock: Material[], printer
     !form.cycles && "número de ciclos",
     form.drying === "não confirmado" && "condição de secagem",
   ].filter(Boolean) as string[];
-  const candidates = materialDatabase.map((spec): MaterialCandidate => {
-    const inventory = stock.find((item) => item.name.toLowerCase().includes(spec.name.toLowerCase()) || spec.name.toLowerCase().includes(item.name.toLowerCase()));
+  const candidates = materialDatabase.map((baseSpec): MaterialCandidate => {
+    const inventory = stock.find((item) => item.name.toLowerCase().includes(baseSpec.name.toLowerCase()) || baseSpec.name.toLowerCase().includes(item.name.toLowerCase()));
+    const spec: MaterialSpec = {
+      ...baseSpec,
+      family: inventory?.family || inventory?.type || baseSpec.family,
+      variant: inventory?.variant || baseSpec.variant,
+      reinforcement: inventory?.reinforcement || baseSpec.reinforcement,
+      tensileXY: inventory?.tensileStrengthXY ?? baseSpec.tensileXY,
+      tensileZ: inventory?.tensileStrengthZ ?? baseSpec.tensileZ,
+      modulus: inventory?.youngModulus ?? baseSpec.modulus,
+      flexural: inventory?.flexuralStrength ?? baseSpec.flexural,
+      impactXY: inventory?.impactStrengthXY ?? baseSpec.impactXY,
+      impactZ: inventory?.impactStrengthZ ?? baseSpec.impactZ,
+      elongation: inventory?.elongationAtBreak ?? baseSpec.elongation,
+      creep: inventory?.creepResistance ?? baseSpec.creep,
+      fatigue: inventory?.fatigueResistance ?? baseSpec.fatigue,
+      hdt: inventory?.hdt045 ?? baseSpec.hdt,
+      continuous: inventory?.continuousServiceTemp ?? baseSpec.continuous,
+      peak: inventory?.peakServiceTemp ?? baseSpec.peak,
+      uv: inventory?.uvResistance ?? baseSpec.uv,
+      water: inventory?.waterResistance ?? baseSpec.water,
+      moisture: inventory?.moistureSensitivity ?? baseSpec.moisture,
+      chemical: inventory?.oilResistance ?? baseSpec.chemical,
+      fuel: inventory?.gasolineResistance ?? baseSpec.fuel,
+      processNozzleMin: inventory?.nozzleMinTemp ?? baseSpec.processNozzleMin,
+      processNozzleMax: inventory?.nozzleMaxTemp ?? baseSpec.processNozzleMax,
+      chamber: inventory?.chamberRequirement || baseSpec.chamber,
+      drying: inventory?.dryingTemperature ? `${inventory.dryingTemperature} °C / ${inventory.dryingTimeHours || 0} h` : baseSpec.drying,
+      abrasive: inventory?.abrasive ?? baseSpec.abrasive,
+      hardenedRequired: inventory?.hardenedNozzleRequired ?? baseSpec.hardenedRequired,
+      costKg: inventory ? inventory.pricePerGram * 1000 : baseSpec.costKg,
+      notes: inventory?.technicalNotes || inventory?.printNotes || baseSpec.notes,
+    };
     const stockGrams = inventory?.availableGrams || 0;
     const reasons: string[] = [];
     const critical: string[] = [];

@@ -25,4 +25,14 @@ const stock = materialDatabase.map((item) => ({ id: item.name, name: item.name, 
     expect(result.primary).toBeNull();
     expect(result.rejected.length).toBeGreaterThan(0);
   });
+  it("uses the selected printer profile as a hard process gate", () => {
+    const result = calculateSelector(form({ continuousTemp: 120, peakTemp: 145, printerId: "small", printerNozzleMax: 300, printerChamberMax: 50, hardenedNozzle: false }), stock, [{ id: "small", name: "Small", model: "S1", status: "Pronta", material: "", lastMaintenance: "", maintenance: [], maxNozzleTemp: 240, maxChamberTemp: 20, hardenedNozzle: false }]);
+    expect(result.rejected.some((item) => item.name === "PA6-CF")).toBe(true);
+  });
+  it("prefers traceable technical overrides from inventory records", () => {
+    const traceableStock = [{ ...stock[0], name: "ASA", continuousServiceTemp: 125, peakServiceTemp: 145, hdt045: 135, dataSource: "Datasheet fabricante", confidenceLevel: "Alta" as const }];
+    const result = calculateSelector(form({ continuousTemp: 110, peakTemp: 140, uv: "Alta / contínua" }), traceableStock, []);
+    expect(result.primary?.name).toBe("ASA");
+    expect(result.primary?.continuous).toBe(125);
+  });
 });
