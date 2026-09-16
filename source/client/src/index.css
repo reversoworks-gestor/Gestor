@@ -747,7 +747,7 @@ button, input, textarea, select { font-family: Inter, ui-sans-serif, system-ui, 
 .catalog-item-form { gap: 16px; }
 .catalog-tax-toggle { display: flex; align-items: center; gap: 8px; color: #A4A9B5; font-size: 12px; }
 .catalog-add-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; }
-.catalog-add-row select { min-height: 44px; }
+.catalog-add-row select, .catalog-add-row button { height: 44px; min-height: 44px; box-sizing: border-box; }
 .line-items-header { display: grid; grid-template-columns: minmax(160px, .9fr) minmax(300px, 2.3fr) 110px 160px 125px 40px; gap: 12px; padding: 0 13px 7px; color: #91A39E; font: 700 10px "SF Mono", monospace; text-transform: uppercase; letter-spacing: .06em; }
 .catalog-line-item { grid-template-columns: minmax(160px, .9fr) minmax(300px, 2.3fr) 110px 160px 125px 40px; }
 .catalog-line-item select, .catalog-line-item input { width: 100%; min-width: 0; }
