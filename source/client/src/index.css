@@ -579,3 +579,56 @@ button, input, textarea, select { font-family: Inter, ui-sans-serif, system-ui, 
 @media (max-width: 900px) { .selector-layout { grid-template-columns: 1fr; } }
 @media (max-width: 760px) { .material-selector { margin-top: 15px; }.selector-flow { gap: 7px; padding: 11px; }.selector-inputs, .selector-primary { padding: 16px; }.selector-metrics { grid-template-columns: repeat(2, 1fr); }.selector-candidate-grid { grid-template-columns: repeat(2, 1fr); }.selector-actions .button { flex: 1 1 150px; min-height: 44px; }.selector-check { min-height: 38px; }.triage-save-panel { padding: 18px 16px calc(20px + env(safe-area-inset-bottom)); }.triage-save-option { grid-template-columns: 21px minmax(0, 1fr) 17px; padding: 12px; } }
 @media (prefers-reduced-motion: reduce) { .selector-advanced-toggle svg { transition: none; } }
+
+/* Escala tipográfica desktop — mantém o mobile intocado e melhora leitura em monitores. */
+@media (min-width: 761px) {
+  body { font-size: 15px; }
+  .eyebrow { font-size: 11px; }
+  .muted-copy { font-size: 15px; }
+  .button { font-size: 15px; min-height: 44px; padding: 11px 16px; }
+  .inline-action { font-size: 14px; }
+  .sidebar nav button { font-size: 14px; }
+  .sidebar-label { font-size: 10px; }
+  .brand b, .brand em { font-size: 16px; }
+  .brand em { font-size: 10px; }
+  .profile-chip b { font-size: 14px; }
+  .profile-chip small, .sidebar-logout { font-size: 11px; }
+  .topbar-title span { font-size: 10px; }
+  .topbar-title b { font-size: 16px; }
+  .section-header h1 { font-size: clamp(32px, 3.7vw, 52px); }
+  .section-description { font-size: 15px; }
+  .command-card h2 { font-size: clamp(29px, 3.2vw, 43px); }
+  .command-card p { font-size: 15px; }
+  .signal { font-size: 10px; }
+  .triage-shortcut h3 { font-size: 24px; }
+  .triage-shortcut > p:not(.eyebrow) { font-size: 14px; }
+  .metric-card > span { font-size: 13px; }
+  .metric-card strong { font-size: clamp(27px, 2.8vw, 37px); }
+  .metric-card small { font-size: 11px; }
+  .panel-title h3, .calendar-title h3 { font-size: 20px; }
+  .timeline-item b { font-size: 14px; }
+  .timeline-item p { font-size: 13px; }
+  .timeline-item time { font-size: 11px; }
+  .field-stack > span { font-size: 14px; }
+  input, textarea, select { font-size: 15px; }
+  .material-info, .material-specs, .stock-meta, .printer-facts, .maintenance-preview { font-size: 14px; }
+  .order-card, .client-card, .part-card { font-size: 15px; }
+  .order-main p, .order-main small, .client-data p, .client-data span { font-size: 13px; }
+  .modal-heading h2 { font-size: 27px; }
+  .dialog-actions .button { font-size: 15px; }
+  .selector-flow { font-size: 11px; }
+  .selector-inputs, .selector-primary { font-size: 15px; }
+  .field-hint { font-size: 11px; }
+  .selector-check { font-size: 14px; }
+  .selector-primary h3 { font-size: 29px; }
+  .selector-metric span { font-size: 10px; }
+  .selector-metric b { font-size: 15px; }
+  .selector-why p:last-child, .selector-process p:last-child { font-size: 14px; }
+  .selector-status { font-size: 11px; }
+  .selector-candidate h4 { font-size: 18px; }
+  .selector-candidate p { font-size: 13px; }
+  .selector-candidate-grid .selector-metric b { font-size: 13px; }
+  .selector-warning { font-size: 14px; }
+  .selector-confidence { font-size: 13px; }
+  .selector-disclaimer { font-size: 11px; }
+}
