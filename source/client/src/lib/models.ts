@@ -139,6 +139,10 @@ export type OrderLine = {
   printHours?: number;
   hourlyRate?: number;
   hourlyRateCents?: number;
+  triageAnalysisId?: string;
+  triageRecommendation?: string;
+  triageScore?: number;
+  triageConfidence?: number;
 };
 
 export type Payment = {

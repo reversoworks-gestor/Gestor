@@ -769,6 +769,44 @@ export default function Home({
     await saveRecord("materialAnalyses", payload as { id: string; [key: string]: unknown });
   }
 
+  async function addSelectorAnalysisToDocument(payload: Record<string, unknown>, documentId: string) {
+    const document = orders.find((item) => item.id === documentId);
+    if (!document) {
+      setNotice("Selecione um orçamento ou invoice válido para vincular a triagem.");
+      return;
+    }
+    const ranking = payload.ranking as { primary?: { name?: string; score?: number; notes?: string } | null } | undefined;
+    const recommendation = String(payload.recommendation ?? ranking?.primary?.name ?? "Sem recomendação segura");
+    const score = Number(payload.score ?? ranking?.primary?.score ?? 0);
+    const confidence = Number(payload.confidence ?? 0);
+    const project = String(payload.project ?? "Projeto sem nome");
+    const analysisId = String(payload.id);
+    const line: OrderLine = {
+      id: id("line"),
+      service: "custom",
+      kind: "service",
+      taxable: false,
+      unit: "unidades",
+      label: "Triagem técnica de material",
+      quantity: 1,
+      unitPrice: 0,
+      unitPriceCents: 0,
+      description: `${project} · ${recommendation} · score ${score}/100 · confiança ${confidence}% · análise ${analysisId}`,
+      triageAnalysisId: analysisId,
+      triageRecommendation: recommendation,
+      triageScore: score,
+      triageConfidence: confidence,
+    };
+    const nextOrder: Order = {
+      ...document,
+      lines: [...(document.lines ?? []), line],
+      notes: [document.notes, `Triagem técnica vinculada: ${recommendation} · ${project}.`].filter(Boolean).join("\n"),
+    };
+    if (!await saveOrder(nextOrder)) return;
+    await saveSelectorAnalysis(payload);
+    setNotice(`Triagem adicionada ao ${isEstimate(document) ? "orçamento" : "invoice"} ${document.title || "selecionado"}.`);
+  }
+
   async function saveCalendarEvent(event: CalendarEvent) {
     if (!event.title.trim() || !event.date) {
       setNotice("Informe o título e a data do evento.");
@@ -1016,7 +1054,7 @@ export default function Home({
         {view === "triage" && (
           <section className="view triage-view">
             <SectionHeader eyebrow="Decisão técnica" title="Seletor de Materiais" description="Reverso Material Selector v3 · material, processo, geometria e ambiente em uma decisão rastreável." />
-            <MaterialSelector stock={activeMaterials} printers={activePrinters} onSave={saveSelectorAnalysis} onNotice={setNotice} />
+            <MaterialSelector stock={activeMaterials} printers={activePrinters} documents={orders.filter((order) => isEstimate(order) || order.documentType === "Invoice")} onSave={saveSelectorAnalysis} onAddToDocument={addSelectorAnalysisToDocument} onNotice={setNotice} />
           </section>
         )}
 
