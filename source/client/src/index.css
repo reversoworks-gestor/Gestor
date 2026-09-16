@@ -677,7 +677,8 @@ button, input, textarea, select { font-family: Inter, ui-sans-serif, system-ui, 
 /* Ordem operacional do documento: cliente, itens/serviços, pagamentos, notas e arquivos. */
 @media (min-width: 761px) {
   .modal-wide { width: min(94vw, 1220px); max-height: min(92vh, 980px); padding: 30px 34px 26px; background: #262A36; }
-  .order-dialog { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .modal-wide .modal-heading { margin-bottom: 18px; }
+  .order-dialog { display: grid; grid-template-columns: minmax(0, 1fr); row-gap: 22px; }
   .order-type-toggle { order: 1; }
   .document-grid { display: contents; }
   .document-grid > .document-section:first-child { order: 2; }
