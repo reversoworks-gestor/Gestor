@@ -673,6 +673,7 @@ button, input, textarea, select { font-family: Inter, ui-sans-serif, system-ui, 
   .modal-panel, .modal-wide { background: #262A36; border-color: #FFFFFF16; }
   .document-section { background: #171920; border-color: #FFFFFF16; }
   .button, .mobile-nav button, .icon-button, .service-picker button { min-height: 42px; }
+}
 /* Ordem operacional do documento: cliente, itens/serviços, pagamentos, notas e arquivos. */
 @media (min-width: 761px) {
   .modal-wide { width: min(94vw, 1220px); max-height: min(92vh, 980px); padding: 30px 34px 26px; background: #262A36; }
@@ -712,3 +713,4 @@ button, input, textarea, select { font-family: Inter, ui-sans-serif, system-ui, 
 @media (max-width: 1100px) and (min-width: 761px) {
   .modal-wide { width: min(96vw, 980px); padding: 24px; }
   .line-item { grid-template-columns: minmax(130px, .8fr) minmax(180px, 1.5fr) 90px 120px 90px 36px; gap: 8px; }
+}
