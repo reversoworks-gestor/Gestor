@@ -673,4 +673,42 @@ button, input, textarea, select { font-family: Inter, ui-sans-serif, system-ui, 
   .modal-panel, .modal-wide { background: #262A36; border-color: #FFFFFF16; }
   .document-section { background: #171920; border-color: #FFFFFF16; }
   .button, .mobile-nav button, .icon-button, .service-picker button { min-height: 42px; }
+/* Ordem operacional do documento: cliente, itens/serviços, pagamentos, notas e arquivos. */
+@media (min-width: 761px) {
+  .modal-wide { width: min(94vw, 1220px); max-height: min(92vh, 980px); padding: 30px 34px 26px; background: #262A36; }
+  .order-dialog { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .order-type-toggle { order: 1; }
+  .document-grid { display: contents; }
+  .document-grid > .document-section:first-child { order: 2; }
+  .document-grid > .document-section:nth-child(2) { order: 3; }
+  .order-dialog > .services-section { order: 4; }
+  .order-dialog > .payment-strip { order: 5; margin: 0; padding: 22px; border: 1px solid rgba(232,247,242,.08); border-radius: 12px; background: rgba(255,255,255,.018); }
+  .order-dialog > .field-stack { order: 6; margin: 0; padding: 22px; border: 1px solid rgba(232,247,242,.08); border-radius: 12px; background: rgba(255,255,255,.018); }
+  .order-dialog > .document-notes-grid { order: 7; margin: 0; padding: 22px; border: 1px solid rgba(232,247,242,.08); border-radius: 12px; background: rgba(255,255,255,.018); }
+  .order-dialog > .dialog-actions { order: 8; }
+  .document-grid > .document-section, .order-dialog > .services-section { width: 100%; padding: 22px; border: 1px solid rgba(232,247,242,.08); border-radius: 12px; background: rgba(255,255,255,.018); }
+  .section-caption { min-height: 24px; font-size: 14px; }
+  .section-caption small { font-size: 11px; }
+  .document-section .dialog-form { gap: 16px; margin-top: 18px; }
+  .document-section .dialog-form .field-stack { min-width: 0; }
+  .document-section .dialog-form .field-span { grid-column: 1 / -1; }
+  .document-section .dialog-form input, .document-section .dialog-form select, .order-dialog > .field-stack textarea, .document-notes-grid textarea { min-height: 48px; }
+  .services-section { gap: 18px; }
+  .service-picker { gap: 9px; }
+  .service-picker button { padding: 9px 12px; font-size: 12px; }
+  .line-item { grid-template-columns: minmax(150px, .8fr) minmax(260px, 2fr) 110px 150px 110px 38px; gap: 12px; padding: 12px; }
+  .line-item strong { font-size: 13px; }
+  .line-item input { min-height: 42px; padding: 8px 10px; font-size: 13px; }
+  .line-item label { font-size: 10px; }
+  .line-item b { font-size: 13px; }
+  .payment-strip { align-items: end; }
+  .payment-strip small { font-size: 12px; }
+  .payment-row { gap: 12px; padding: 10px 0; }
+  .payment-row input { min-height: 42px; }
+  .document-notes-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+  .document-notes-grid .field-stack { margin: 0; }
+  .document-total { padding-top: 12px; }
 }
+@media (max-width: 1100px) and (min-width: 761px) {
+  .modal-wide { width: min(96vw, 980px); padding: 24px; }
+  .line-item { grid-template-columns: minmax(130px, .8fr) minmax(180px, 1.5fr) 90px 120px 90px 36px; gap: 8px; }
