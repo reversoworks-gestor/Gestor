@@ -780,3 +780,27 @@ button, input, textarea, select { font-family: Inter, ui-sans-serif, system-ui, 
   .catalog-line-item b { padding: 8px 0; }
   .document-totals { max-width: none; }
 }
+
+/* Pagamentos — grade minimalista e uniforme. */
+.payment-section { background: #171920; }
+.payment-section .payment-strip { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 20px; padding: 0 0 18px; border-top: 0; border-bottom: 1px solid #FFFFFF16; }
+.payment-section .payment-strip small { color: #8F9A9F; }
+.payment-row-header { display: grid; grid-template-columns: 1.4fr 1fr 1fr 40px; gap: 14px; padding: 18px 14px 8px; color: #91A39E; font: 700 10px "SF Mono", monospace; text-transform: uppercase; letter-spacing: .06em; }
+.payment-row { display: grid; grid-template-columns: 1.4fr 1fr 1fr 40px; gap: 14px; align-items: center; padding: 12px 14px; border: 1px solid #FFFFFF16; border-radius: 8px; background: #07080D; }
+.payment-section > .payment-row + .payment-row { margin-top: 10px; }
+.payment-row select, .payment-row input { width: 100%; min-width: 0; min-height: 42px; box-sizing: border-box; }
+.payment-row .icon-button { justify-self: end; width: 36px; height: 36px; }
+@media (max-width: 1100px) and (min-width: 761px) {
+  .payment-row-header, .payment-row { grid-template-columns: 1.25fr 1fr 1fr 36px; gap: 10px; }
+}
+@media (max-width: 760px) {
+  .payment-section .payment-strip { align-items: flex-start; flex-wrap: wrap; }
+  .payment-section .payment-strip small { flex: 1 1 100%; }
+  .payment-row-header { grid-template-columns: 1fr 1fr 40px; gap: 9px; }
+  .payment-row-header span:nth-child(3) { grid-column: 1 / -1; }
+  .payment-row { grid-template-columns: 1fr 1fr; gap: 9px; padding: 12px; }
+  .payment-row select { grid-column: 1 / -1; }
+  .payment-row input { width: 100%; }
+  .payment-row .icon-button { justify-self: end; align-self: end; }
+}
+.payment-row input:nth-child(2), .payment-row input:nth-child(3) { width: 100%; }
