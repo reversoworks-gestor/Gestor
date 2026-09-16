@@ -805,3 +805,12 @@ button, input, textarea, select { font-family: Inter, ui-sans-serif, system-ui, 
   .payment-row .icon-button { justify-self: end; align-self: end; }
 }
 .payment-row input:nth-child(2), .payment-row input:nth-child(3) { width: 100%; }
+
+/* Ajuste final do cabeçalho de pagamentos. */
+.payment-section > .section-caption { display: flex; align-items: center; gap: 8px; }
+.payment-section .payment-add-button { margin-left: auto; height: 44px; min-height: 44px; box-sizing: border-box; }
+.payment-row select, .payment-row input { height: 44px; min-height: 44px; padding-top: 10px; padding-bottom: 10px; box-sizing: border-box; }
+@media (max-width: 760px) {
+  .payment-section > .section-caption { align-items: center; }
+  .payment-section .payment-add-button { margin-left: auto; }
+}
