@@ -735,3 +735,35 @@ button, input, textarea, select { font-family: Inter, ui-sans-serif, system-ui, 
   }
   .order-dialog > .dialog-actions { margin-top: 0; }
 }
+
+/* Catálogo comercial e tabela de itens — Comando Técnico. */
+.catalog-settings-card { grid-column: 1 / -1; }
+.settings-card-heading { display: flex; align-items: start; justify-content: space-between; gap: 16px; }
+.catalog-list { display: grid; gap: 8px; margin-top: 18px; }
+.catalog-list-row { display: grid; grid-template-columns: minmax(0, 1fr) auto 36px; align-items: center; gap: 12px; padding: 11px 12px; border: 1px solid #FFFFFF16; border-radius: 9px; background: #171920; }
+.catalog-list-row b { color: #F5F7FA; font-size: 13px; }
+.catalog-list-row small { display: block; margin-top: 3px; color: #8F9A9F; font-size: 11px; }
+.catalog-list-row strong { color: #70E9D7; font: 700 13px "SF Mono", monospace; }
+.catalog-item-form { gap: 16px; }
+.catalog-tax-toggle { display: flex; align-items: center; gap: 8px; color: #A4A9B5; font-size: 12px; }
+.catalog-add-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.catalog-add-row select { min-height: 44px; }
+.line-items-header { display: grid; grid-template-columns: minmax(160px, .9fr) minmax(300px, 2.3fr) 110px 160px 125px 40px; gap: 12px; padding: 0 13px 7px; color: #91A39E; font: 700 10px "SF Mono", monospace; text-transform: uppercase; letter-spacing: .06em; }
+.catalog-line-item { grid-template-columns: minmax(160px, .9fr) minmax(300px, 2.3fr) 110px 160px 125px 40px; }
+.catalog-line-item select, .catalog-line-item input { width: 100%; min-width: 0; }
+.catalog-line-item b { padding-bottom: 0; align-self: center; }
+.document-totals { display: grid; gap: 5px; max-width: 360px; margin: 18px 0 0 auto; padding-top: 14px; border-top: 1px solid #FFFFFF16; }
+.document-total-final { margin-top: 6px; padding-top: 10px; border-top: 1px solid #FFFFFF16; }
+.document-total-final strong { font-size: 30px; }
+@media (max-width: 1100px) and (min-width: 761px) {
+  .line-items-header, .catalog-line-item { grid-template-columns: minmax(130px, .8fr) minmax(180px, 1.5fr) 90px 120px 90px 36px; gap: 8px; }
+}
+@media (max-width: 760px) {
+  .settings-card-heading { flex-direction: column; }
+  .catalog-add-row { grid-template-columns: 1fr; }
+  .line-items-header { display: none; }
+  .catalog-line-item { grid-template-columns: 1fr 1fr; gap: 9px; }
+  .catalog-line-item select, .catalog-line-item input[aria-label*="descrição"] { grid-column: 1 / -1; }
+  .catalog-line-item b { padding: 8px 0; }
+  .document-totals { max-width: none; }
+}

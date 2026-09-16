@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { User } from "firebase/auth";
 import {
+  deleteDoc,
   doc,
   onSnapshot,
   serverTimestamp,
@@ -58,6 +59,7 @@ import MaterialSelector from "@/components/MaterialSelector";
 import type {
   Attachment,
   CalendarEvent,
+  CatalogItem,
   Client,
   Expense,
   MaintenanceEntry,
@@ -140,6 +142,15 @@ const serviceLabels: Record<OrderLine["service"], string> = {
   shipping: "Envio",
   custom: "Personalizado",
 };
+
+const defaultCatalogItems: CatalogItem[] = [
+  { id: "cat-item", name: "Item personalizado", description: "Componentes ou produto definido no documento.", unitPrice: 0, taxable: true, kind: "item" },
+  { id: "cat-scan", name: "Escaneamento 3D", description: "Serviço de captura e preparação da referência física.", unitPrice: 85, taxable: false, kind: "service" },
+  { id: "cat-cad", name: "CAD / modelagem", description: "Modelagem técnica e preparação do arquivo.", unitPrice: 75, taxable: false, kind: "service" },
+  { id: "cat-print", name: "Impressão 3D", description: "Produção aditiva conforme material e parâmetros definidos.", unitPrice: 0, taxable: false, kind: "service" },
+  { id: "cat-post", name: "Pós-processamento", description: "Acabamento, preparação e inspeção final.", unitPrice: 45, taxable: false, kind: "service" },
+  { id: "cat-shipping", name: "Envio", description: "Embalagem e transporte definidos no documento.", unitPrice: 0, taxable: true, kind: "service" },
+];
 
 const technicalParts = [
   {
@@ -372,6 +383,7 @@ export default function Home({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
   const [materials, setMaterials] = useState<Material[]>([]);
+  const [catalogItems, setCatalogItems] = useState<CatalogItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [triages, setTriages] = useState<Triage[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -381,6 +393,7 @@ export default function Home({
   const [revisions, setRevisions] = useState<PartRevision[]>([]);
   const [clientModal, setClientModal] = useState<Client | null>(null);
   const [materialModal, setMaterialModal] = useState<Material | null>(null);
+  const [catalogModal, setCatalogModal] = useState<CatalogItem | null>(null);
   const [calendarModal, setCalendarModal] = useState<CalendarEvent | null>(null);
   const [maintenancePrinter, setMaintenancePrinter] = useState<PrinterModel | null>(null);
   const [printerModal, setPrinterModal] = useState<PrinterModel | null>(null);
@@ -407,6 +420,7 @@ export default function Home({
   const searchTriggerRef = useRef<HTMLButtonElement>(null);
 
   const activeMaterials = materials.length ? materials : defaultMaterials;
+  const activeCatalogItems = [...defaultCatalogItems.filter((item) => !catalogItems.some((saved) => saved.id === item.id)), ...catalogItems];
   const activePrinters = printers.length ? printers : defaultPrinters;
   const userName = displayName(user?.email);
   const greeting = greetingForEmail(user?.email);
@@ -416,6 +430,7 @@ export default function Home({
     const subscriptions = [
       ["clients", setClients],
       ["materials", setMaterials],
+      ["catalogItems", setCatalogItems],
       ["orders", setOrders],
       ["triages", setTriages],
       ["calendar", setEvents],
@@ -507,6 +522,10 @@ export default function Home({
     setPrinters((current) => current.length ? current : defaultPrinters);
   }, [preview]);
 
+  async function deleteRecord(collectionName: string, recordId: string) {
+    if (preview) return;
+    await deleteDoc(doc(workspaceCollection(collectionName), recordId));
+  }
   async function saveRecord(collectionName: string, record: { id: string; [key: string]: unknown }) {
     if (preview) return;
     const { id: recordId, ...rawData } = record;
@@ -562,6 +581,23 @@ export default function Home({
     }
   }
 
+  async function saveCatalogItem(item: CatalogItem) {
+    const saved = { ...item, updatedAt: nowIso() };
+    try {
+      if (preview) setCatalogItems((current) => current.some((entry) => entry.id === saved.id) ? current.map((entry) => entry.id === saved.id ? saved : entry) : [saved, ...current]);
+      else await saveRecord("catalogItems", saved);
+      setCatalogModal(null);
+      setNotice("Item do catálogo salvo.");
+    } catch { setNotice("Não foi possível salvar o item do catálogo."); }
+  }
+  async function deleteCatalogItem(item: CatalogItem) {
+    try {
+      if (preview) setCatalogItems((current) => current.filter((entry) => entry.id !== item.id));
+      else await deleteRecord("catalogItems", item.id);
+      setCatalogModal(null);
+      setNotice("Item removido do catálogo.");
+    } catch { setNotice("Não foi possível remover o item do catálogo."); }
+  }
   async function saveMaterial(material: Material) {
     if (!material.name.trim()) {
       setNotice("Informe o nome do filamento para salvar o estoque.");
@@ -1141,7 +1177,7 @@ export default function Home({
         {view === "settings" && (
           <section className="view">
             <SectionHeader eyebrow="Acesso privado" title="Equipe e configuração" description="Somente e-mails autorizados podem abrir os dados operacionais deste espaço." />
-            <div className="settings-grid"><article className="panel-card"><p className="eyebrow">Equipe do espaço</p><h3>Autorizar integrante</h3><p className="muted-copy">A conta atual é exibida com nome personalizado: Lincoln para Lincoln e Duda para Eduarda.</p><div className="team-member"><span>{userName.slice(0, 1).toUpperCase()}</span><div><b>{userName}</b><p>{user?.email || "Prévia da interface"}</p></div><em>Ativo</em></div>{!preview && <div className="team-form"><input type="email" value={teamEmail} onChange={(event) => setTeamEmail(event.target.value)} placeholder="E-mail da integrante" /><button type="button" className="button button-primary" onClick={() => void authorizeTeamMember()}>Autorizar acesso</button></div>}</article><article className="panel-card"><p className="eyebrow">Princípios de operação</p><h3>Registros rastreáveis</h3><ul className="settings-list"><li><Check size={16} /> Telefone formatado em padrão americano</li><li><Check size={16} /> Toda etapa relevante cria um evento visual</li><li><Check size={16} /> Consumo do material é abatido ao salvar o documento</li></ul></article></div>
+            <div className="settings-grid"><article className="panel-card catalog-settings-card"><div className="settings-card-heading"><div><p className="eyebrow">Catálogo comercial</p><h3>Itens e serviços</h3></div><button type="button" className="button button-secondary" onClick={() => setCatalogModal({ id: id("catalog"), name: "", description: "", unitPrice: 0, taxable: true, kind: "item" })}><Plus size={15} /> Adicionar item</button></div><p className="muted-copy">Cadastre os itens que aparecem no documento. O preço unitário será aplicado automaticamente ao selecionar o item.</p><div className="catalog-list">{activeCatalogItems.map((item) => <div className="catalog-list-row" key={item.id}><div><b>{item.name}</b><small>{item.description || "Sem descrição"}</small></div><strong>{currency(item.unitPrice)}</strong><button type="button" className="icon-button" aria-label={`Editar ${item.name}`} onClick={() => setCatalogModal({ ...item })}><Pencil size={15} /></button></div>)}</div></article><article className="panel-card"><p className="eyebrow">Equipe do espaço</p><h3>Autorizar integrante</h3><p className="muted-copy">A conta atual é exibida com nome personalizado: Lincoln para Lincoln e Duda para Eduarda.</p><div className="team-member"><span>{userName.slice(0, 1).toUpperCase()}</span><div><b>{userName}</b><p>{user?.email || "Prévia da interface"}</p></div><em>Ativo</em></div>{!preview && <div className="team-form"><input type="email" value={teamEmail} onChange={(event) => setTeamEmail(event.target.value)} placeholder="E-mail da integrante" /><button type="button" className="button button-primary" onClick={() => void authorizeTeamMember()}>Autorizar acesso</button></div>}</article><article className="panel-card"><p className="eyebrow">Princípios de operação</p><h3>Registros rastreáveis</h3><ul className="settings-list"><li><Check size={16} /> Telefone formatado em padrão americano</li><li><Check size={16} /> Toda etapa relevante cria um evento visual</li><li><Check size={16} /> Consumo do material é abatido ao salvar o documento</li></ul></article></div>
           </section>
         )}
       </main>
@@ -1149,12 +1185,13 @@ export default function Home({
       <nav className="mobile-nav" aria-label="Navegação móvel">{mobileNavigation.map(({ id: navId, label, icon: Icon }) => <button key={navId} className={view === navId ? "mobile-active" : ""} type="button" onClick={() => navigate(navId)}><Icon size={19} /><span>{label.replace(" técnica", "")}</span></button>)}</nav>
 
       {clientModal && <ClientDialog client={clientModal} onChange={setClientModal} onClose={() => setClientModal(null)} onSave={saveClient} />}
+      {catalogModal && <CatalogItemDialog item={catalogModal} onChange={setCatalogModal} onClose={() => setCatalogModal(null)} onSave={saveCatalogItem} onDelete={deleteCatalogItem} />}
       {materialModal && <MaterialDialog material={materialModal} onChange={setMaterialModal} onClose={() => setMaterialModal(null)} onSave={saveMaterial} />}
       {printerModal && <PrinterDialog printer={printerModal} onChange={setPrinterModal} onClose={() => setPrinterModal(null)} onSave={savePrinter} />}
       {calendarModal && <CalendarDialog event={calendarModal} onChange={setCalendarModal} onClose={() => setCalendarModal(null)} onSave={saveCalendarEvent} />}
       {maintenancePrinter && <MaintenanceDialog printer={maintenancePrinter} onClose={() => setMaintenancePrinter(null)} onSave={saveMaintenance} />}
       {newDocumentModal && <NewDocumentDialog onClose={() => setNewDocumentModal(false)} onSelect={(documentType) => { setNewDocumentModal(false); setOrderModal(orderTemplate(activeMaterials[0], documentType)); }} />}
-      {orderModal && <DocumentDialog order={orderModal} existing={orders.some((item) => item.id === orderModal.id)} authenticated={Boolean(user) && !preview} clients={clients} materials={activeMaterials} onChange={setOrderModal} onClose={() => setOrderModal(null)} onSave={saveOrder} onConvert={convertOrderToInvoice} onPrint={downloadInvoicePdf} onAttach={attachStl} createLine={createLine} />}
+      {orderModal && <DocumentDialog order={orderModal} existing={orders.some((item) => item.id === orderModal.id)} authenticated={Boolean(user) && !preview} clients={clients} materials={activeMaterials} catalogItems={activeCatalogItems} onChange={setOrderModal} onClose={() => setOrderModal(null)} onSave={saveOrder} onConvert={convertOrderToInvoice} onPrint={downloadInvoicePdf} onAttach={attachStl} createLine={createLine} />}
       {expenseModal && <ExpenseDialog expense={expenseModal} onChange={setExpenseModal} onClose={() => setExpenseModal(null)} onSave={saveExpense} />}
       {partModal && <PartDialog part={partModal} invoices={orders.filter((order) => order.documentType === "Invoice")} onChange={setPartModal} onClose={() => setPartModal(null)} onSave={savePart} />}
       {revisionModal && <RevisionDialog revision={revisionModal} parts={parts} invoices={orders.filter((order) => order.documentType === "Invoice")} preview={preview} onChange={setRevisionModal} onClose={() => setRevisionModal(null)} onSave={saveRevision} />}
@@ -1198,6 +1235,9 @@ function ClientDialog({ client, onChange, onClose, onSave }: { client: Client; o
   }
   return <Modal title={client.name ? "Editar cliente" : "Novo cliente"} onClose={onClose}><div className="dialog-form"><label className="field-stack"><span>Primeiro nome *</span><input value={firstName} onChange={(event) => updateName(event.target.value, lastName)} placeholder="Nome" /></label><label className="field-stack"><span>Último nome</span><input value={lastName} onChange={(event) => updateName(firstName, event.target.value)} placeholder="Sobrenome" /></label><label className="field-stack"><span>Empresa</span><input value={client.company} onChange={(event) => onChange({ ...client, company: event.target.value })} placeholder="Opcional" /></label><label className="field-stack"><span>E-mail</span><input type="email" value={client.email} onChange={(event) => onChange({ ...client, email: event.target.value })} placeholder="cliente@email.com" /></label><label className="field-stack field-span"><span>Telefone</span><input inputMode="tel" value={client.phone} onChange={(event) => onChange({ ...client, phone: formatUsPhone(event.target.value) })} placeholder="(000) 000-0000" /></label><label className="field-stack field-span"><span>Endereço</span><input value={client.address} onChange={(event) => onChange({ ...client, address: event.target.value })} placeholder="Endereço completo" /></label><label className="field-stack field-span"><span>Notas internas</span><textarea value={client.notes} onChange={(event) => onChange({ ...client, notes: event.target.value })} placeholder="Preferências, histórico, instruções…" /></label></div><div className="dialog-actions"><button type="button" className="button button-secondary" onClick={onClose}>Cancelar</button><button type="button" className="button button-primary" onClick={() => void onSave(client)}>Salvar todas as alterações</button></div></Modal>;
 }
+
+function CatalogItemDialog({ item, onChange, onClose, onSave, onDelete }: { item: CatalogItem; onChange: (item: CatalogItem) => void; onClose: () => void; onSave: (item: CatalogItem) => Promise<void>; onDelete: (item: CatalogItem) => Promise<void> }) {
+  return <Modal title={item.id.startsWith("catalog-") ? "Editar item do catálogo" : "Novo item do catálogo"} onClose={onClose}><div className="dialog-form catalog-item-form"><label className="field-stack field-span"><span>Nome do item</span><input value={item.name} onChange={(event) => onChange({ ...item, name: event.target.value })} placeholder="Ex.: Peça usinada, hora técnica ou envio" /></label><label className="field-stack field-span"><span>Descrição</span><textarea value={item.description} onChange={(event) => onChange({ ...item, description: event.target.value })} placeholder="Descrição que poderá ser ajustada no documento." /></label><label className="field-stack"><span>Preço unitário</span><input type="number" min="0" step="0.01" value={item.unitPrice} onChange={(event) => onChange({ ...item, unitPrice: Number(event.target.value) })} /></label><label className="field-stack"><span>Tipo</span><select value={item.kind} onChange={(event) => onChange({ ...item, kind: event.target.value as CatalogItem["kind"] })}><option value="item">Item</option><option value="service">Serviço</option></select></label><label className="catalog-tax-toggle"><input type="checkbox" checked={item.taxable} onChange={(event) => onChange({ ...item, taxable: event.target.checked })} /> Aplicar tax neste item</label></div><div className="dialog-actions"><button type="button" className="button button-secondary" onClick={() => void onDelete(item)}>Excluir</button><button type="button" className="button button-secondary" onClick={onClose}>Cancelar</button><button type="button" className="button button-primary" onClick={() => void onSave(item)} disabled={!item.name.trim()}>Salvar item</button></div></Modal>}
 
 function MaterialDialog({ material, onChange, onClose, onSave }: { material: Material; onChange: (material: Material) => void; onClose: () => void; onSave: (material: Material) => Promise<void> }) {
   const number = (key: keyof Material, value: string) => onChange({ ...material, [key]: Number(value) || 0 });

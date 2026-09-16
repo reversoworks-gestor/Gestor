@@ -12,7 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { calculateLineSubtotalCents, calculateOrderTotals, centsToAmount, printServicePrice, toCents } from "@/lib/finance";
-import type { Attachment, Client, Material, Order, OrderLine, Payment } from "@/lib/models";
+import type { Attachment, CatalogItem, Client, Material, Order, OrderLine, Payment } from "@/lib/models";
 import { isEstimate } from "@/lib/documents";
 import { currency } from "@/lib/formatters";
 
@@ -60,6 +60,7 @@ type DocumentDialogProps = {
   authenticated: boolean;
   clients: Client[];
   materials: Material[];
+  catalogItems: CatalogItem[];
   onChange: (order: Order) => void;
   onClose: () => void;
   onSave: (order: Order) => Promise<boolean>;
@@ -69,7 +70,7 @@ type DocumentDialogProps = {
   createLine: (service: OrderLine["service"], material: Material) => OrderLine;
 };
 
-export default function DocumentDialog({ order, existing, authenticated, clients, materials, onChange, onClose, onSave, onConvert, onPrint, onAttach, createLine }: DocumentDialogProps) {
+export default function DocumentDialog({ order, existing, authenticated, clients, materials, catalogItems, onChange, onClose, onSave, onConvert, onPrint, onAttach, createLine }: DocumentDialogProps) {
   const [readOnly, setReadOnly] = useState(existing);
   const [dirty, setDirty] = useState(false);
   const [clientQuery, setClientQuery] = useState(order.clientName || "");
@@ -178,33 +179,23 @@ export default function DocumentDialog({ order, existing, authenticated, clients
               </div>
             </section>
 
-            <section className="document-section">
-              <div className="section-caption"><Box size={17} /><span>Itens e serviços</span></div>
-              <div className="dialog-form"><label className="field-stack field-span"><span>Título *</span><input value={order.title} onChange={(event) => change({ ...order, title: event.target.value })} placeholder="Nome do trabalho" /></label><label className="field-stack"><span>Tax (%)</span><input type="number" min="0" step="0.01" value={(order.taxRate ?? 0) * 100} onChange={(event) => change({ ...order, taxRate: Number(event.target.value) / 100 })} /></label></div>
-              <div className="service-picker">
-                <button type="button" onClick={() => change({ ...order, lines: [...order.lines, { ...createLine("hardware", material), kind: "item", taxable: true, unit: "unidades" }] })}><Plus size={14} /> Item</button>
-                {(["scan", "cad", "print", "post", "shipping"] as OrderLine["service"][]).map((service) => <button type="button" key={service} onClick={() => change({ ...order, lines: [...order.lines, createLine(service, material)] })}><Plus size={14} /> {serviceLabels[service]}</button>)}
-              </div>
+            <section className="document-section items-services-section">
+              <div className="section-caption"><Box size={17} /><span>Itens e serviços</span><small>Selecione no catálogo, descreva e informe a quantidade.</small></div>
+              <div className="dialog-form"><label className="field-stack field-span"><span>Título</span><input value={order.title} onChange={(event) => change({ ...order, title: event.target.value })} placeholder="Nome do trabalho" /></label></div>
+              <div className="catalog-add-row"><select aria-label="Item do catálogo" defaultValue="" onChange={(event) => { const item = catalogItems.find((entry) => entry.id === event.target.value); if (!item) return; change({ ...order, lines: [...order.lines, { id: makeId("line"), service: item.kind === "item" ? "hardware" : "custom", kind: item.kind, catalogItemId: item.id, taxable: item.taxable, unit: "unidades", label: item.name, quantity: 1, unitPrice: item.unitPrice, unitPriceCents: toCents(item.unitPrice), description: item.description }] }); event.currentTarget.value = ""; }}><option value="">Adicionar item ou serviço…</option>{catalogItems.map((item) => <option key={item.id} value={item.id}>{item.name} · {currency(item.unitPrice)}</option>)}</select><button type="button" className="button button-secondary" onClick={() => { const item = catalogItems[0]; if (!item) return; change({ ...order, lines: [...order.lines, { id: makeId("line"), service: item.kind === "item" ? "hardware" : "custom", kind: item.kind, catalogItemId: item.id, taxable: item.taxable, unit: "unidades", label: item.name, quantity: 1, unitPrice: item.unitPrice, unitPriceCents: toCents(item.unitPrice), description: item.description }] }); }}><Plus size={14} /> Adicionar</button></div>
+              <div className="line-items-header"><span>Item</span><span>Descrição</span><span>Quantidade</span><span>Preço por unidade</span><span>Total</span><span /></div>
               <div className="line-items">
-                {order.lines.map((line) => <div className="line-item" key={line.id}>
-                  <label>Tipo<select value={line.kind ?? "service"} onChange={(event) => updateLine(line.id, { kind: event.target.value as OrderLine["kind"], taxable: event.target.value === "item" ? line.taxable !== false : false, unit: event.target.value === "item" ? "unidades" : "horas" })}><option value="item">Item</option><option value="service">Serviço</option></select></label>
-                  <label>Item/serviço<select value={line.service} onChange={(event) => { const service = event.target.value as OrderLine["service"]; updateLine(line.id, { service, label: serviceLabels[service] }); }}><option value="scan">Escaneamento 3D</option><option value="cad">CAD / modelagem</option><option value="print">Impressão</option><option value="post">Pós-processamento</option><option value="hardware">Hardware</option><option value="shipping">Envio</option><option value="custom">Personalizado</option></select></label>
+                {order.lines.map((line) => <div className="line-item catalog-line-item" key={line.id}>
+                  <select aria-label="Item" value={line.catalogItemId ?? ""} onChange={(event) => { const item = catalogItems.find((entry) => entry.id === event.target.value); if (item) updateLine(line.id, { catalogItemId: item.id, service: item.kind === "item" ? "hardware" : "custom", kind: item.kind, label: item.name, unitPrice: item.unitPrice, unitPriceCents: toCents(item.unitPrice), taxable: item.taxable, description: line.description || item.description }); }}><option value="">Selecionar item</option>{catalogItems.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select>
                   <input aria-label={`${line.label} descrição`} value={line.description} onChange={(event) => updateLine(line.id, { description: event.target.value })} placeholder="Descrição" />
-                  <label>{line.kind === "item" ? "Unidades" : "Horas"}<input type="number" min="0" step="0.25" value={line.quantity} onChange={(event) => updateLine(line.id, { quantity: Number(event.target.value) })} /></label>
-                  <label>Valor unitário<input type="number" min="0" step="0.01" value={centsToAmount(line.unitPriceCents ?? toCents(line.unitPrice))} readOnly={line.service === "print"} onChange={(event) => updateLine(line.id, { unitPrice: Number(event.target.value), unitPriceCents: toCents(event.target.value) })} /></label>
-                  {line.kind === "item" && <label><input type="checkbox" checked={line.taxable !== false} onChange={(event) => updateLine(line.id, { taxable: event.target.checked })} /> Taxável</label>}
+                  <input aria-label="Quantidade" type="number" min="0" step="1" value={line.quantity} onChange={(event) => updateLine(line.id, { quantity: Number(event.target.value) })} />
+                  <input aria-label="Preço por unidade" type="number" min="0" step="0.01" value={centsToAmount(line.unitPriceCents ?? toCents(line.unitPrice))} readOnly />
                   <b>{currency(centsToAmount(calculateLineSubtotalCents(line)))}</b>
                   <button type="button" aria-label={`Remover ${line.label}`} className="icon-button" onClick={() => change({ ...order, lines: order.lines.filter((item) => item.id !== line.id) })}><X size={16} /></button>
-                  {line.service === "print" && <div className="dialog-form field-span">
-                    <label className="field-stack"><span>Material</span><select value={line.materialId ?? material.id} onChange={(event) => updatePrintLine(line, { materialId: event.target.value })}>{materials.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-                    <label className="field-stack"><span>Peso estimado (g)</span><input type="number" min="0" value={line.weightGrams ?? order.materialGrams ?? 0} onChange={(event) => updatePrintLine(line, { weightGrams: Number(event.target.value) })} /></label>
-                    <label className="field-stack"><span>Horas de impressão</span><input type="number" min="0" step="0.25" value={line.printHours ?? 0} onChange={(event) => updatePrintLine(line, { printHours: Number(event.target.value) })} /></label>
-                    <label className="field-stack"><span>Valor da hora</span><input type="number" min="0" step="0.01" value={line.hourlyRate ?? 2.5} onChange={(event) => updatePrintLine(line, { hourlyRate: Number(event.target.value), hourlyRateCents: toCents(event.target.value) })} /></label>
-                  </div>}
                 </div>)}
-                {!order.lines.length && <p className="muted-copy">Adicione itens ou serviços configurados para compor o documento.</p>}
+                {!order.lines.length && <p className="muted-copy">Adicione um item ou serviço do catálogo para compor o documento.</p>}
               </div>
-              <div className="document-total"><span>Subtotal</span><strong>{currency(centsToAmount(totals.subtotalCents))}</strong></div><div className="document-total"><span>Tax</span><strong>{currency(centsToAmount(totals.taxCents))}</strong></div><div className="document-total"><span>Total</span><strong>{currency(centsToAmount(totals.totalCents))}</strong></div>
+              <div className="document-totals"><div className="document-total"><span>Subtotal</span><strong>{currency(centsToAmount(totals.subtotalCents))}</strong></div><div className="document-total"><span>Tax</span><strong>{currency(centsToAmount(totals.taxCents))}</strong></div><div className="document-total document-total-final"><span>Total + Taxes</span><strong>{currency(centsToAmount(totals.totalCents))}</strong></div></div>
             </section>
 
             <section className="document-section">

@@ -143,6 +143,17 @@ export type OrderLine = {
   triageRecommendation?: string;
   triageScore?: number;
   triageConfidence?: number;
+  catalogItemId?: string;
+};
+
+export type CatalogItem = {
+  id: string;
+  name: string;
+  description: string;
+  unitPrice: number;
+  taxable: boolean;
+  kind: "item" | "service";
+  updatedAt?: string;
 };
 
 export type Payment = {
