@@ -172,9 +172,12 @@ export type Attachment = {
   contentType?: string;
   uploadedAt?: string;
 };
+export type ProductionStage = "planning" | "approval" | "production" | "quality" | "shipping";
+
 export type Order = {
   id: string;
   documentType: "Estimativa" | "Orçamento" | "Invoice";
+  productionStage?: ProductionStage;
   status: "Rascunho" | "Enviado" | "Aprovado" | "Em produção";
   clientId: string;
   clientName: string;

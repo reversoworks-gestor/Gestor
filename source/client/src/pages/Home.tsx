@@ -69,6 +69,7 @@ import type {
   PartRevision,
   Payment,
   Printer as PrinterModel,
+  ProductionStage,
   Triage,
   ViewId,
 } from "@/lib/models";
@@ -141,6 +142,13 @@ const serviceLabels: Record<OrderLine["service"], string> = {
   shipping: "Envio",
   custom: "Personalizado",
 };
+const productionStages: Array<{ id: ProductionStage; label: string; detail: string }> = [
+  { id: "planning", label: "Triagem", detail: "Entrada e definição" },
+  { id: "approval", label: "Aprovação", detail: "Cliente e escopo" },
+  { id: "production", label: "Produção", detail: "Execução em fábrica" },
+  { id: "quality", label: "Qualidade", detail: "Inspeção e validação" },
+  { id: "shipping", label: "Envio", detail: "Despacho e conclusão" },
+];
 
 const defaultCatalogItems: CatalogItem[] = [
   { id: "cat-item", name: "Item personalizado", description: "Componentes ou produto definido no documento.", unitPrice: 0, taxable: true, kind: "item" },
@@ -318,6 +326,7 @@ function orderTemplate(material: Material, documentType: "Estimativa" | "Invoice
     startDate: todayInputValue(),
     materialId: material.id,
     materialName: material.name,
+    productionStage: "planning",
     materialGrams: 0,
     notes: "",
     publicNote: "",
@@ -364,6 +373,11 @@ function TriageField({
     </label>
   );
 }
+
+function ProductionBoard({ orders, onOpen, onMove }: { orders: Order[]; onOpen: (order: Order) => void; onMove: (order: Order, stage: ProductionStage) => void }) {
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const activeOrders = orders.filter((order) => order.status !== "Rascunho");
+  return <div className="production-board-shell"><div className="production-board" role="list" aria-label="Funil de produção">{productionStages.map((stage) => { const cards = activeOrders.filter((order) => (order.productionStage ?? "planning") === stage.id); return <section className="production-column" key={stage.id} onDragOver={(event) => event.preventDefault()} onDrop={() => { const order = orders.find((item) => item.id === draggedId); if (order) onMove(order, stage.id); setDraggedId(null); }}><header className="production-column-header"><div><p className="eyebrow">{stage.detail}</p><h3>{stage.label}</h3></div><span>{cards.length}</span></header><div className="production-column-body">{cards.map((order) => <article className="production-card" key={order.id} draggable onDragStart={() => setDraggedId(order.id)} onDragEnd={() => setDraggedId(null)}><button type="button" className="production-card-main" onClick={() => onOpen(order)}><span className="production-card-type">{order.documentType}</span><strong>{order.title || "Sem título"}</strong><small>{order.clientName || "Cliente não definido"}</small><span className="production-card-meta">{order.dueDate ? `Entrega ${order.dueDate}` : "Sem entrega definida"} · {currency(order.total || 0)}</span></button><div className="production-card-actions"><button type="button" onClick={() => onMove(order, productionStages[Math.min(productionStages.length - 1, productionStages.findIndex((item) => item.id === stage.id) + 1)].id)} disabled={stage.id === "shipping"}>Avançar <ChevronRight size={14} /></button></div></article>)}{!cards.length && <p className="production-empty">Solte pedidos aqui</p>}</div></section>; })}</div></div>}
 
 export default function Home({
   user,
@@ -762,6 +776,15 @@ export default function Home({
     }
   }
 
+  async function moveProductionOrder(order: Order, productionStage: ProductionStage) {
+    const changed = { ...order, productionStage, status: productionStage === "production" || productionStage === "quality" ? "Em produção" as const : order.status };
+    try {
+      if (preview) setOrders((current) => current.map((item) => item.id === order.id ? changed : item));
+      else await saveRecord("orders", changed);
+      await recordProcess("order", `Funil atualizado: ${changed.title}`, `Etapa: ${productionStages.find((stage) => stage.id === productionStage)?.label ?? productionStage}.`);
+      setNotice(`Pedido movido para ${productionStages.find((stage) => stage.id === productionStage)?.label ?? "a próxima etapa"}.`);
+    } catch { setNotice("Não foi possível mover o pedido no funil."); }
+  }
   async function convertOrderToInvoice(order: Order): Promise<boolean> {
     const prepared = prepareOrder(order);
     if (!prepared || !isEstimate(prepared.saved)) return false;
@@ -1118,6 +1141,12 @@ export default function Home({
           </section>
         )}
 
+        {view === "production" && (
+          <section className="view production-view">
+            <SectionHeader eyebrow="Fábrica / Funil operacional" title="Produção em fluxo" description="Da triagem ao envio, cada pedido avança por uma etapa clara e rastreável." action={<button type="button" className="button button-primary" onClick={() => navigate("triage")}><ClipboardCheck size={17} /> Nova triagem</button>} />
+            <ProductionBoard orders={orders} onOpen={(order) => setOrderModal({ ...order })} onMove={(order, stage) => void moveProductionOrder(order, stage)} />
+          </section>
+        )}
         {view === "inventory" && (
           <section className="view">
             <SectionHeader eyebrow="Fábrica" title="Estoque de filamentos" description="Acompanhe disponível, limite de reposição e consumo aplicado a protótipos ou produtos." action={<button type="button" className="button button-primary" onClick={() => setMaterialModal(materialTemplate())}><Plus size={17} /> Adicionar filamento</button>} />

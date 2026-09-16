@@ -814,3 +814,28 @@ button, input, textarea, select { font-family: Inter, ui-sans-serif, system-ui, 
   .payment-section > .section-caption { align-items: center; }
   .payment-section .payment-add-button { margin-left: auto; }
 }
+
+/* Produção — funil horizontal estilo Trello. */
+.production-view { min-width: 0; }
+.production-board-shell { width: 100%; overflow-x: auto; overflow-y: hidden; padding: 4px 0 18px; scrollbar-color: #70E9D7 #171920; scrollbar-width: thin; }
+.production-board { display: grid; grid-template-columns: repeat(5, minmax(270px, 1fr)); gap: 14px; min-width: 1420px; min-height: calc(100dvh - 270px); }
+.production-column { display: flex; min-height: 520px; flex-direction: column; overflow: hidden; border: 1px solid #FFFFFF16; border-radius: 12px; background: #171920; }
+.production-column-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px; border-bottom: 1px solid #FFFFFF16; background: #262A36; }
+.production-column-header h3 { margin: 3px 0 0; font-size: 18px; }
+.production-column-header > span { display: grid; min-width: 28px; height: 28px; place-items: center; border: 1px solid rgba(112,233,215,.28); border-radius: 999px; color: #70E9D7; font: 700 12px "SF Mono", monospace; }
+.production-column-body { display: grid; align-content: start; gap: 10px; flex: 1; padding: 12px; }
+.production-card { border: 1px solid #FFFFFF16; border-radius: 9px; background: #07080D; transition: border-color .16s ease, transform .16s ease; }
+.production-card:hover { border-color: rgba(112,233,215,.4); transform: translateY(-1px); }
+.production-card-main { display: grid; width: 100%; gap: 6px; padding: 14px; color: #F5F7FA; text-align: left; }
+.production-card-main strong { font-size: 14px; }
+.production-card-main small, .production-card-meta { color: #A4A9B5; font-size: 12px; }
+.production-card-type { color: #70E9D7; font: 700 10px "SF Mono", monospace; letter-spacing: .06em; text-transform: uppercase; }
+.production-card-meta { font-family: "SF Mono", monospace; font-size: 10px; }
+.production-card-actions { display: flex; justify-content: flex-end; padding: 0 12px 12px; }
+.production-card-actions button { display: inline-flex; align-items: center; gap: 5px; color: #70E9D7; font-size: 11px; }
+.production-card-actions button:disabled { visibility: hidden; }
+.production-empty { margin: 4px; padding: 22px 12px; border: 1px dashed #FFFFFF16; border-radius: 8px; color: #737D83; font-size: 12px; text-align: center; }
+@media (max-width: 760px) {
+  .production-board { min-height: calc(100dvh - 245px); }
+  .production-column { min-height: 480px; }
+}
