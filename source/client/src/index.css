@@ -755,8 +755,21 @@ button, input, textarea, select { font-family: Inter, ui-sans-serif, system-ui, 
 .document-totals { display: grid; gap: 5px; max-width: 360px; margin: 18px 0 0 auto; padding-top: 14px; border-top: 1px solid #FFFFFF16; }
 .document-total-final { margin-top: 6px; padding-top: 10px; border-top: 1px solid #FFFFFF16; }
 .document-total-final strong { font-size: 30px; }
+@media (min-width: 1101px) {
+  .items-services-section { padding: 24px; }
+  .items-services-section > .dialog-form { margin: 20px 0 22px; }
+  .catalog-add-row { gap: 14px; margin-bottom: 22px; }
+  .catalog-add-row select, .catalog-add-row button { min-height: 44px; }
+  .line-items-header { grid-template-columns: 1.35fr 2.7fr 1fr 1.15fr 1fr 40px; gap: 14px; padding: 0 14px 10px; }
+  .line-items { gap: 12px; }
+  .catalog-line-item { grid-template-columns: 1.35fr 2.7fr 1fr 1.15fr 1fr 40px; gap: 14px; min-height: 62px; padding: 10px 14px; border: 1px solid #FFFFFF16; border-radius: 8px; background: #07080D; }
+  .catalog-line-item select, .catalog-line-item input { min-height: 42px; box-sizing: border-box; }
+  .catalog-line-item b { text-align: right; white-space: nowrap; }
+  .catalog-line-item .icon-button { justify-self: end; }
+  .document-totals { gap: 8px; margin-top: 22px; padding-top: 16px; }
+}
 @media (max-width: 1100px) and (min-width: 761px) {
-  .line-items-header, .catalog-line-item { grid-template-columns: minmax(130px, .8fr) minmax(180px, 1.5fr) 90px 120px 90px 36px; gap: 8px; }
+  .line-items-header, .catalog-line-item { grid-template-columns: 1.15fr 2fr .9fr 1.05fr .9fr 36px; gap: 10px; }
 }
 @media (max-width: 760px) {
   .settings-card-heading { flex-direction: column; }
