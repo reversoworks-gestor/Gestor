@@ -1060,14 +1060,14 @@ export default function Home({
 
         {(view === "orders" || view === "estimates" || view === "invoices") && (
           <section className="view">
-            <SectionHeader eyebrow="Comercial" title={view === "invoices" ? "Invoices" : "Estimativas"} description="Documentos conectados ao cliente, itens, serviços, pagamentos, notas e arquivos." action={<button type="button" className="button button-primary" onClick={() => setNewDocumentModal(true)}><Plus size={17} /> Novo pedido</button>} />
+            <SectionHeader eyebrow="Comercial" title={view === "invoices" ? "Invoices" : "Estimativas"} description="Documentos conectados ao cliente, itens, serviços, pagamentos, notas e arquivos." action={<button type="button" className="button button-primary" onClick={() => view === "estimates" ? setOrderModal(orderTemplate(activeMaterials[0], "Estimativa")) : setNewDocumentModal(true)}><Plus size={17} /> Novo pedido</button>} />
             <div className="order-list">
               {orders.filter((order) => {
                 const term = globalSearch.trim().toLocaleLowerCase();
                 const typeMatches = view === "invoices" ? order.documentType === "Invoice" : isEstimate(order);
                 return typeMatches && (!term || `${order.title} ${order.clientName} ${order.documentType}`.toLocaleLowerCase().includes(term));
               }).map((order) => <article className="order-card" key={order.id}><div className="order-symbol">{order.documentType === "Invoice" ? <CircleDollarSign size={21} /> : <FileText size={21} />}</div><div className="order-main"><div className="order-title"><span>{isEstimate(order) ? "Estimativa" : "Invoice"}</span><h3>{order.title}</h3></div><p>{order.clientName} · {order.materialName || "Material não definido"}</p><small><Clock3 size={13} /> Entrega: {order.dueDate || "a definir"}</small></div><div className="order-value"><strong>{currency(order.total)}</strong><span>{order.status}</span></div><div className="order-actions"><button className="icon-button" type="button" aria-label="Abrir documento" onClick={() => setOrderModal({ ...order })}><Eye size={16} /></button>{order.documentType === "Invoice" && <button className="icon-button" type="button" aria-label="Imprimir invoice" onClick={() => downloadInvoicePdf(order)}><FileDown size={16} /></button>}</div></article>)}
-              {!orders.some((order) => view === "invoices" ? order.documentType === "Invoice" : isEstimate(order)) && <EmptyState icon={FilePlus2} title={`Nenhuma ${view === "invoices" ? "invoice" : "estimativa"} criada`} body="Crie um documento com itens, serviços, pagamentos, notas e anexos." action={<button type="button" className="button button-primary" onClick={() => setNewDocumentModal(true)}>Criar documento</button>} />}
+              {!orders.some((order) => view === "invoices" ? order.documentType === "Invoice" : isEstimate(order)) && <EmptyState icon={FilePlus2} title={`Nenhuma ${view === "invoices" ? "invoice" : "estimativa"} criada`} body="Crie um documento com itens, serviços, pagamentos, notas e anexos." action={<button type="button" className="button button-primary" onClick={() => view === "estimates" ? setOrderModal(orderTemplate(activeMaterials[0], "Estimativa")) : setNewDocumentModal(true)}>Criar documento</button>} />}
             </div>
           </section>
         )}
