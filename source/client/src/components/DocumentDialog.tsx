@@ -5,14 +5,13 @@ import {
   FileDown,
   FileText,
   HardHat,
-  Paperclip,
   Pencil,
   Plus,
   UsersRound,
   X,
 } from "lucide-react";
 import { calculateLineSubtotalCents, calculateOrderTotals, centsToAmount, printServicePrice, toCents } from "@/lib/finance";
-import type { Attachment, CatalogItem, Client, Material, Order, OrderLine, Payment } from "@/lib/models";
+import type { CatalogItem, Client, Material, Order, OrderLine, Payment } from "@/lib/models";
 import { isEstimate } from "@/lib/documents";
 import { currency } from "@/lib/formatters";
 
@@ -66,16 +65,13 @@ type DocumentDialogProps = {
   onSave: (order: Order) => Promise<boolean>;
   onConvert: (order: Order) => Promise<boolean>;
   onPrint: (order: Order) => void;
-  onAttach: (order: Order, file: File) => Promise<Attachment>;
   createLine: (service: OrderLine["service"], material: Material) => OrderLine;
 };
 
-export default function DocumentDialog({ order, existing, authenticated, clients, materials, catalogItems, onChange, onClose, onSave, onConvert, onPrint, onAttach, createLine }: DocumentDialogProps) {
+export default function DocumentDialog({ order, existing, authenticated, clients, materials, catalogItems, onChange, onClose, onSave, onConvert, onPrint, createLine }: DocumentDialogProps) {
   const [readOnly, setReadOnly] = useState(existing);
   const [dirty, setDirty] = useState(false);
   const [clientQuery, setClientQuery] = useState(order.clientName || "");
-  const [attachBusy, setAttachBusy] = useState(false);
-  const [attachError, setAttachError] = useState("");
   const material = materials.find((item) => item.id === order.materialId) ?? materials[0];
   const totals = calculateOrderTotals(order.lines, order.taxRate ?? 0);
   const suggestions = useMemo(() => {
@@ -136,20 +132,6 @@ export default function DocumentDialog({ order, existing, authenticated, clients
     });
   }
 
-  async function attachFile(file?: File) {
-    if (!file) return;
-    setAttachBusy(true);
-    setAttachError("");
-    try {
-      const attachment = await onAttach(order, file);
-      change({ ...order, attachments: [...(order.attachments ?? []), attachment] });
-    } catch (error) {
-      setAttachError(error instanceof Error ? error.message : "Não foi possível anexar o arquivo .STL.");
-    } finally {
-      setAttachBusy(false);
-    }
-  }
-
   async function save() {
     if (await onSave(order)) setDirty(false);
   }
@@ -207,9 +189,6 @@ export default function DocumentDialog({ order, existing, authenticated, clients
             <section className="document-section">
               <div className="section-caption"><FileText size={17} /><span>Notas e arquivos</span></div>
               <div className="document-notes-grid"><label className="field-stack"><span>Nota pública · aparece no PDF</span><textarea value={order.publicNote ?? ""} onChange={(event) => change({ ...order, publicNote: event.target.value })} /></label>{authenticated && <label className="field-stack"><span>Nota privada · apenas autenticados</span><textarea value={order.privateNote ?? ""} onChange={(event) => change({ ...order, privateNote: event.target.value })} /></label>}</div>
-              <label className="button button-secondary"><Paperclip size={16} /> {attachBusy ? "Enviando…" : "Anexar .STL"}<input hidden type="file" accept=".stl,model/stl" disabled={attachBusy} onChange={(event) => void attachFile(event.target.files?.[0])} /></label>
-              {attachError && <small className="inline-warning">{attachError}</small>}
-              <div className="stack-list">{(order.attachments ?? []).map((attachment) => <div key={attachment.id ?? attachment.storagePath ?? attachment.name}><a href={attachment.downloadUrl} target="_blank" rel="noreferrer">{attachment.name}</a><small>{attachment.size ? `${Math.ceil(attachment.size / 1024)} KB` : ".STL"}</small></div>)}</div>
             </section>
           </div>
         </fieldset>
@@ -218,9 +197,9 @@ export default function DocumentDialog({ order, existing, authenticated, clients
           <button type="button" className="button button-secondary" onClick={requestClose}>{readOnly ? "Fechar" : "Cancelar"}</button>
           {readOnly && !isEstimate(order) && <button type="button" className="button button-secondary" onClick={() => onPrint(order)}><FileDown size={16} /> Imprimir</button>}
           {readOnly && <button type="button" className="button button-primary" onClick={() => setReadOnly(false)}><Pencil size={16} /> Modificar</button>}
-          {!readOnly && isEstimate(order) && <button type="button" className="button button-secondary" onClick={() => void convert()} disabled={attachBusy}><CircleDollarSign size={16} /> Criar Invoice</button>}
+          {!readOnly && isEstimate(order) && <button type="button" className="button button-secondary" onClick={() => void convert()}><CircleDollarSign size={16} /> Criar Invoice</button>}
           {!readOnly && !isEstimate(order) && <button type="button" className="button button-secondary" onClick={() => onPrint(order)}><FileDown size={16} /> Imprimir</button>}
-          {!readOnly && <button type="button" className="button button-primary" onClick={() => void save()} disabled={attachBusy}>Salvar</button>}
+          {!readOnly && <button type="button" className="button button-primary" onClick={() => void save()}>Salvar</button>}
         </div>
       </div>
     </Modal>

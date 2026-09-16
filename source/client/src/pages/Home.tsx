@@ -57,7 +57,6 @@ import { downloadInvoicePdf } from "@/lib/pdf";
 import DocumentDialog, { NewDocumentDialog } from "@/components/DocumentDialog";
 import MaterialSelector from "@/components/MaterialSelector";
 import type {
-  Attachment,
   CalendarEvent,
   CatalogItem,
   Client,
@@ -794,12 +793,6 @@ export default function Home({
     }
   }
 
-  async function attachStl(order: Order, file: File): Promise<Attachment> {
-    if (preview) return { id: id("attachment"), name: file.name, size: file.size, contentType: "model/stl", uploadedAt: nowIso() };
-    const attachment = await uploadStlAttachment(order.id, file);
-    setNotice("Arquivo .STL enviado. Salve o documento para persistir o vínculo.");
-    return attachment;
-  }
 
   async function saveSelectorAnalysis(payload: Record<string, unknown>) {
     await saveRecord("materialAnalyses", payload as { id: string; [key: string]: unknown });
@@ -1191,7 +1184,7 @@ export default function Home({
       {calendarModal && <CalendarDialog event={calendarModal} onChange={setCalendarModal} onClose={() => setCalendarModal(null)} onSave={saveCalendarEvent} />}
       {maintenancePrinter && <MaintenanceDialog printer={maintenancePrinter} onClose={() => setMaintenancePrinter(null)} onSave={saveMaintenance} />}
       {newDocumentModal && <NewDocumentDialog onClose={() => setNewDocumentModal(false)} onSelect={(documentType) => { setNewDocumentModal(false); setOrderModal(orderTemplate(activeMaterials[0], documentType)); }} />}
-      {orderModal && <DocumentDialog order={orderModal} existing={orders.some((item) => item.id === orderModal.id)} authenticated={Boolean(user) && !preview} clients={clients} materials={activeMaterials} catalogItems={activeCatalogItems} onChange={setOrderModal} onClose={() => setOrderModal(null)} onSave={saveOrder} onConvert={convertOrderToInvoice} onPrint={downloadInvoicePdf} onAttach={attachStl} createLine={createLine} />}
+      {orderModal && <DocumentDialog order={orderModal} existing={orders.some((item) => item.id === orderModal.id)} authenticated={Boolean(user) && !preview} clients={clients} materials={activeMaterials} catalogItems={activeCatalogItems} onChange={setOrderModal} onClose={() => setOrderModal(null)} onSave={saveOrder} onConvert={convertOrderToInvoice} onPrint={downloadInvoicePdf} createLine={createLine} />}
       {expenseModal && <ExpenseDialog expense={expenseModal} onChange={setExpenseModal} onClose={() => setExpenseModal(null)} onSave={saveExpense} />}
       {partModal && <PartDialog part={partModal} invoices={orders.filter((order) => order.documentType === "Invoice")} onChange={setPartModal} onClose={() => setPartModal(null)} onSave={savePart} />}
       {revisionModal && <RevisionDialog revision={revisionModal} parts={parts} invoices={orders.filter((order) => order.documentType === "Invoice")} preview={preview} onChange={setRevisionModal} onClose={() => setRevisionModal(null)} onSave={saveRevision} />}
