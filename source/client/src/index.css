@@ -764,6 +764,7 @@ button, input, textarea, select { font-family: Inter, ui-sans-serif, system-ui, 
   .line-items { gap: 12px; }
   .catalog-line-item { grid-template-columns: 1.35fr 2.7fr 1fr 1.15fr 1fr 40px; gap: 14px; min-height: 62px; padding: 10px 14px; border: 1px solid #FFFFFF16; border-radius: 8px; background: #07080D; }
   .catalog-line-item select, .catalog-line-item input { min-height: 42px; box-sizing: border-box; }
+  .catalog-line-item select, .catalog-line-item input { height: 44px; min-height: 44px; padding-top: 10px; padding-bottom: 10px; }
   .catalog-line-item b { text-align: right; white-space: nowrap; }
   .catalog-line-item .icon-button { justify-self: end; }
   .document-totals { gap: 8px; margin-top: 22px; padding-top: 16px; }
