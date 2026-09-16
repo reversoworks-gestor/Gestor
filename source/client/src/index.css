@@ -695,13 +695,16 @@ button, input, textarea, select { font-family: Inter, ui-sans-serif, system-ui, 
   .document-section .dialog-form .field-span { grid-column: 1 / -1; }
   .document-section .dialog-form input, .document-section .dialog-form select, .order-dialog > .field-stack textarea, .document-notes-grid textarea { min-height: 48px; }
   .services-section { gap: 18px; }
-  .service-picker { gap: 9px; }
-  .service-picker button { padding: 9px 12px; font-size: 12px; }
-  .line-item { grid-template-columns: minmax(150px, .8fr) minmax(260px, 2fr) 110px 150px 110px 38px; gap: 12px; padding: 12px; }
+  .service-picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .service-picker button { width: 100%; min-height: 42px; justify-content: flex-start; padding: 9px 12px; font-size: 12px; }
+  .line-items { gap: 10px; }
+  .line-item { grid-template-columns: minmax(160px, .9fr) minmax(300px, 2.3fr) 110px 160px 125px 40px; gap: 12px; padding: 13px; }
   .line-item strong { font-size: 13px; }
-  .line-item input { min-height: 42px; padding: 8px 10px; font-size: 13px; }
-  .line-item label { font-size: 10px; }
-  .line-item b { font-size: 13px; }
+  .line-item input { min-height: 44px; padding: 9px 11px; font-size: 13px; }
+  .line-item label { display: grid; gap: 4px; color: #91a39e; font-size: 10px; font-weight: 650; }
+  .line-item label input { margin-top: 0; }
+  .line-item b { align-self: end; padding-bottom: 12px; color: #9cebdc; font-size: 14px; }
+  .line-item .icon-button { align-self: end; width: 36px; height: 36px; margin-bottom: 3px; }
   .payment-strip { align-items: end; }
   .payment-strip small { font-size: 12px; }
   .payment-row { gap: 12px; padding: 10px 0; }
@@ -712,5 +715,6 @@ button, input, textarea, select { font-family: Inter, ui-sans-serif, system-ui, 
 }
 @media (max-width: 1100px) and (min-width: 761px) {
   .modal-wide { width: min(96vw, 980px); padding: 24px; }
+  .service-picker { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .line-item { grid-template-columns: minmax(130px, .8fr) minmax(180px, 1.5fr) 90px 120px 90px 36px; gap: 8px; }
 }
