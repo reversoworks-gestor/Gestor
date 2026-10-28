@@ -167,6 +167,7 @@ export type Attachment = {
   id?: string;
   name: string;
   storagePath?: string;
+  /** Legacy bearer URL; never render or persist this field in new writes. */
   downloadUrl?: string;
   size?: number;
   contentType?: string;

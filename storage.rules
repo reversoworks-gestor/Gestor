@@ -18,5 +18,16 @@ service firebase.storage {
         && request.resource.contentType == 'model/stl';
       allow delete: if workspaceMember();
     }
+
+    match /workspaces/reverso-private/documents/{orderId}/{fileName} {
+      allow read, delete: if workspaceMember();
+      allow create, update: if workspaceMember()
+        && request.resource != null
+        && request.resource.size > 0
+        && request.resource.size <= 15 * 1024 * 1024
+        && request.resource.contentType in [
+          'application/pdf', 'image/png', 'image/jpeg', 'model/stl'
+        ];
+    }
   }
 }

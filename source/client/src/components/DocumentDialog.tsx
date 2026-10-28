@@ -5,15 +5,18 @@ import {
   FileDown,
   FileText,
   HardHat,
+  Paperclip,
   Pencil,
   Plus,
+  Trash2,
   UsersRound,
   X,
 } from "lucide-react";
 import { calculateLineSubtotalCents, calculateOrderTotals, centsToAmount, printServicePrice, toCents } from "@/lib/finance";
-import type { CatalogItem, Client, Material, Order, OrderLine, Payment } from "@/lib/models";
+import type { Attachment, CatalogItem, Client, Material, Order, OrderLine, Payment } from "@/lib/models";
 import { isEstimate } from "@/lib/documents";
 import { currency } from "@/lib/formatters";
+import { downloadStoredAttachment } from "@/lib/firebase";
 
 const serviceLabels: Record<OrderLine["service"], string> = {
   scan: "Escaneamento 3D",
@@ -65,12 +68,18 @@ type DocumentDialogProps = {
   onSave: (order: Order) => Promise<boolean>;
   onConvert: (order: Order) => Promise<boolean>;
   onPrint: (order: Order) => void;
+  onUploadAttachment: (orderId: string, file: File) => Promise<Attachment>;
+  onDeleteAttachment: (attachment: Attachment) => Promise<void>;
   createLine: (service: OrderLine["service"], material: Material) => OrderLine;
 };
 
-export default function DocumentDialog({ order, existing, authenticated, clients, materials, catalogItems, onChange, onClose, onSave, onConvert, onPrint, createLine }: DocumentDialogProps) {
+export default function DocumentDialog({ order, existing, authenticated, clients, materials, catalogItems, onChange, onClose, onSave, onConvert, onPrint, onUploadAttachment, onDeleteAttachment, createLine }: DocumentDialogProps) {
   const [readOnly, setReadOnly] = useState(existing);
   const [dirty, setDirty] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [attachmentError, setAttachmentError] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [downloadingAttachmentId, setDownloadingAttachmentId] = useState("");
   const [clientQuery, setClientQuery] = useState(order.clientName || "");
   const material = materials.find((item) => item.id === order.materialId) ?? materials[0];
   const totals = calculateOrderTotals(order.lines, order.taxRate ?? 0);
@@ -132,12 +141,81 @@ export default function DocumentDialog({ order, existing, authenticated, clients
     });
   }
 
-  async function save() {
-    if (await onSave(order)) setDirty(false);
+  async function cleanupUploadedAttachments(attachments: Attachment[]) {
+    const outcomes = await Promise.allSettled(attachments.map(onDeleteAttachment));
+    return outcomes.every((outcome) => outcome.status === "fulfilled");
+  }
+
+  async function downloadAttachment(attachment: Attachment) {
+    const attachmentId = attachment.id ?? attachment.name;
+    if (!attachment.storagePath) {
+      setAttachmentError(authenticated
+        ? "Este arquivo não tem um caminho autenticado. Remova-o e anexe novamente."
+        : "O arquivo está apenas nesta prévia local e não foi enviado ao armazenamento.");
+      return;
+    }
+    setDownloadingAttachmentId(attachmentId);
+    setAttachmentError("");
+    try {
+      await downloadStoredAttachment(attachment);
+    } catch {
+      setAttachmentError("Não foi possível baixar o arquivo. Verifique sua autorização no workspace e tente novamente.");
+    } finally {
+      setDownloadingAttachmentId("");
+    }
+  }
+
+  async function commitWithAttachments(commit: (next: Order) => Promise<boolean>) {
+    setAttachmentError("");
+    const uploaded: Attachment[] = [];
+    try {
+      for (const file of pendingFiles) uploaded.push(await onUploadAttachment(order.id, file));
+      const next = uploaded.length
+        ? { ...order, attachments: [...(order.attachments ?? []), ...uploaded] }
+        : order;
+      if (!await commit(next)) {
+        const cleaned = await cleanupUploadedAttachments(uploaded);
+        if (uploaded.length) setAttachmentError(cleaned
+          ? "O documento não foi salvo; os arquivos desta tentativa foram removidos."
+          : "O documento não foi salvo; um ou mais arquivos podem exigir limpeza no armazenamento.");
+        return;
+      }
+      setPendingFiles([]);
+      setDirty(false);
+    } catch (error) {
+      const cleaned = await cleanupUploadedAttachments(uploaded);
+      const uploadMessage = error instanceof Error && (error.message.startsWith("Anexe") || error.message.startsWith("O arquivo"))
+        ? error.message
+        : "Não foi possível concluir o envio. Verifique a conexão e as permissões do espaço.";
+      setAttachmentError(`${uploadMessage}${uploaded.length && !cleaned ? " Um arquivo enviado pode exigir limpeza no armazenamento." : ""}`);
+    }
+  }
+
+  function queueAttachments(files: FileList | null) {
+    const selected = Array.from(files ?? []);
+    if (!selected.length) return;
+    const invalid = selected.find((file) => !/\.(pdf|png|jpe?g|stl)$/i.test(file.name) || file.size <= 0 || file.size > 15 * 1024 * 1024);
+    if (invalid) {
+      setAttachmentError("Anexe arquivos PDF, PNG, JPG ou STL com até 15 MB.");
+      return;
+    }
+    setAttachmentError("");
+    setPendingFiles((current) => [...current, ...selected]);
+    setDirty(true);
   }
 
   async function convert() {
-    if (await onConvert(order)) setDirty(false);
+    if (uploading) return;
+    setUploading(true);
+    await commitWithAttachments(onConvert);
+    setUploading(false);
+  }
+
+  async function save() {
+    if (uploading) return;
+    setUploading(true);
+    await commitWithAttachments(onSave);
+    setUploading(false);
   }
 
   return (
@@ -177,7 +255,7 @@ export default function DocumentDialog({ order, existing, authenticated, clients
                 </div>)}
                 {!order.lines.length && <p className="muted-copy">Adicione um item ou serviço do catálogo para compor o documento.</p>}
               </div>
-              <div className="document-totals"><div className="document-total"><span>Subtotal</span><strong>{currency(centsToAmount(totals.subtotalCents))}</strong></div><div className="document-total"><span>Tax</span><strong>{currency(centsToAmount(totals.taxCents))}</strong></div><div className="document-total document-total-final"><span>Total + Taxes</span><strong>{currency(centsToAmount(totals.totalCents))}</strong></div></div>
+              <div className="document-totals"><div className="document-total"><span>Subtotal</span><strong>{currency(centsToAmount(totals.subtotalCents))}</strong></div><label className="field-stack document-tax-rate"><span>Alíquota de imposto (%)</span><input type="number" min="0" max="100" step="0.01" value={String(Number(((order.taxRate ?? 0) * 100).toFixed(2)))} onChange={(event) => { const value = event.target.value === "" ? 0 : Number(event.target.value); if (Number.isFinite(value) && value >= 0 && value <= 100) change({ ...order, taxRate: value / 100 }); }} /><small>Aplicada aos itens marcados como tributáveis.</small></label><div className="document-total"><span>Imposto</span><strong>{currency(centsToAmount(totals.taxCents))}</strong></div><div className="document-total document-total-final"><span>Total com imposto</span><strong>{currency(centsToAmount(totals.totalCents))}</strong></div></div>
             </section>
 
             <section className="document-section payment-section">
@@ -189,6 +267,12 @@ export default function DocumentDialog({ order, existing, authenticated, clients
             <section className="document-section">
               <div className="section-caption"><FileText size={17} /><span>Notas e arquivos</span></div>
               <div className="document-notes-grid"><label className="field-stack"><span>Nota pública · aparece no PDF</span><textarea value={order.publicNote ?? ""} onChange={(event) => change({ ...order, publicNote: event.target.value })} /></label>{authenticated && <label className="field-stack"><span>Nota privada · apenas autenticados</span><textarea value={order.privateNote ?? ""} onChange={(event) => change({ ...order, privateNote: event.target.value })} /></label>}</div>
+              <div className="attachment-controls"><label className="button button-secondary"><Paperclip size={16} /> Anexar arquivo<input className="attachment-file-input" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.stl,application/pdf,image/png,image/jpeg,model/stl" onChange={(event) => { queueAttachments(event.currentTarget.files); event.currentTarget.value = ""; }} /></label><small>PDF, PNG, JPG ou STL · até 15 MB por arquivo</small></div>
+              {attachmentError && <p className="inline-warning" role="alert">{attachmentError}</p>}
+              {(order.attachments ?? []).length > 0 && <div className="stack-list document-attachments" aria-label="Arquivos anexados">{order.attachments?.map((attachment) => attachment.storagePath
+                ? <button key={attachment.id ?? attachment.name} type="button" className="inline-action" aria-label={`Baixar ${attachment.name}`} disabled={downloadingAttachmentId === (attachment.id ?? attachment.name)} onClick={() => void downloadAttachment(attachment)}><span>{attachment.name}</span><FileDown size={16} /></button>
+                : <span key={attachment.id ?? attachment.name}>{attachment.name} · {authenticated ? "sem caminho autenticado; reenvie para baixar" : "disponível somente nesta prévia local"}</span>)}</div>}
+              {pendingFiles.length > 0 && <div className="stack-list document-pending-attachments" aria-label="Arquivos pendentes">{pendingFiles.map((file, index) => <div key={`${file.name}-${file.lastModified}-${index}`}><span>{file.name} · pendente de envio</span><button type="button" className="icon-button" aria-label={`Remover ${file.name}`} onClick={() => setPendingFiles((current) => current.filter((_, itemIndex) => itemIndex !== index))}><Trash2 size={14} /></button></div>)}</div>}
             </section>
           </div>
         </fieldset>
@@ -197,9 +281,9 @@ export default function DocumentDialog({ order, existing, authenticated, clients
           <button type="button" className="button button-secondary" onClick={requestClose}>{readOnly ? "Fechar" : "Cancelar"}</button>
           {readOnly && !isEstimate(order) && <button type="button" className="button button-secondary" onClick={() => onPrint(order)}><FileDown size={16} /> Imprimir</button>}
           {readOnly && <button type="button" className="button button-primary" onClick={() => setReadOnly(false)}><Pencil size={16} /> Modificar</button>}
-          {!readOnly && isEstimate(order) && <button type="button" className="button button-secondary" onClick={() => void convert()}><CircleDollarSign size={16} /> Criar Invoice</button>}
+          {!readOnly && isEstimate(order) && <button type="button" className="button button-secondary" disabled={uploading} onClick={() => void convert()}><CircleDollarSign size={16} /> Criar Invoice</button>}
           {!readOnly && !isEstimate(order) && <button type="button" className="button button-secondary" onClick={() => onPrint(order)}><FileDown size={16} /> Imprimir</button>}
-          {!readOnly && <button type="button" className="button button-primary" onClick={() => void save()}>Salvar</button>}
+          {!readOnly && <button type="button" className="button button-primary" disabled={uploading} onClick={() => void save()}>{uploading ? "Enviando e salvando…" : "Salvar"}</button>}
         </div>
       </div>
     </Modal>

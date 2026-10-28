@@ -49,3 +49,10 @@ export function splitClientName(name: string) {
     lastName: parts.slice(1).join(" "),
   };
 }
+
+export function normalizeClientIdentity(client: { name: string; firstName?: string; lastName?: string }) {
+  const fallback = splitClientName(client.name);
+  const firstName = (client.firstName ?? fallback.firstName).trim();
+  const lastName = (client.lastName ?? fallback.lastName).trim();
+  return { name: [firstName, lastName].filter(Boolean).join(" "), firstName, lastName };
+}

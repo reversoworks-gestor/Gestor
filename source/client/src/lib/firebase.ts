@@ -15,7 +15,7 @@ import {
   setDoc,
   updateDoc,
 } from "firebase/firestore";
-import { getDownloadURL, getStorage, ref as storageRef, uploadBytes } from "firebase/storage";
+import { deleteObject, getBlob, getStorage, ref as storageRef, uploadBytes } from "firebase/storage";
 import type { Attachment } from "./models";
 import { sanitizeFileName } from "./finance";
 
@@ -128,9 +128,76 @@ export async function uploadStlAttachment(recordId: string, file: File): Promise
     id: crypto.randomUUID(),
     name: file.name,
     storagePath: path,
-    downloadUrl: await getDownloadURL(reference),
     size: file.size,
     contentType: "model/stl",
     uploadedAt: new Date().toISOString(),
   };
+}
+
+const documentTypes: Record<string, string> = {
+  pdf: "application/pdf",
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  stl: "model/stl",
+};
+
+export async function uploadDocumentAttachment(recordId: string, file: File): Promise<Attachment> {
+  const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+  const contentType = documentTypes[extension];
+  if (!contentType) throw new Error("Anexe apenas PDF, PNG, JPG ou STL.");
+  if (file.size <= 0 || file.size > 15 * 1024 * 1024) {
+    throw new Error("O arquivo deve ter entre 1 byte e 15 MB.");
+  }
+
+  const objectName = `${crypto.randomUUID()}--${sanitizeFileName(file.name)}`;
+  const path = `workspaces/${WORKSPACE_ID}/documents/${sanitizeFileName(recordId)}/${objectName}`;
+  const reference = storageRef(storage, path);
+  await uploadBytes(reference, file, {
+    contentType,
+    customMetadata: { recordId, originalName: file.name },
+  });
+
+  return {
+    id: crypto.randomUUID(),
+    name: file.name,
+    storagePath: path,
+    size: file.size,
+    contentType,
+    uploadedAt: new Date().toISOString(),
+  };
+}
+
+export async function downloadStoredAttachment(attachment: Attachment): Promise<void> {
+  const path = attachment.storagePath;
+  const allowedPrefixes = [
+    `workspaces/${WORKSPACE_ID}/documents/`,
+    `workspaces/${WORKSPACE_ID}/stl/`,
+  ];
+  if (!path || !allowedPrefixes.some((prefix) => path.startsWith(prefix))) {
+    throw new Error("O arquivo não possui um caminho autenticado válido neste workspace.");
+  }
+
+  const blob = await getBlob(storageRef(storage, path));
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = objectUrl;
+  link.download = attachment.name;
+  link.rel = "noopener";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 30_000);
+}
+
+export async function deleteStoredAttachment(attachment: Attachment): Promise<void> {
+  if (!attachment.storagePath) return;
+  const allowedPrefixes = [
+    `workspaces/${WORKSPACE_ID}/documents/`,
+    `workspaces/${WORKSPACE_ID}/stl/`,
+  ];
+  if (!allowedPrefixes.some((prefix) => attachment.storagePath?.startsWith(prefix))) {
+    throw new Error("O caminho do anexo não pertence às áreas autorizadas deste workspace.");
+  }
+  await deleteObject(storageRef(storage, attachment.storagePath));
 }

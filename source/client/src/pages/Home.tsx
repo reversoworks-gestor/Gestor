@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { User } from "firebase/auth";
 import {
+  deleteField,
   deleteDoc,
   doc,
   onSnapshot,
+  runTransaction,
   serverTimestamp,
   setDoc,
-  updateDoc,
   writeBatch,
 } from "firebase/firestore";
 import {
@@ -46,17 +47,23 @@ import { signOut } from "firebase/auth";
 import {
   addWorkspaceEmail,
   auth,
+  deleteStoredAttachment,
   db,
+  downloadStoredAttachment,
+  uploadDocumentAttachment,
   uploadStlAttachment,
   workspaceCollection,
 } from "@/lib/firebase";
-import { currency, dayLabel, displayName, formatUsPhone, greetingForEmail, splitClientName } from "@/lib/formatters";
+import { currency, dayLabel, displayName, formatUsPhone, greetingForEmail, normalizeClientIdentity, splitClientName } from "@/lib/formatters";
+import { stripDownloadUrlToken } from "@/lib/attachments";
 import { calculateOrderTotals, centsToAmount, printServicePrice, toCents, validatePayments } from "@/lib/finance";
 import { createInvoiceFromEstimate, isEstimate, nextFutureOrder, normalizeExpense, normalizeOrderMoney, unifiedSearch } from "@/lib/documents";
 import { downloadInvoicePdf } from "@/lib/pdf";
+import { formatDateTimeLocal, isValidEmail, moveStock, reconcileReservation } from "@/lib/operationalRules";
 import DocumentDialog, { NewDocumentDialog } from "@/components/DocumentDialog";
 import MaterialSelector from "@/components/MaterialSelector";
 import type {
+  Attachment,
   CalendarEvent,
   CatalogItem,
   Client,
@@ -305,7 +312,7 @@ function calendarTemplate(): CalendarEvent {
     id: id("event"),
     title: "",
     detail: "",
-    date: new Date().toISOString().slice(0, 16),
+    date: nowIso(),
     type: "calendar",
   };
 }
@@ -571,12 +578,12 @@ export default function Home({
   }
 
   async function saveClient(client: Client) {
-    if (!client.name.trim()) {
-      setNotice("Informe o nome do cliente para salvar o cadastro.");
+    const identity = normalizeClientIdentity(client);
+    if (!identity.firstName) {
+      setNotice("Informe o primeiro nome do cliente para salvar o cadastro.");
       return;
     }
-    const nameParts = splitClientName(client.name);
-    const saved = { ...client, ...nameParts, phone: formatUsPhone(client.phone), updatedAt: nowIso() };
+    const saved = { ...client, ...identity, phone: formatUsPhone(client.phone), updatedAt: nowIso() };
     try {
       if (preview) {
         setClients((current) => {
@@ -586,11 +593,16 @@ export default function Home({
       } else {
         await saveRecord("clients", saved);
       }
-      await recordProcess("calendar", `Cliente atualizado: ${saved.name}`, "Cadastro de cliente criado ou alterado.");
-      setClientModal(null);
-      setNotice("Cliente salvo com todos os dados atualizados.");
     } catch {
       setNotice("Não foi possível salvar o cliente.");
+      return;
+    }
+    setClientModal(null);
+    setNotice("Cliente salvo com todos os dados atualizados.");
+    try {
+      await recordProcess("calendar", `Cliente atualizado: ${saved.name}`, "Cadastro de cliente criado ou alterado.");
+    } catch {
+      setNotice("Cadastro do cliente salvo; não foi possível registrar o movimento auxiliar no calendário.");
     }
   }
 
@@ -604,6 +616,10 @@ export default function Home({
     } catch { setNotice("Não foi possível salvar o item do catálogo."); }
   }
   async function deleteCatalogItem(item: CatalogItem) {
+    if (item.id.startsWith("cat-")) {
+      setNotice("Itens predefinidos não podem ser excluídos. Você pode editar seus dados.");
+      return;
+    }
     try {
       if (preview) setCatalogItems((current) => current.filter((entry) => entry.id !== item.id));
       else await deleteRecord("catalogItems", item.id);
@@ -614,6 +630,11 @@ export default function Home({
   async function saveMaterial(material: Material) {
     if (!material.name.trim()) {
       setNotice("Informe o nome do filamento para salvar o estoque.");
+      return;
+    }
+    const requiredNumbers = [material.availableGrams, material.reorderAtGrams, material.pricePerGram];
+    if (requiredNumbers.some((value) => !Number.isFinite(value) || value < 0)) {
+      setNotice("Quantidade, limite de reposição e valor por grama devem ser números válidos e não negativos.");
       return;
     }
     try {
@@ -635,11 +656,14 @@ export default function Home({
 
   async function adjustStock(material: Material, direction: "in" | "out") {
     const amount = Number(stockAdjustment[material.id]);
-    if (!amount || amount <= 0) {
-      setNotice("Informe uma quantidade em gramas para movimentar o estoque.");
+    const movement = moveStock(material.availableGrams, amount, direction);
+    if (!movement.ok) {
+      setNotice(movement.error === "insufficient-stock"
+        ? `Saldo insuficiente: ${material.availableGrams} g disponíveis para a saída solicitada.`
+        : "Informe uma quantidade positiva e válida em gramas.");
       return;
     }
-    const next = Math.max(0, material.availableGrams + (direction === "in" ? amount : -amount));
+    const next = movement.balance;
     const changed = { ...material, availableGrams: next };
     try {
       if (preview) {
@@ -650,7 +674,7 @@ export default function Home({
       await recordProcess(
         "inventory",
         `${direction === "in" ? "Reposição" : "Consumo"}: ${material.name}`,
-        `${direction === "in" ? "+" : "-"}${amount} g · saldo de ${next} g.`,
+        `${direction === "in" ? "+" : "-"}${movement.quantity} g · saldo de ${next} g.`,
       );
       setStockAdjustment((current) => ({ ...current, [material.id]: "" }));
       setNotice("Movimentação registrada no estoque e no calendário.");
@@ -719,6 +743,7 @@ export default function Home({
     const client = clients.find((item) => item.id === order.clientId);
     const normalized = normalizeOrderMoney({
       ...order,
+      attachments: (order.attachments ?? []).map(stripDownloadUrlToken),
       clientName: client?.name ?? order.clientName,
       clientSnapshot: client ? {
         name: client.name,
@@ -741,39 +766,155 @@ export default function Home({
     return { saved: normalized, material };
   }
 
+  async function uploadOrderAttachment(orderId: string, file: File): Promise<Attachment> {
+    if (!preview) return uploadDocumentAttachment(orderId, file);
+    const extension = file.name.split(".").pop()?.toLowerCase();
+    const contentType = extension === "pdf" ? "application/pdf"
+      : extension === "png" ? "image/png"
+        : extension === "jpg" || extension === "jpeg" ? "image/jpeg"
+          : "model/stl";
+    return { id: id("attachment"), name: file.name, size: file.size, contentType, uploadedAt: nowIso() };
+  }
+
+  async function removeOrderAttachment(attachment: Attachment): Promise<void> {
+    if (!preview) await deleteStoredAttachment(attachment);
+  }
+
   async function saveOrder(order: Order): Promise<boolean> {
     const prepared = prepareOrder(order);
     if (!prepared) return false;
     const { saved, material } = prepared;
-    const previous = orders.find((item) => item.id === saved.id);
-    const materialDelta = saved.materialGrams - (previous?.materialGrams ?? 0);
+    const previousInState = orders.find((item) => item.id === saved.id);
+    const nextReservation = saved.materialGrams > 0
+      ? { materialId: material.id, quantity: saved.materialGrams }
+      : null;
+    let reconciledMaterials = activeMaterials;
+    let changedMaterials: Material[] = [];
+    let previousBalances = Object.fromEntries(activeMaterials.map((item) => [item.id, item.availableGrams]));
+    let hadPrevious = Boolean(previousInState);
     try {
-      if (preview) setOrders((current) => current.some((item) => item.id === saved.id) ? current.map((item) => item.id === saved.id ? saved : item) : [saved, ...current]);
-      else {
-        if (!materials.some((item) => item.id === material.id)) await saveRecord("materials", material);
-        await saveRecord("orders", saved);
-        if (materialDelta !== 0) {
-          await updateDoc(doc(db, "workspaces", "reverso-private", "materials", material.id), {
-            availableGrams: Math.max(0, material.availableGrams - materialDelta),
-            updatedAt: serverTimestamp(),
-          });
+      if (preview) {
+        const previousReservation = previousInState && previousInState.materialGrams > 0
+          ? { materialId: previousInState.materialId, quantity: previousInState.materialGrams }
+          : null;
+        const reservation = reconcileReservation(
+          Object.fromEntries(activeMaterials.map((item) => [item.id, item.availableGrams])),
+          previousReservation,
+          nextReservation,
+        );
+        if (!reservation.ok) {
+          setNotice(reservation.error === "insufficient-stock"
+            ? `Estoque insuficiente de ${material.name} para reservar ${saved.materialGrams} g.`
+            : reservation.error === "missing-stock"
+              ? "O material da reserva anterior não foi encontrado. Revise o vínculo do pedido antes de salvar."
+              : "Não foi possível reconciliar a reserva de estoque. Verifique os dados do documento.");
+          return false;
         }
+        reconciledMaterials = activeMaterials.map((item) => ({
+          ...item,
+          availableGrams: reservation.balances[item.id] ?? item.availableGrams,
+        }));
+        changedMaterials = reconciledMaterials.filter((item) =>
+          activeMaterials.find((current) => current.id === item.id)?.availableGrams !== item.availableGrams,
+        );
+      } else {
+        const transactionResult = await runTransaction(db, async (transaction) => {
+          const orderRef = doc(workspaceCollection("orders"), saved.id);
+          const orderSnapshot = await transaction.get(orderRef);
+          const previousOrder = orderSnapshot.exists()
+            ? { id: saved.id, ...orderSnapshot.data() } as Order
+            : undefined;
+          const previousReservation = previousOrder && previousOrder.materialGrams > 0
+            ? { materialId: previousOrder.materialId, quantity: previousOrder.materialGrams }
+            : null;
+          const materialIds = Array.from(new Set(
+            [previousReservation?.materialId, nextReservation?.materialId]
+              .filter((materialId): materialId is string => Boolean(materialId)),
+          ));
+          const materialRefs = materialIds.map((materialId) => doc(workspaceCollection("materials"), materialId));
+          const materialSnapshots = await Promise.all(materialRefs.map((reference) => transaction.get(reference)));
+          const currentMaterials = materialSnapshots.map((snapshot, index) => {
+            const materialId = materialIds[index];
+            const localMaterial = activeMaterials.find((item) => item.id === materialId);
+            if (!snapshot.exists() && !localMaterial) throw new Error("reservation:missing-stock");
+            const data = snapshot.exists() ? snapshot.data() : localMaterial;
+            return {
+              ...localMaterial,
+              ...data,
+              id: materialId,
+              availableGrams: Number(data?.availableGrams ?? localMaterial?.availableGrams),
+            } as Material;
+          });
+          const balances = Object.fromEntries(currentMaterials.map((item) => [item.id, item.availableGrams]));
+          const reservation = reconcileReservation(balances, previousReservation, nextReservation);
+          if (!reservation.ok) throw new Error(`reservation:${reservation.error}`);
+
+          const updatedMaterials = currentMaterials.map((item) => ({
+            ...item,
+            availableGrams: reservation.balances[item.id] ?? item.availableGrams,
+          }));
+          const changed = updatedMaterials.filter((item) => item.availableGrams !== balances[item.id]);
+          const updatedIds = new Set(updatedMaterials.map((item) => item.id));
+          const mergedMaterials = [
+            ...updatedMaterials.map((item) => ({ ...activeMaterials.find((current) => current.id === item.id), ...item })),
+            ...activeMaterials.filter((item) => !updatedIds.has(item.id)),
+          ];
+          const { id: orderId, ...orderData } = saved;
+          transaction.set(orderRef, {
+            ...JSON.parse(JSON.stringify(orderData)),
+            updatedAt: serverTimestamp(),
+          }, { merge: true });
+          for (const changedMaterial of changed) {
+            const { id: materialId, ...materialData } = changedMaterial;
+            transaction.set(doc(workspaceCollection("materials"), materialId), {
+              ...materialData,
+              updatedAt: serverTimestamp(),
+            }, { merge: true });
+          }
+          return {
+            materials: mergedMaterials,
+            changedMaterials: changed,
+            previousBalances: balances,
+            hadPrevious: Boolean(previousOrder),
+          };
+        });
+        reconciledMaterials = transactionResult.materials;
+        changedMaterials = transactionResult.changedMaterials;
+        previousBalances = transactionResult.previousBalances;
+        hadPrevious = transactionResult.hadPrevious;
       }
-      await recordProcess(
-        "order",
-        `${saved.documentType} ${previous ? "atualizada" : "criada"}: ${saved.title}`,
-        `${saved.clientName} · ${currency(saved.total)} · ${saved.materialGrams || 0} g de ${material.name}.`,
-      );
-      if (materialDelta !== 0) {
-        await recordProcess("inventory", `Reserva ajustada: ${material.name}`, `${materialDelta > 0 ? "+" : ""}${materialDelta} g no documento ${saved.title}.`);
-      }
+      setOrders((current) => current.some((item) => item.id === saved.id)
+        ? current.map((item) => item.id === saved.id ? saved : item)
+        : [saved, ...current]);
+      setMaterials(reconciledMaterials);
       setOrderModal(null);
-      setNotice(`${saved.documentType} salva com valores normalizados em centavos.`);
-      return true;
-    } catch {
-      setNotice("Não foi possível salvar o documento. Verifique o material e sua conexão.");
+    } catch (error) {
+      const reason = error instanceof Error ? error.message.replace(/^reservation:/, "") : "";
+      setNotice(reason === "insufficient-stock"
+        ? `Estoque insuficiente de ${material.name} para reservar ${saved.materialGrams} g.`
+        : reason === "missing-stock"
+          ? "O material da reserva anterior não foi encontrado. Revise o vínculo do pedido antes de salvar."
+          : reason
+            ? "Não foi possível reconciliar a reserva de estoque. Verifique os dados do documento."
+            : "Não foi possível salvar o documento. Verifique o material e sua conexão.");
       return false;
     }
+    setNotice(`${saved.documentType} ${hadPrevious ? "atualizada" : "salva"} com valores normalizados e reserva reconciliada.`);
+    try {
+      await recordProcess(
+        "order",
+        `${saved.documentType} ${hadPrevious ? "atualizada" : "criada"}: ${saved.title}`,
+        `${saved.clientName} · ${currency(saved.total)} · ${saved.materialGrams || 0} g de ${material.name}.`,
+      );
+      for (const changed of changedMaterials) {
+        const previousBalance = previousBalances[changed.id] ?? activeMaterials.find((item) => item.id === changed.id)?.availableGrams ?? 0;
+        const movement = changed.availableGrams - previousBalance;
+        await recordProcess("inventory", `Reserva ajustada: ${changed.name}`, `${movement > 0 ? "+" : ""}${movement} g · saldo ${changed.availableGrams} g · ${saved.title}.`);
+      }
+    } catch {
+      setNotice(`${saved.documentType} salva; um movimento auxiliar não foi registrado no calendário.`);
+    }
+    return true;
   }
 
   async function moveProductionOrder(order: Order, productionStage: ProductionStage) {
@@ -792,7 +933,7 @@ export default function Home({
     if (existingInvoice) {
       setOrderModal({ ...existingInvoice });
       setNotice("Esta estimativa já possui uma invoice vinculada.");
-      return true;
+      return false;
     }
     const converted = createInvoiceFromEstimate(prepared.saved, id("invoice"), nowIso());
     try {
@@ -806,14 +947,18 @@ export default function Home({
         batch.set(doc(workspaceCollection("orders"), converted.invoice.id), { ...invoiceData, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
         await batch.commit();
       }
-      await recordProcess("order", `Invoice criada: ${converted.invoice.title}`, `Convertida da estimativa ${converted.estimate.id}, preservando pagamentos, notas e anexos.`);
-      setOrderModal({ ...converted.invoice });
-      setNotice("Invoice criada e vinculada à estimativa sem perda de dados.");
-      return true;
     } catch {
       setNotice("Não foi possível converter a estimativa em invoice.");
       return false;
     }
+    setOrderModal({ ...converted.invoice });
+    setNotice("Invoice criada e vinculada à estimativa sem perda de dados.");
+    try {
+      await recordProcess("order", `Invoice criada: ${converted.invoice.title}`, `Convertida da estimativa ${converted.estimate.id}, preservando pagamentos, notas e anexos.`);
+    } catch {
+      setNotice("Invoice criada; não foi possível registrar o movimento auxiliar no calendário.");
+    }
+    return true;
   }
 
 
@@ -860,12 +1005,13 @@ export default function Home({
   }
 
   async function saveCalendarEvent(event: CalendarEvent) {
-    if (!event.title.trim() || !event.date) {
-      setNotice("Informe o título e a data do evento.");
+    const eventDate = new Date(event.date);
+    if (!event.title.trim() || !event.date || !Number.isFinite(eventDate.getTime())) {
+      setNotice("Informe o título e uma data/hora válida para o evento.");
       return;
     }
     try {
-      await addEvent(event);
+      await addEvent({ ...event, date: eventDate.toISOString() });
       setCalendarModal(null);
       setNotice("Evento adicionado ao calendário operacional.");
     } catch {
@@ -897,6 +1043,10 @@ export default function Home({
 
   async function savePrinter(printer: PrinterModel) {
     if (!printer.name.trim() || !printer.model.trim()) { setNotice("Informe nome e modelo da impressora."); return; }
+    if (!["Pronta", "Em manutenção", "Pausada"].includes(printer.status)) {
+      setNotice("Selecione um estado de impressora válido.");
+      return;
+    }
     try {
       if (preview) setPrinters((current) => current.some((item) => item.id === printer.id) ? current.map((item) => item.id === printer.id ? printer : item) : [printer, ...current]);
       else await saveRecord("printers", printer);
@@ -937,28 +1087,78 @@ export default function Home({
     }
   }
 
-  async function saveRevision(revision: PartRevision) {
+  async function saveRevision(revision: PartRevision): Promise<boolean> {
     if (!revision.partId || !revision.title.trim() || !revision.version.trim()) {
       setNotice("Selecione a peça e informe título e versão.");
-      return;
+      return false;
     }
-    const saved = { ...revision, updatedAt: nowIso() };
+    const saved = { ...revision, attachments: revision.attachments.map(stripDownloadUrlToken), updatedAt: nowIso() };
+    const previousRevision = revisions.find((item) => item.id === saved.id);
+    const previousPart = previousRevision ? parts.find((item) => item.id === previousRevision.partId) : undefined;
+    const targetPart = parts.find((item) => item.id === saved.partId);
+    if (!targetPart) {
+      setNotice("A peça selecionada não está disponível. Feche e reabra a revisão antes de salvar.");
+      return false;
+    }
+    const updatedTargetPart: Part = {
+      ...targetPart,
+      currentRevisionId: saved.id,
+      invoiceIds: Array.from(new Set([...(targetPart.invoiceIds ?? []), ...saved.invoiceIds])),
+      updatedAt: nowIso(),
+    };
     try {
-      if (preview) setRevisions((current) => current.some((item) => item.id === saved.id) ? current.map((item) => item.id === saved.id ? saved : item) : [saved, ...current]);
-      else await saveRecord("partRevisions", saved);
-      const part = parts.find((item) => item.id === revision.partId);
-      if (part) await savePart({ ...part, currentRevisionId: revision.id, invoiceIds: Array.from(new Set([...part.invoiceIds, ...revision.invoiceIds])) });
+      if (preview) {
+        setRevisions((current) => current.some((item) => item.id === saved.id) ? current.map((item) => item.id === saved.id ? saved : item) : [saved, ...current]);
+        setParts((current) => current.map((part) => {
+          if (previousPart && previousPart.id !== targetPart.id && part.id === previousPart.id && part.currentRevisionId === saved.id) {
+            return { ...part, currentRevisionId: undefined };
+          }
+          return part.id === targetPart.id ? updatedTargetPart : part;
+        }));
+      } else {
+        const batch = writeBatch(db);
+        const { id: revisionId, ...revisionData } = saved;
+        const { id: targetPartId, ...targetPartData } = updatedTargetPart;
+        batch.set(doc(workspaceCollection("partRevisions"), revisionId), {
+          ...JSON.parse(JSON.stringify(revisionData)),
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
+        if (previousPart && previousPart.id !== targetPart.id && previousPart.currentRevisionId === saved.id) {
+          batch.update(doc(workspaceCollection("parts"), previousPart.id), {
+            currentRevisionId: deleteField(),
+            updatedAt: serverTimestamp(),
+          });
+        }
+        batch.set(doc(workspaceCollection("parts"), targetPartId), {
+          ...JSON.parse(JSON.stringify(targetPartData)),
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
+        await batch.commit();
+        setRevisions((current) => current.some((item) => item.id === saved.id) ? current.map((item) => item.id === saved.id ? saved : item) : [saved, ...current]);
+        setParts((current) => current.map((part) => {
+          if (previousPart && previousPart.id !== targetPart.id && part.id === previousPart.id && part.currentRevisionId === saved.id) {
+            return { ...part, currentRevisionId: undefined };
+          }
+          return part.id === targetPart.id ? updatedTargetPart : part;
+        }));
+      }
       setRevisionModal(null);
       setNotice("Revisão salva com arquivo, notas e vínculos.");
+      return true;
     } catch {
       setNotice("Não foi possível salvar a revisão.");
+      return false;
     }
   }
 
   async function authorizeTeamMember() {
-    if (!teamEmail.trim()) return;
+    const email = teamEmail.trim().toLowerCase();
+    if (!isValidEmail(email)) {
+      setNotice("Informe um endereço de e-mail válido antes de autorizar o acesso.");
+      return;
+    }
     try {
-      await addWorkspaceEmail(teamEmail);
+      await addWorkspaceEmail(email);
       setTeamEmail("");
       setNotice("Acesso autorizado para o e-mail informado.");
     } catch {
@@ -985,8 +1185,7 @@ export default function Home({
       {notice && <div className="notice" role="status"><Check size={16} /> {notice}</div>}
       <aside className={`sidebar ${mobileOpen ? "sidebar-open" : ""}`}>
         <button type="button" className="brand" onClick={() => navigate("overview")}>
-          <span className="brand-mark">R</span>
-          <span><b>REVERSO</b><em>WORKS</em></span>
+          <img className="brand-logo" src={`${import.meta.env.BASE_URL}reverso-logo-branca.png`} alt="Reverso Works" />
         </button>
         <div className="sidebar-label">Operação</div>
         <nav>
@@ -1106,7 +1305,7 @@ export default function Home({
         {view === "triage" && (
           <section className="view triage-view">
             <SectionHeader eyebrow="Decisão técnica" title="Seletor de Materiais" description="Reverso Material Selector v3 · material, processo, geometria e ambiente em uma decisão rastreável." />
-            <MaterialSelector stock={activeMaterials} printers={activePrinters} documents={orders.filter((order) => isEstimate(order) || order.documentType === "Invoice")} onSave={saveSelectorAnalysis} onAddToDocument={addSelectorAnalysisToDocument} onNotice={setNotice} />
+            <MaterialSelector stock={activeMaterials} printers={activePrinters} documents={orders.filter((order) => isEstimate(order) || order.documentType === "Invoice")} preview={preview} onSave={saveSelectorAnalysis} onAddToDocument={addSelectorAnalysisToDocument} onNotice={setNotice} />
           </section>
         )}
 
@@ -1213,7 +1412,7 @@ export default function Home({
       {calendarModal && <CalendarDialog event={calendarModal} onChange={setCalendarModal} onClose={() => setCalendarModal(null)} onSave={saveCalendarEvent} />}
       {maintenancePrinter && <MaintenanceDialog printer={maintenancePrinter} onClose={() => setMaintenancePrinter(null)} onSave={saveMaintenance} />}
       {newDocumentModal && <NewDocumentDialog onClose={() => setNewDocumentModal(false)} onSelect={(documentType) => { setNewDocumentModal(false); setOrderModal(orderTemplate(activeMaterials[0], documentType)); }} />}
-      {orderModal && <DocumentDialog order={orderModal} existing={orders.some((item) => item.id === orderModal.id)} authenticated={Boolean(user) && !preview} clients={clients} materials={activeMaterials} catalogItems={activeCatalogItems} onChange={setOrderModal} onClose={() => setOrderModal(null)} onSave={saveOrder} onConvert={convertOrderToInvoice} onPrint={downloadInvoicePdf} createLine={createLine} />}
+      {orderModal && <DocumentDialog order={orderModal} existing={orders.some((item) => item.id === orderModal.id)} authenticated={Boolean(user) && !preview} clients={clients} materials={activeMaterials} catalogItems={activeCatalogItems} onChange={setOrderModal} onClose={() => setOrderModal(null)} onSave={saveOrder} onConvert={convertOrderToInvoice} onPrint={downloadInvoicePdf} onUploadAttachment={uploadOrderAttachment} onDeleteAttachment={removeOrderAttachment} createLine={createLine} />}
       {expenseModal && <ExpenseDialog expense={expenseModal} onChange={setExpenseModal} onClose={() => setExpenseModal(null)} onSave={saveExpense} />}
       {partModal && <PartDialog part={partModal} invoices={orders.filter((order) => order.documentType === "Invoice")} onChange={setPartModal} onClose={() => setPartModal(null)} onSave={savePart} />}
       {revisionModal && <RevisionDialog revision={revisionModal} parts={parts} invoices={orders.filter((order) => order.documentType === "Invoice")} preview={preview} onChange={setRevisionModal} onClose={() => setRevisionModal(null)} onSave={saveRevision} />}
@@ -1229,23 +1428,73 @@ function PartDialog({ part, invoices, onChange, onClose, onSave }: { part: Part;
   return <Modal title={part.name ? "Modificar peça" : "Nova peça"} onClose={onClose}><div className="dialog-form"><label className="field-stack field-span"><span>Nome do objeto *</span><input value={part.name} onChange={(event) => onChange({ ...part, name: event.target.value })} /></label><div className="field-stack field-span"><span>Invoices relacionadas</span>{invoices.map((invoice) => <label key={invoice.id}><input type="checkbox" checked={part.invoiceIds.includes(invoice.id)} onChange={(event) => onChange({ ...part, invoiceIds: event.target.checked ? [...part.invoiceIds, invoice.id] : part.invoiceIds.filter((idValue) => idValue !== invoice.id) })} /> {invoice.clientName} · {invoice.title}</label>)}</div></div><div className="dialog-actions"><button type="button" className="button button-secondary" onClick={onClose}>Cancelar</button><button type="button" className="button button-primary" onClick={() => void onSave(part)}>Salvar</button></div></Modal>;
 }
 
-function RevisionDialog({ revision, parts, invoices, preview, onChange, onClose, onSave }: { revision: PartRevision; parts: Part[]; invoices: Order[]; preview: boolean; onChange: (revision: PartRevision) => void; onClose: () => void; onSave: (revision: PartRevision) => Promise<void> }) {
+function RevisionDialog({ revision, parts, invoices, preview, onChange, onClose, onSave }: { revision: PartRevision; parts: Part[]; invoices: Order[]; preview: boolean; onChange: (revision: PartRevision) => void; onClose: () => void; onSave: (revision: PartRevision) => Promise<boolean> }) {
   const [uploading, setUploading] = useState(false);
+  const [downloadingAttachmentId, setDownloadingAttachmentId] = useState("");
   const [error, setError] = useState("");
-  async function attach(file?: File) {
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  function queueFile(file?: File) {
     if (!file) return;
+    if (!/\.stl$/i.test(file.name) || file.size <= 0 || file.size >= 50 * 1024 * 1024) {
+      setError("Selecione um arquivo .STL válido com menos de 50 MB.");
+      return;
+    }
+    setError("");
+    setPendingFiles((current) => [...current, file]);
+  }
+  async function saveRevision() {
+    if (uploading) return;
+    if (!revision.partId || !revision.title.trim() || !revision.version.trim()) {
+      setError("Selecione a peça e informe título e versão.");
+      return;
+    }
     setUploading(true);
     setError("");
+    const uploaded: Attachment[] = [];
     try {
-      const attachment = preview ? { id: id("attachment"), name: file.name, size: file.size, contentType: "model/stl", uploadedAt: nowIso() } : await uploadStlAttachment(revision.id, file);
-      onChange({ ...revision, attachments: [...revision.attachments, attachment] });
+      for (const file of pendingFiles) {
+        uploaded.push(preview
+          ? { id: id("attachment"), name: file.name, size: file.size, contentType: "model/stl", uploadedAt: nowIso() }
+          : await uploadStlAttachment(revision.id, file));
+      }
+      const nextRevision = { ...revision, attachments: [...revision.attachments, ...uploaded] };
+      const saved = await onSave(nextRevision);
+      if (!saved) {
+        const cleanup = await Promise.allSettled(uploaded.map(deleteStoredAttachment));
+        const cleaned = cleanup.every((result) => result.status === "fulfilled");
+        setError(cleaned ? "A revisão não foi salva; os arquivos desta tentativa foram removidos." : "A revisão não foi salva; um arquivo enviado pode exigir limpeza no armazenamento.");
+        return;
+      }
+      setPendingFiles([]);
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : "Não foi possível anexar o arquivo.");
+      const cleanup = await Promise.allSettled(uploaded.map(deleteStoredAttachment));
+      const cleaned = cleanup.every((result) => result.status === "fulfilled");
+      const message = nextError instanceof Error ? nextError.message : "Não foi possível salvar a revisão.";
+      setError(`${message}${uploaded.length && !cleaned ? " Um arquivo enviado pode exigir limpeza no armazenamento." : ""}`);
     } finally {
       setUploading(false);
     }
   }
-  return <Modal title="Detalhes da revisão" onClose={onClose}><div className="dialog-form"><label className="field-stack"><span>Peça *</span><select value={revision.partId} onChange={(event) => onChange({ ...revision, partId: event.target.value })}>{parts.map((part) => <option key={part.id} value={part.id}>{part.name}</option>)}</select></label><label className="field-stack"><span>Versão *</span><input value={revision.version} onChange={(event) => onChange({ ...revision, version: event.target.value })} /></label><label className="field-stack field-span"><span>Título da versão *</span><input value={revision.title} onChange={(event) => onChange({ ...revision, title: event.target.value })} /></label><label className="field-stack field-span"><span>Notas</span><textarea value={revision.notes} onChange={(event) => onChange({ ...revision, notes: event.target.value })} /></label><div className="field-stack field-span"><span>Invoices relacionadas</span>{invoices.map((invoice) => <label key={invoice.id}><input type="checkbox" checked={revision.invoiceIds.includes(invoice.id)} onChange={(event) => onChange({ ...revision, invoiceIds: event.target.checked ? [...revision.invoiceIds, invoice.id] : revision.invoiceIds.filter((idValue) => idValue !== invoice.id) })} /> {invoice.clientName} · {invoice.title}</label>)}</div><label className="button button-secondary field-span"><Paperclip size={16} /> {uploading ? "Enviando…" : "Anexar arquivo .STL"}<input hidden type="file" accept=".stl,model/stl" disabled={uploading} onChange={(event) => void attach(event.target.files?.[0])} /></label>{error && <small className="inline-warning field-span">{error}</small>}<div className="stack-list field-span">{revision.attachments.map((attachment) => <a key={attachment.id ?? attachment.name} href={attachment.downloadUrl} target="_blank" rel="noreferrer">{attachment.name}</a>)}</div></div><div className="dialog-actions"><button type="button" className="button button-secondary" onClick={onClose}>Cancelar</button><button type="button" className="button button-primary" disabled={uploading} onClick={() => void onSave(revision)}>Salvar revisão</button></div></Modal>;
+  function requestClose() {
+    if (!uploading) onClose();
+  }
+  async function downloadAttachment(attachment: Attachment) {
+    const attachmentId = attachment.id ?? attachment.name;
+    if (!attachment.storagePath) {
+      setError(preview ? "O arquivo está disponível somente nesta prévia local." : "Este arquivo não tem um caminho autenticado. Reenvie-o para baixar.");
+      return;
+    }
+    setDownloadingAttachmentId(attachmentId);
+    setError("");
+    try {
+      await downloadStoredAttachment(attachment);
+    } catch {
+      setError("Não foi possível baixar o arquivo. Verifique sua autorização no workspace e tente novamente.");
+    } finally {
+      setDownloadingAttachmentId("");
+    }
+  }
+  return <Modal title="Detalhes da revisão" onClose={requestClose}><div className="dialog-form"><label className="field-stack"><span>Peça *</span><select value={revision.partId} onChange={(event) => onChange({ ...revision, partId: event.target.value })}>{parts.map((part) => <option key={part.id} value={part.id}>{part.name}</option>)}</select></label><label className="field-stack"><span>Versão *</span><input value={revision.version} onChange={(event) => onChange({ ...revision, version: event.target.value })} /></label><label className="field-stack field-span"><span>Título da versão *</span><input value={revision.title} onChange={(event) => onChange({ ...revision, title: event.target.value })} /></label><label className="field-stack field-span"><span>Notas</span><textarea value={revision.notes} onChange={(event) => onChange({ ...revision, notes: event.target.value })} /></label><div className="field-stack field-span"><span>Invoices relacionadas</span>{invoices.map((invoice) => <label key={invoice.id}><input type="checkbox" checked={revision.invoiceIds.includes(invoice.id)} onChange={(event) => onChange({ ...revision, invoiceIds: event.target.checked ? [...revision.invoiceIds, invoice.id] : revision.invoiceIds.filter((idValue) => idValue !== invoice.id) })} /> {invoice.clientName} · {invoice.title}</label>)}</div><label className="button button-secondary field-span"><Paperclip size={16} /> {pendingFiles.length ? `${pendingFiles.length} arquivo(s) pendente(s)` : "Anexar arquivo .STL"}<input hidden type="file" accept=".stl,model/stl" disabled={uploading} onChange={(event) => { queueFile(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }} /></label>{preview && pendingFiles.length > 0 && <small className="muted-copy field-span">Na prévia, os nomes dos arquivos ficam na sessão; o conteúdo não é enviado ao workspace.</small>}{error && <small className="inline-warning field-span" role="alert">{error}</small>}<div className="stack-list field-span">{revision.attachments.map((attachment) => attachment.storagePath ? <button key={attachment.id ?? attachment.name} type="button" className="inline-action" aria-label={`Baixar ${attachment.name}`} disabled={downloadingAttachmentId === (attachment.id ?? attachment.name)} onClick={() => void downloadAttachment(attachment)}><span>{attachment.name}</span><FileDown size={16} /></button> : <span key={attachment.id ?? attachment.name}>{attachment.name} · {preview ? "disponível somente nesta prévia local" : "sem caminho autenticado; reenvie para baixar"}</span>)}</div>{pendingFiles.length > 0 && <div className="stack-list field-span" aria-label="Arquivos pendentes">{pendingFiles.map((file, index) => <div key={`${file.name}-${file.lastModified}-${index}`}><span>{file.name} · pendente</span><button type="button" className="icon-button" aria-label={`Remover ${file.name}`} disabled={uploading} onClick={() => setPendingFiles((current) => current.filter((_, itemIndex) => itemIndex !== index))}><X size={15} /></button></div>)}</div>}</div><div className="dialog-actions"><button type="button" className="button button-secondary" onClick={requestClose} disabled={uploading}>Cancelar</button><button type="button" className="button button-primary" disabled={uploading} onClick={() => void saveRevision()}>{uploading ? "Enviando e salvando…" : "Salvar revisão"}</button></div></Modal>;
 }
 
 function ClientDialog({ client, onChange, onClose, onSave }: { client: Client; onChange: (client: Client) => void; onClose: () => void; onSave: (client: Client) => Promise<void> }) {
@@ -1259,7 +1508,7 @@ function ClientDialog({ client, onChange, onClose, onSave }: { client: Client; o
 }
 
 function CatalogItemDialog({ item, onChange, onClose, onSave, onDelete }: { item: CatalogItem; onChange: (item: CatalogItem) => void; onClose: () => void; onSave: (item: CatalogItem) => Promise<void>; onDelete: (item: CatalogItem) => Promise<void> }) {
-  return <Modal title={item.id.startsWith("catalog-") ? "Editar item do catálogo" : "Novo item do catálogo"} onClose={onClose}><div className="dialog-form catalog-item-form"><label className="field-stack field-span"><span>Nome do item</span><input value={item.name} onChange={(event) => onChange({ ...item, name: event.target.value })} placeholder="Ex.: Peça usinada, hora técnica ou envio" /></label><label className="field-stack field-span"><span>Descrição</span><textarea value={item.description} onChange={(event) => onChange({ ...item, description: event.target.value })} placeholder="Descrição que poderá ser ajustada no documento." /></label><label className="field-stack"><span>Preço unitário</span><input type="number" min="0" step="0.01" value={item.unitPrice} onChange={(event) => onChange({ ...item, unitPrice: Number(event.target.value) })} /></label><label className="field-stack"><span>Tipo</span><select value={item.kind} onChange={(event) => onChange({ ...item, kind: event.target.value as CatalogItem["kind"] })}><option value="item">Item</option><option value="service">Serviço</option></select></label><label className="catalog-tax-toggle"><input type="checkbox" checked={item.taxable} onChange={(event) => onChange({ ...item, taxable: event.target.checked })} /> Aplicar tax neste item</label></div><div className="dialog-actions"><button type="button" className="button button-secondary" onClick={() => void onDelete(item)}>Excluir</button><button type="button" className="button button-secondary" onClick={onClose}>Cancelar</button><button type="button" className="button button-primary" onClick={() => void onSave(item)} disabled={!item.name.trim()}>Salvar item</button></div></Modal>}
+  return <Modal title={(item.id.startsWith("catalog-") || item.id.startsWith("cat-")) ? "Editar item do catálogo" : "Novo item do catálogo"} onClose={onClose}><div className="dialog-form catalog-item-form"><label className="field-stack field-span"><span>Nome do item</span><input value={item.name} onChange={(event) => onChange({ ...item, name: event.target.value })} placeholder="Ex.: Peça usinada, hora técnica ou envio" /></label><label className="field-stack field-span"><span>Descrição</span><textarea value={item.description} onChange={(event) => onChange({ ...item, description: event.target.value })} placeholder="Descrição que poderá ser ajustada no documento." /></label><label className="field-stack"><span>Preço unitário</span><input type="number" min="0" step="0.01" value={item.unitPrice} onChange={(event) => onChange({ ...item, unitPrice: Number(event.target.value) })} /></label><label className="field-stack"><span>Tipo</span><select value={item.kind} onChange={(event) => onChange({ ...item, kind: event.target.value as CatalogItem["kind"] })}><option value="item">Item</option><option value="service">Serviço</option></select></label><label className="catalog-tax-toggle"><input type="checkbox" checked={item.taxable} onChange={(event) => onChange({ ...item, taxable: event.target.checked })} /> Aplicar tax neste item</label></div><div className="dialog-actions">{!item.id.startsWith("cat-") && <button type="button" className="button button-secondary" onClick={() => void onDelete(item)}>Excluir</button>}<button type="button" className="button button-secondary" onClick={onClose}>Cancelar</button><button type="button" className="button button-primary" onClick={() => void onSave(item)} disabled={!item.name.trim()}>Salvar item</button></div></Modal>}
 
 function MaterialDialog({ material, onChange, onClose, onSave }: { material: Material; onChange: (material: Material) => void; onClose: () => void; onSave: (material: Material) => Promise<void> }) {
   const number = (key: keyof Material, value: string) => onChange({ ...material, [key]: Number(value) || 0 });
@@ -1267,12 +1516,12 @@ function MaterialDialog({ material, onChange, onClose, onSave }: { material: Mat
 }
 
 function CalendarDialog({ event, onChange, onClose, onSave }: { event: CalendarEvent; onChange: (event: CalendarEvent) => void; onClose: () => void; onSave: (event: CalendarEvent) => Promise<void> }) {
-  return <Modal title="Novo evento" onClose={onClose}><div className="dialog-form"><label className="field-stack field-span"><span>Título *</span><input value={event.title} onChange={(change) => onChange({ ...event, title: change.target.value })} placeholder="Ex.: Visita técnica" /></label><label className="field-stack"><span>Data e hora *</span><input type="datetime-local" value={event.date.slice(0, 16)} onChange={(change) => onChange({ ...event, date: new Date(change.target.value).toISOString() })} /></label><label className="field-stack"><span>Categoria</span><select value={event.type} onChange={(change) => onChange({ ...event, type: change.target.value as CalendarEvent["type"] })}><option value="calendar">Agenda</option><option value="order">Pedido</option><option value="triage">Triagem</option><option value="inventory">Estoque</option><option value="maintenance">Manutenção</option></select></label><label className="field-stack field-span"><span>Detalhes</span><textarea value={event.detail} onChange={(change) => onChange({ ...event, detail: change.target.value })} placeholder="O que precisa ficar visível no histórico?" /></label></div><div className="dialog-actions"><button type="button" className="button button-secondary" onClick={onClose}>Cancelar</button><button type="button" className="button button-primary" onClick={() => void onSave(event)}>Salvar evento</button></div></Modal>;
+  return <Modal title="Novo evento" onClose={onClose}><div className="dialog-form"><label className="field-stack field-span"><span>Título *</span><input value={event.title} onChange={(change) => onChange({ ...event, title: change.target.value })} placeholder="Ex.: Visita técnica" /></label><label className="field-stack"><span>Data e hora *</span><input type="datetime-local" step="60" value={formatDateTimeLocal(new Date(event.date))?.slice(0, 16) ?? ""} onChange={(change) => { const value = change.target.value; const parsed = value ? new Date(value) : null; onChange({ ...event, date: parsed && Number.isFinite(parsed.getTime()) ? parsed.toISOString() : "" }); }} /></label><label className="field-stack"><span>Categoria</span><select value={event.type} onChange={(change) => onChange({ ...event, type: change.target.value as CalendarEvent["type"] })}><option value="calendar">Agenda</option><option value="order">Pedido</option><option value="triage">Triagem</option><option value="inventory">Estoque</option><option value="maintenance">Manutenção</option></select></label><label className="field-stack field-span"><span>Detalhes</span><textarea value={event.detail} onChange={(change) => onChange({ ...event, detail: change.target.value })} placeholder="O que precisa ficar visível no histórico?" /></label></div><div className="dialog-actions"><button type="button" className="button button-secondary" onClick={onClose}>Cancelar</button><button type="button" className="button button-primary" onClick={() => void onSave(event)}>Salvar evento</button></div></Modal>;
 }
 
 function PrinterDialog({ printer, onChange, onClose, onSave }: { printer: PrinterModel; onChange: (printer: PrinterModel) => void; onClose: () => void; onSave: (printer: PrinterModel) => Promise<void> }) {
   const number = (key: keyof PrinterModel, value: string) => onChange({ ...printer, [key]: Number(value) || 0 });
-  return <Modal title={printer.name ? "Editar impressora" : "Nova impressora"} onClose={onClose}><div className="dialog-form"><label className="field-stack"><span>Nome *</span><input value={printer.name} onChange={(event) => onChange({ ...printer, name: event.target.value })} placeholder="Ex.: Bambu Lab X2D" /></label><label className="field-stack"><span>Modelo *</span><input value={printer.model} onChange={(event) => onChange({ ...printer, model: event.target.value })} placeholder="Modelo / configuração" /></label><label className="field-stack"><span>Status</span><select value={printer.status} onChange={(event) => onChange({ ...printer, status: event.target.value as PrinterModel["status"] })}><option>Pronta</option><option>Em manutenção</option><option>Indisponível</option></select></label><label className="field-stack"><span>Material atual</span><input value={printer.material} onChange={(event) => onChange({ ...printer, material: event.target.value })} placeholder="PLA / PETG" /></label><label className="field-stack"><span>Nozzle máximo (°C)</span><input type="number" value={printer.maxNozzleTemp ?? ""} onChange={(event) => number("maxNozzleTemp", event.target.value)} /></label><label className="field-stack"><span>Mesa máxima (°C)</span><input type="number" value={printer.maxBedTemp ?? ""} onChange={(event) => number("maxBedTemp", event.target.value)} /></label><label className="field-stack"><span>Câmara máxima (°C)</span><input type="number" value={printer.maxChamberTemp ?? ""} onChange={(event) => number("maxChamberTemp", event.target.value)} /></label><label className="field-stack"><span>Diâmetro do nozzle (mm)</span><input type="number" step="0.1" value={printer.nozzleDiameter ?? ""} onChange={(event) => number("nozzleDiameter", event.target.value)} /></label><label className="field-stack field-span"><span>Volume útil X × Y × Z (mm)</span><input value={printer.buildVolume ?? ""} onChange={(event) => onChange({ ...printer, buildVolume: event.target.value })} placeholder="256 × 256 × 256" /></label><label className="field-stack field-span"><span>Materiais compatíveis</span><input value={(printer.compatibleMaterials ?? []).join(", ")} onChange={(event) => onChange({ ...printer, compatibleMaterials: event.target.value.split(",").map((item) => item.trim()).filter(Boolean) })} placeholder="PLA, PETG, ASA, PA6-CF" /></label><label className="selector-check"><input type="checkbox" checked={Boolean(printer.hardenedNozzle)} onChange={(event) => onChange({ ...printer, hardenedNozzle: event.target.checked })} /> Bico endurecido disponível</label><label className="selector-check"><input type="checkbox" checked={Boolean(printer.dryingAvailable)} onChange={(event) => onChange({ ...printer, dryingAvailable: event.target.checked })} /> Secagem controlada disponível</label></div><div className="dialog-actions"><button type="button" className="button button-secondary" onClick={onClose}>Cancelar</button><button type="button" className="button button-primary" onClick={() => void onSave(printer)}>Salvar perfil técnico</button></div></Modal>;
+  return <Modal title={printer.name ? "Editar impressora" : "Nova impressora"} onClose={onClose}><div className="dialog-form"><label className="field-stack"><span>Nome *</span><input value={printer.name} onChange={(event) => onChange({ ...printer, name: event.target.value })} placeholder="Ex.: Bambu Lab X2D" /></label><label className="field-stack"><span>Modelo *</span><input value={printer.model} onChange={(event) => onChange({ ...printer, model: event.target.value })} placeholder="Modelo / configuração" /></label><label className="field-stack"><span>Status</span><select value={printer.status} onChange={(event) => onChange({ ...printer, status: event.target.value as PrinterModel["status"] })}><option>Pronta</option><option>Em manutenção</option><option>Pausada</option></select></label><label className="field-stack"><span>Material atual</span><input value={printer.material} onChange={(event) => onChange({ ...printer, material: event.target.value })} placeholder="PLA / PETG" /></label><label className="field-stack"><span>Nozzle máximo (°C)</span><input type="number" value={printer.maxNozzleTemp ?? ""} onChange={(event) => number("maxNozzleTemp", event.target.value)} /></label><label className="field-stack"><span>Mesa máxima (°C)</span><input type="number" value={printer.maxBedTemp ?? ""} onChange={(event) => number("maxBedTemp", event.target.value)} /></label><label className="field-stack"><span>Câmara máxima (°C)</span><input type="number" value={printer.maxChamberTemp ?? ""} onChange={(event) => number("maxChamberTemp", event.target.value)} /></label><label className="field-stack"><span>Diâmetro do nozzle (mm)</span><input type="number" step="0.1" value={printer.nozzleDiameter ?? ""} onChange={(event) => number("nozzleDiameter", event.target.value)} /></label><label className="field-stack field-span"><span>Volume útil X × Y × Z (mm)</span><input value={printer.buildVolume ?? ""} onChange={(event) => onChange({ ...printer, buildVolume: event.target.value })} placeholder="256 × 256 × 256" /></label><label className="field-stack field-span"><span>Materiais compatíveis</span><input value={(printer.compatibleMaterials ?? []).join(", ")} onChange={(event) => onChange({ ...printer, compatibleMaterials: event.target.value.split(",").map((item) => item.trim()).filter(Boolean) })} placeholder="PLA, PETG, ASA, PA6-CF" /></label><label className="selector-check"><input type="checkbox" checked={Boolean(printer.hardenedNozzle)} onChange={(event) => onChange({ ...printer, hardenedNozzle: event.target.checked })} /> Bico endurecido disponível</label><label className="selector-check"><input type="checkbox" checked={Boolean(printer.dryingAvailable)} onChange={(event) => onChange({ ...printer, dryingAvailable: event.target.checked })} /> Secagem controlada disponível</label></div><div className="dialog-actions"><button type="button" className="button button-secondary" onClick={onClose}>Cancelar</button><button type="button" className="button button-primary" onClick={() => void onSave(printer)}>Salvar perfil técnico</button></div></Modal>;
 }
 
 function MaintenanceDialog({ printer, onClose, onSave }: { printer: PrinterModel; onClose: () => void; onSave: (printer: PrinterModel, entry: MaintenanceEntry) => Promise<void> }) {

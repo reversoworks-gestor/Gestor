@@ -26,8 +26,8 @@ function Login({ onPreview }: { onPreview: () => void }) {
   return (
     <main className="login-page">
       <section className="login-brand">
-        <div className="login-mark">R</div>
-        <p className="eyebrow">Reverse engineering system</p>
+        <img className="login-logo" src={`${import.meta.env.BASE_URL}reverso-logo-branca.png`} alt="Reverso Works" />
+        <p className="eyebrow">Sistema de engenharia reversa</p>
         <h1>Do objeto físico à peça possível.</h1>
         <p>Centro privado de engenharia, fabricação e operação da Reverso Works.</p>
         <div className="login-ambient"><span /><span /><span /></div>
