@@ -7,7 +7,7 @@ Versão reconstruída em 28/10/2026 conforme o Marketing Book Automotivo e a aut
 | Verificação | Resultado observado |
 | --- | --- |
 | Matriz de ações e estados dos módulos | **157/157 casos PASS** |
-| Testes de domínio, componentes, regressões e PDF | **64/64 PASS** |
+| Testes de domínio, componentes, regressões e PDF | **66/66 PASS** |
 | Auth, Firestore, Storage e transações reais em emuladores | **13/13 PASS** |
 | Reflow das 16 páginas em 320, 375, 768, 1024, 1280 e 1440 px | **96/96 PASS**, sem overflow global |
 | TypeScript e build de produção | Sem erros |
@@ -36,6 +36,8 @@ Build `1608783` concluído com estado `built`. Endereço público HTTP 200; JS, 
 
 A captura recebida revelou uma falha que a verificação anterior de overflow global não detectava: em 440 px, o título tinha 72 px disponíveis para 83 px de conteúdo, enquanto campo e botão de busca apareciam simultaneamente. A regressão `qa/check_header.py` falhou antes da alteração e passou depois em 15 larguras, incluindo 429/430, 440 e 1279/1280 px. Busca compacta e inline agora são exclusivas; o título quebra linhas sem corte; controles mantêm 44 px.
 
-O iPhone 17 Pro Max foi registrado como dispositivo principal. Validados viewport da captura 440×956, escala 3, e orientação horizontal 956×440: menu móvel preservado, título legível, campos de busca de 16 px, modais dentro da tela e texto ampliado a 200%. CSS protege áreas seguras de topo, laterais e base. Busca, resultados, retorno de foco com Escape, menu e perfil foram revalidados. TypeScript/build sem erros; suíte existente 64/64 aprovada.
+O iPhone 17 Pro Max foi registrado como dispositivo principal. Validados viewport da captura 440×956, escala 3, e orientação horizontal 956×440: menu móvel preservado, título legível, campos de busca de 16 px, modais dentro da tela e texto ampliado a 200%. CSS protege áreas seguras de topo, laterais e base. Busca, resultados, retorno de foco com Escape, menu e perfil foram revalidados. TypeScript/build sem erros; suíte de 66/66 testes aprovada, incluindo duas regressões do cache de atualização.
 
 Método: Chromium com dimensões/escala equivalentes. O preset disponível não reproduz integralmente toque/Safari; não houve teste físico no iPhone 17 Pro Max. Essa limitação permanece explícita em `qa/iphone-priority-results.json`. Nenhum dado Firebase foi alterado.
+
+A verificação pública com revisão explícita passou em 375, 430, 440, 956 e 1280 px. Foi detectado HTML anterior no cache de uma sessão já aberta; a navegação agora solicita revalidação do documento, sem apagar armazenamento local, autenticação ou cache dos assets versionados. Chamadas privadas continuam fora da interceptação.

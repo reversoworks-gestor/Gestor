@@ -14,7 +14,9 @@ self.addEventListener("fetch", event => {
   const url = new URL(request.url);
   if (request.method !== "GET" || url.origin !== self.location.origin || request.headers.has("Authorization")) return;
   if (!STATIC_DESTINATIONS.has(request.destination) || url.pathname.includes("/api/") || url.pathname.includes("/manus-storage/")) return;
-  event.respondWith(fetch(request).then(response => {
+  // Revalidate the HTML entry on navigation; hashed assets keep normal browser caching.
+  const options = { cache: request.destination === "document" ? "no-cache" : "default" };
+  event.respondWith(fetch(request, options).then(response => {
     if (response.ok && !/private|no-store/i.test(response.headers.get("Cache-Control") || "")) {
       const copy = response.clone();
       void caches.open(CACHE).then(cache => cache.put(request, copy)).catch(() => undefined);
