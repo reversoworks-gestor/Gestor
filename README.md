@@ -52,3 +52,7 @@ O projeto mantém compatibilidade de leitura com modelos e coleções existentes
 A conta responsável pelo workspace pode alterar registros e arquivos. Integrantes autorizados têm acesso consultivo, sem gravação, exclusão ou sobrescrita de evidências, tanto na interface quanto nas regras Firebase. Não há criação automática de proprietário pelo cliente. Remoções de registros autenticados são arquivamentos com `archivedAt` e `archivedBy`: não há exclusão física de registros e os anexos históricos continuam preservados. Registros arquivados deixam de aparecer nas listas operacionais. A demonstração usa dados descartáveis locais e não representa retenção de produção.
 
 Moeda é fixada em documentos, despesas e itens do catálogo. Trocar a moeda do estúdio afeta novos registros e o filtro inicial de relatórios; não converte nem renomeia valores históricos. O seletor comercial mostra somente itens do catálogo na moeda do documento.
+
+## Publicação em GitHub Pages
+
+Endereço solicitado: https://reversoworks-gestor.github.io/Gestor/. O build de produção usa `VITE_GITHUB_PAGES=true`, base `/Gestor/`, e está servido pela branch `main:/`, com `.nojekyll`. O código-fonte e o histórico foram preservados. Implantar o frontend não altera as regras ou os dados do Firebase; as novas regras dependem de acesso administrativo.

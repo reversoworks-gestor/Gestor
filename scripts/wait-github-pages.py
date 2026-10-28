@@ -1,11 +1,12 @@
-import json, subprocess, time, sys, urllib.request
+import json, subprocess, time, sys, urllib.request, re
 repo = 'reversoworks-gestor/Gestor'
 expected = sys.argv[1]
 url = 'https://reversoworks-gestor.github.io/Gestor/'
+ansi = re.compile(r'\x1b\[[0-?]*[ -/]*[@-~]')
 for attempt in range(60):
     result = subprocess.run(['gh','api',f'repos/{repo}/pages/builds/latest'],capture_output=True,text=True)
     if result.returncode == 0:
-        build = json.loads(result.stdout)
+        build = json.loads(ansi.sub('', result.stdout))
         print(f"Pages: status={build.get('status')} commit={build.get('commit','')[:7]}", flush=True)
         if build.get('commit') == expected and build.get('status') == 'errored':
             raise SystemExit(f"Pages deployment failed: {build.get('error')}")

@@ -1,0 +1,57 @@
+[
+  {
+    "url": "https://reversoworks-gestor.github.io/Gestor/manifest.webmanifest",
+    "status": 200,
+    "bytes": 374
+  },
+  {
+    "url": "https://reversoworks-gestor.github.io/Gestor/apple-touch-icon.png",
+    "status": 200,
+    "bytes": 9665
+  },
+  {
+    "url": "https://reversoworks-gestor.github.io/Gestor/favicon-32.png",
+    "status": 200,
+    "bytes": 1134
+  },
+  {
+    "url": "https://reversoworks-gestor.github.io/Gestor/assets/index-C4XJjwIr.js",
+    "status": 200,
+    "bytes": 282078
+  },
+  {
+    "url": "https://reversoworks-gestor.github.io/Gestor/assets/react-runtime-COd4auuD.js",
+    "status": 200,
+    "bytes": 11794
+  },
+  {
+    "url": "https://reversoworks-gestor.github.io/Gestor/assets/firebase-runtime-COZQI-aU.js",
+    "status": 200,
+    "bytes": 711649
+  },
+  {
+    "url": "https://reversoworks-gestor.github.io/Gestor/assets/index-xtIPzICN.css",
+    "status": 200,
+    "bytes": 33661
+  },
+  {
+    "url": "https://reversoworks-gestor.github.io/Gestor/reverso-logo-branca.png",
+    "status": 200,
+    "bytes": 880544
+  },
+  {
+    "url": "https://reversoworks-gestor.github.io/Gestor/icon-192.png",
+    "status": 200,
+    "bytes": 10665
+  },
+  {
+    "url": "https://reversoworks-gestor.github.io/Gestor/sw.js",
+    "status": 200,
+    "bytes": 1323
+  },
+  {
+    "url": "https://reversoworks-gestor.github.io/Gestor/release.json",
+    "status": 200,
+    "bytes": 148
+  }
+]

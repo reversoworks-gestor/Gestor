@@ -10,13 +10,13 @@
 - [x] Modais devem conter/restaurar foco e fechar por Escape; menu móvel, campos e ações acessíveis em 320, 375, 768, 1024, 1280 e 1440 px; sem overflow global acidental; respeitar redução de movimento.
 - [x] Corrigir falhas de preço negativo, valor de pagamento vazio e foco do último relatório; suprir dados de teste para estados antes bloqueados; validar módulos e regressões com resultados observados.
 - [x] Revisão independente read-only da implementação, build e TypeScript limpos; testes de interface, domínio e integração sem pendências ocultas; registrar honestamente a cobertura efetiva.
-- [x] Código salvo na branch GitHub de reconstrução e checkpoint gerenciado; não sobrescrever main/produção nem declarar implantação sem evidência.
+- [x] Código salvo no GitHub e checkpoint gerenciado; publicação na main posteriormente autorizada para GitHub Pages; preservar histórico/dados e não declarar implantação sem evidência.
 
 ## Fronteira de entrega
 
-A versão reconstruída e testada fica salva na branch de reconstrução e no checkpoint gerenciado. A implantação administrativa das regras Firebase não foi executada; a publicação gerenciada segue a preferência ativa do Dashboard; a produção anterior e seus dados permanecem intactos. A matriz aprovada cobre 157 casos definidos, não todas as combinações possíveis.
+A versão reconstruída e testada fica salva na branch de reconstrução e no checkpoint gerenciado. A implantação administrativa das regras Firebase não foi executada; a publicação gerenciada segue a preferência ativa do Dashboard; o histórico da versão anterior e seus dados permanecem intactos; o frontend foi publicado no endereço GitHub Pages autorizado. A matriz aprovada cobre 157 casos definidos, não todas as combinações possíveis.
 
 ## Publicação solicitada
 
-- [ ] Publicar a versão reconstruída em https://reversoworks-gestor.github.io/Gestor/, com base `/Gestor/`, logo e fontes carregando, histórico Git preservado e Firebase/dados existentes intactos.
-- [ ] Confirmar build bem-sucedido do GitHub Pages e carregamento real da versão publicada, incluindo login e navegação de demonstração, sem gravações em produção.
+- [x] Publicar a versão reconstruída em https://reversoworks-gestor.github.io/Gestor/, com base `/Gestor/`, logo e fontes carregando, histórico Git preservado e Firebase/dados existentes intactos.
+- [x] Confirmar build bem-sucedido do GitHub Pages e carregamento real da versão publicada, incluindo login e navegação de demonstração, sem gravações em produção.

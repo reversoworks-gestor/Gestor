@@ -1,0 +1,130 @@
+[
+  {
+    "view": "overview",
+    "title": "Visão geral",
+    "demo": true,
+    "width": 1280,
+    "overflow": false,
+    "pass": true
+  },
+  {
+    "view": "clients",
+    "title": "Clientes",
+    "demo": true,
+    "width": 1280,
+    "overflow": false,
+    "pass": true
+  },
+  {
+    "view": "vehicles",
+    "title": "Veículos",
+    "demo": true,
+    "width": 1280,
+    "overflow": false,
+    "pass": true
+  },
+  {
+    "view": "triage",
+    "title": "Triagem automotiva",
+    "demo": true,
+    "width": 1280,
+    "overflow": false,
+    "pass": true
+  },
+  {
+    "view": "calendar",
+    "title": "Calendário",
+    "demo": true,
+    "width": 1280,
+    "overflow": false,
+    "pass": true
+  },
+  {
+    "view": "estimates",
+    "title": "Estimativas",
+    "demo": true,
+    "width": 1280,
+    "overflow": false,
+    "pass": true
+  },
+  {
+    "view": "invoices",
+    "title": "Invoices",
+    "demo": true,
+    "width": 1280,
+    "overflow": false,
+    "pass": true
+  },
+  {
+    "view": "orders",
+    "title": "Pedidos",
+    "demo": true,
+    "width": 1280,
+    "overflow": false,
+    "pass": true
+  },
+  {
+    "view": "production",
+    "title": "Produção",
+    "demo": true,
+    "width": 1280,
+    "overflow": false,
+    "pass": true
+  },
+  {
+    "view": "inventory",
+    "title": "Materiais",
+    "demo": true,
+    "width": 1280,
+    "overflow": false,
+    "pass": true
+  },
+  {
+    "view": "printers",
+    "title": "Impressoras e manutenção",
+    "demo": true,
+    "width": 1280,
+    "overflow": false,
+    "pass": true
+  },
+  {
+    "view": "parts",
+    "title": "Peças e revisões",
+    "demo": true,
+    "width": 1280,
+    "overflow": false,
+    "pass": true
+  },
+  {
+    "view": "finance",
+    "title": "Visão financeira",
+    "demo": true,
+    "width": 1280,
+    "overflow": false,
+    "pass": true
+  },
+  {
+    "view": "expenses",
+    "title": "Despesas operacionais",
+    "demo": true,
+    "width": 1280,
+    "overflow": false,
+    "pass": true
+  },
+  {
+    "view": "more",
+    "title": "Áreas do estúdio",
+    "demo": true,
+    "width": 1280,
+    "overflow": false,
+    "pass": true
+  },
+  {
+    "view": "settings",
+    "title": "Configurações do estúdio",
+    "demo": true,
+    "width": 1280,
+    "overflow": false,
+    "pass": true
+  }
+]
