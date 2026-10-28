@@ -15,3 +15,8 @@
 ## Fronteira de entrega
 
 A versão reconstruída e testada fica salva na branch de reconstrução e no checkpoint gerenciado. A implantação administrativa das regras Firebase não foi executada; a publicação gerenciada segue a preferência ativa do Dashboard; a produção anterior e seus dados permanecem intactos. A matriz aprovada cobre 157 casos definidos, não todas as combinações possíveis.
+
+## Publicação solicitada
+
+- [ ] Publicar a versão reconstruída em https://reversoworks-gestor.github.io/Gestor/, com base `/Gestor/`, logo e fontes carregando, histórico Git preservado e Firebase/dados existentes intactos.
+- [ ] Confirmar build bem-sucedido do GitHub Pages e carregamento real da versão publicada, incluindo login e navegação de demonstração, sem gravações em produção.

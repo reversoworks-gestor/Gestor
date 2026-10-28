@@ -14,3 +14,7 @@ Verde profundo #031A17 dominante, verde estúdio #062C27 nas superfícies, #0C39
 
 ## Ambiente e entrega
 Workspace gerenciado `/home/ubuntu/reversogestor`, com código em `source/`. Testes unitários e de integração, emuladores Firebase com projeto `demo-reverso-qa` sem credenciais reais, testes públicos de interface com dados sintéticos e navegador. Jamais executar QA no Firebase de produção. Código será sincronizado para a branch de reconstrução no repositório existente `reversoworks-gestor/Gestor`; preservar main, histórico e publicação existente. Salvar checkpoint gerenciado da mesma versão para Preview. Não declarar que produção foi implantada ou que a validação de produção ocorreu sem comprovação.
+
+## Publicação autorizada em 28/10/2026
+
+O usuário solicitou explicitamente publicar em https://reversoworks-gestor.github.io/Gestor/. A fonte atual de Pages é `main:/`; integrar a branch reconstruída por fast-forward, mantendo o histórico, e publicar o build com `VITE_GITHUB_PAGES=true`, base `/Gestor/`, assets locais e `.nojekyll`. Não mudar domínio, configuração Firebase ou dados comerciais. Confirmar a implantação por build do GitHub Pages, recursos HTTP e navegação anônima/demonstração. Essa autorização supera a restrição anterior de não substituir o frontend publicado; não autoriza migração destrutiva dos dados.

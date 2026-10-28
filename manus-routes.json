@@ -1,0 +1,72 @@
+{
+  "routes": [
+    {
+      "path": "/Gestor/",
+      "title": "Reverso Gestor"
+    },
+    {
+      "path": "/Gestor/?view=overview",
+      "title": "Início"
+    },
+    {
+      "path": "/Gestor/?view=clients",
+      "title": "Clientes"
+    },
+    {
+      "path": "/Gestor/?view=vehicles",
+      "title": "Veículos"
+    },
+    {
+      "path": "/Gestor/?view=estimates",
+      "title": "Estimativas"
+    },
+    {
+      "path": "/Gestor/?view=invoices",
+      "title": "Invoices"
+    },
+    {
+      "path": "/Gestor/?view=orders",
+      "title": "Pedidos"
+    },
+    {
+      "path": "/Gestor/?view=production",
+      "title": "Jornada e produção"
+    },
+    {
+      "path": "/Gestor/?view=triage",
+      "title": "Avaliação e triagem"
+    },
+    {
+      "path": "/Gestor/?view=calendar",
+      "title": "Calendário"
+    },
+    {
+      "path": "/Gestor/?view=inventory",
+      "title": "Estoque"
+    },
+    {
+      "path": "/Gestor/?view=printers",
+      "title": "Impressoras e manutenção"
+    },
+    {
+      "path": "/Gestor/?view=parts",
+      "title": "Peças e revisões"
+    },
+    {
+      "path": "/Gestor/?view=finance",
+      "title": "Financeiro"
+    },
+    {
+      "path": "/Gestor/?view=expenses",
+      "title": "Despesas"
+    },
+    {
+      "path": "/Gestor/?view=more",
+      "title": "Áreas do estúdio"
+    },
+    {
+      "path": "/Gestor/?view=settings",
+      "title": "Ajustes"
+    }
+  ]
+}
