@@ -12,3 +12,4 @@ __pycache__/
 source/.vitest-emulators.*
 docs/Marketing-Book-Automotivo.pdf
 qa/evidence/authenticated-private-field.png
+docs/*.pdf

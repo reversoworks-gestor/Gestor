@@ -10,7 +10,7 @@
 - [x] Modais devem conter/restaurar foco e fechar por Escape; menu móvel, campos e ações acessíveis em 320, 375, 768, 1024, 1280 e 1440 px; sem overflow global acidental; respeitar redução de movimento.
 - [x] Corrigir falhas de preço negativo, valor de pagamento vazio e foco do último relatório; suprir dados de teste para estados antes bloqueados; validar módulos e regressões com resultados observados.
 - [x] Revisão independente read-only da implementação, build e TypeScript limpos; testes de interface, domínio e integração sem pendências ocultas; registrar honestamente a cobertura efetiva.
-- [ ] Código salvo na branch GitHub de reconstrução e checkpoint gerenciado; não sobrescrever main/produção nem declarar implantação sem evidência.
+- [x] Código salvo na branch GitHub de reconstrução e checkpoint gerenciado; não sobrescrever main/produção nem declarar implantação sem evidência.
 
 ## Fronteira de entrega
 
