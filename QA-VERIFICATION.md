@@ -31,3 +31,11 @@ A demonstração usa somente registros sintéticos e armazenamento local do nave
 ## Publicação GitHub Pages confirmada
 
 Build `1608783` concluído com estado `built`. Endereço público HTTP 200; JS, CSS, manifesto, logo e ícones responderam 200. As 16 páginas carregaram em demonstração no domínio publicado, sem erros de JavaScript, com verificação móvel sem overflow. Um PDF sintético foi gerado e baixado, comprovando fontes e logo no caminho `/Gestor/`. A página de acesso foi verificada sem utilizar credenciais reais ou gravar no Firebase. Evidências: `qa/github-pages-build.json`, `qa/github-pages-assets.json`, `qa/github-pages-smoke.json` e capturas em `qa/evidence`.
+
+## Correção móvel — prioridade iPhone 17 Pro Max
+
+A captura recebida revelou uma falha que a verificação anterior de overflow global não detectava: em 440 px, o título tinha 72 px disponíveis para 83 px de conteúdo, enquanto campo e botão de busca apareciam simultaneamente. A regressão `qa/check_header.py` falhou antes da alteração e passou depois em 15 larguras, incluindo 429/430, 440 e 1279/1280 px. Busca compacta e inline agora são exclusivas; o título quebra linhas sem corte; controles mantêm 44 px.
+
+O iPhone 17 Pro Max foi registrado como dispositivo principal. Validados viewport da captura 440×956, escala 3, e orientação horizontal 956×440: menu móvel preservado, título legível, campos de busca de 16 px, modais dentro da tela e texto ampliado a 200%. CSS protege áreas seguras de topo, laterais e base. Busca, resultados, retorno de foco com Escape, menu e perfil foram revalidados. TypeScript/build sem erros; suíte existente 64/64 aprovada.
+
+Método: Chromium com dimensões/escala equivalentes. O preset disponível não reproduz integralmente toque/Safari; não houve teste físico no iPhone 17 Pro Max. Essa limitação permanece explícita em `qa/iphone-priority-results.json`. Nenhum dado Firebase foi alterado.

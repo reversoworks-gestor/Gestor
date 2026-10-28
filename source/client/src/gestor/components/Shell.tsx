@@ -93,13 +93,13 @@ export default function Shell({
     [profileOpen, setProfileOpen] = useState(false),
     [searchOpen, setSearchOpen] = useState(false);
   const [desktop, setDesktop] = useState(
-    () => matchMedia("(min-width:900px)").matches
+    () => matchMedia("(min-width:900px) and (min-height:600px)").matches
   );
   const sidebar = useRef<HTMLElement>(null),
     frame = useRef<HTMLDivElement>(null),
     menu = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const query = matchMedia("(min-width:900px)");
+    const query = matchMedia("(min-width:900px) and (min-height:600px)");
     const change = () => {
       setDesktop(query.matches);
       if (query.matches) setMobileMenuOpen(false);
@@ -337,7 +337,6 @@ export default function Shell({
               <label className="sr-only" htmlFor="gestor-global-search">
                 Buscar em clientes, veículos e documentos
               </label>
-              <Search size={17} />
               <input
                 id="gestor-global-search"
                 type="search"
@@ -345,10 +344,17 @@ export default function Shell({
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Buscar no Gestor"
               />
+              <button
+                type="submit"
+                className="global-search-submit"
+                aria-label="Pesquisar no Gestor"
+              >
+                <Search size={18} aria-hidden="true" />
+              </button>
             </form>
             <button
               type="button"
-              className="icon-button"
+              className="icon-button compact-search-toggle"
               aria-label="Abrir busca global"
               onClick={() => setSearchOpen(true)}
             >

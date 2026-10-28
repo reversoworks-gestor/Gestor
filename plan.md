@@ -18,3 +18,11 @@ Workspace gerenciado `/home/ubuntu/reversogestor`, com código em `source/`. Tes
 ## Publicação autorizada em 28/10/2026
 
 O usuário solicitou explicitamente publicar em https://reversoworks-gestor.github.io/Gestor/. A fonte atual de Pages é `main:/`; integrar a branch reconstruída por fast-forward, mantendo o histórico, e publicar o build com `VITE_GITHUB_PAGES=true`, base `/Gestor/`, assets locais e `.nojekyll`. Não mudar domínio, configuração Firebase ou dados comerciais. Confirmar a implantação por build do GitHub Pages, recursos HTTP e navegação anônima/demonstração. Essa autorização supera a restrição anterior de não substituir o frontend publicado; não autoriza migração destrutiva dos dados.
+
+## Ajuste móvel após captura do usuário
+
+Corrigir o shell sem redesenhar os módulos nem alterar registros. A busca inline fica reservada a larguras a partir de 1280 px, com envio dentro do próprio campo; abaixo disso, um único botão abre o modal de busca. O título pode quebrar linhas, sem ellipsis. Menu/perfil mantêm alvos de 44 px, e o cabeçalho respeita áreas seguras do iPhone. Remover as regras conflitantes de 430 px em vez de encobrir o problema com corte de conteúdo.
+
+## Dispositivo prioritário confirmado
+
+O responsável informou em 28/10/2026 que usa prioritariamente o iPhone 17 Pro Max. O Gestor deve ser touch-first: leitura e ações principais confortáveis nesse aparelho, áreas seguras de topo/laterais/base, orientação vertical e horizontal e conteúdo utilizável com texto ampliado. Validar por viewport e emulação de toque; não apresentar emulação Chromium como teste físico de Safari/iPhone.

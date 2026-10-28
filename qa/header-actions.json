@@ -1,0 +1,10 @@
+{
+  "compactSearch": true,
+  "inlineSearch": true,
+  "searchResults": true,
+  "escapeRestoreFocus": true,
+  "menuNavigation": true,
+  "profile": true,
+  "longTitle320": true,
+  "jsErrors": false
+}

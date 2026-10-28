@@ -162,7 +162,10 @@ svg {
   display: flex;
   width: min(85vw, 290px);
   flex-direction: column;
-  padding: 18px 14px 14px;
+  padding: max(18px, env(safe-area-inset-top, 0px))
+    max(14px, env(safe-area-inset-right, 0px))
+    max(14px, env(safe-area-inset-bottom, 0px))
+    max(14px, env(safe-area-inset-left, 0px));
   color: var(--rw-white);
   background: #031a17;
   border-right: 1px solid rgba(197, 205, 199, 0.12);
@@ -277,7 +280,9 @@ svg {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 16px;
+  padding: calc(10px + env(safe-area-inset-top, 0px))
+    max(12px, env(safe-area-inset-right, 0px)) 10px
+    max(12px, env(safe-area-inset-left, 0px));
   background: rgba(3, 26, 23, 0.97);
   border-bottom: 1px solid var(--rw-line);
 }
@@ -295,10 +300,12 @@ svg {
 
 .topbar-context {
   min-width: 0;
+  flex: 1 1 0;
   gap: 10px;
 }
 .topbar-actions {
   min-width: 0;
+  flex: 0 0 auto;
   gap: 8px;
 }
 
@@ -344,19 +351,20 @@ svg {
 }
 
 .workspace-title {
-  overflow: hidden;
+  min-width: 0;
   color: var(--rw-white);
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.03em;
-  text-overflow: ellipsis;
   text-transform: uppercase;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
 }
 
 .global-search {
-  display: flex;
-  width: 44px;
+  display: none;
+  width: clamp(220px, 23vw, 300px);
   min-height: 44px;
   align-items: center;
   justify-content: center;
@@ -367,9 +375,11 @@ svg {
 }
 
 .global-search input {
-  width: 0;
+  width: 100%;
   min-width: 0;
-  padding: 0;
+  flex: 1;
+  padding: 10px 12px;
+  font-size: 16px;
   color: var(--rw-white);
   background: transparent;
   border: 0;
@@ -378,6 +388,24 @@ svg {
 
 .global-search:focus-within {
   border-color: var(--rw-gold);
+}
+
+.global-search-submit {
+  display: inline-grid;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  color: var(--rw-white);
+  background: transparent;
+  border: 0;
+  border-radius: 5px;
+}
+.global-search-submit:hover {
+  color: var(--rw-gold);
+}
+.profile-trigger > svg {
+  display: none;
 }
 
 .profile-wrap {
@@ -498,7 +526,9 @@ svg {
   width: 100%;
   min-width: 0;
   flex: 1;
-  padding: 22px 16px 38px;
+  padding: 22px max(16px, env(safe-area-inset-right, 0px))
+    calc(38px + env(safe-area-inset-bottom, 0px))
+    max(16px, env(safe-area-inset-left, 0px));
 }
 
 /* Layout and UI primitives */
@@ -1173,18 +1203,29 @@ svg {
 
 /* Modal and form overlay from components/ui.tsx */
 .modal-backdrop {
+  --rw-modal-gutter: 12px;
   position: fixed;
   z-index: 100;
   inset: 0;
   display: grid;
   place-items: end center;
-  padding: 12px;
+  padding: max(var(--rw-modal-gutter), env(safe-area-inset-top, 0px))
+    max(var(--rw-modal-gutter), env(safe-area-inset-right, 0px))
+    max(var(--rw-modal-gutter), env(safe-area-inset-bottom, 0px))
+    max(var(--rw-modal-gutter), env(safe-area-inset-left, 0px));
   background: rgba(0, 0, 0, 0.7);
 }
 .modal-panel {
   display: grid;
   width: min(100%, 620px);
-  max-height: min(90dvh, 760px);
+  max-height: min(
+    90dvh,
+    760px,
+    calc(
+      100dvh - max(var(--rw-modal-gutter), env(safe-area-inset-top, 0px)) -
+        max(var(--rw-modal-gutter), env(safe-area-inset-bottom, 0px))
+    )
+  );
   overflow: hidden;
   background: var(--rw-surface);
   border: 1px solid var(--rw-line-strong);
@@ -1226,15 +1267,6 @@ svg {
 }
 
 @media (min-width: 430px) {
-  .global-search {
-    width: min(245px, 34vw);
-    justify-content: flex-start;
-    gap: 8px;
-    padding: 0 11px;
-  }
-  .global-search input {
-    width: 100%;
-  }
   .metric-grid {
     gap: 12px;
   }
@@ -1246,13 +1278,13 @@ svg {
 
 @media (min-width: 620px) {
   .gestor-topbar {
-    padding-inline: 24px;
+    padding-left: max(24px, env(safe-area-inset-left, 0px));
+    padding-right: max(24px, env(safe-area-inset-right, 0px));
   }
   .gestor-workspace {
-    padding: 28px 24px 44px;
-  }
-  .breadcrumbs {
-    display: flex;
+    padding: 28px max(24px, env(safe-area-inset-right, 0px))
+      calc(44px + env(safe-area-inset-bottom, 0px))
+      max(24px, env(safe-area-inset-left, 0px));
   }
   .workspace-title {
     font-size: 0.8rem;
@@ -1278,12 +1310,23 @@ svg {
     border: 0;
   }
   .modal-backdrop {
+    --rw-modal-gutter: 24px;
     place-items: center;
-    padding: 24px;
   }
 }
 
-@media (min-width: 900px) {
+@media (min-width: 900px) and (min-height: 600px) {
+  .topbar-context {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+  .breadcrumbs {
+    display: flex;
+  }
+  .profile-trigger > svg {
+    display: block;
+  }
   .gestor-shell {
     display: grid;
     grid-template-columns: 240px minmax(0, 1fr);
@@ -1636,7 +1679,10 @@ label.row {
     flex-wrap: wrap;
   }
   .modal-panel {
-    max-height: calc(100dvh - 24px);
+    max-height: calc(
+      100dvh - max(var(--rw-modal-gutter), env(safe-area-inset-top, 0px)) -
+        max(var(--rw-modal-gutter), env(safe-area-inset-bottom, 0px))
+    );
   }
   .line-row .form-grid {
     grid-template-columns: minmax(0, 1fr);
@@ -1674,19 +1720,11 @@ label.row {
   line-height: 1.5;
 }
 @media (max-width: 429px) {
-  .global-search {
-    display: none;
-  }
   .topbar-actions {
     gap: 4px;
   }
-  .workspace-title {
-    max-width: 100px;
-    white-space: normal;
-  }
   .gestor-topbar {
     gap: 8px;
-    padding-inline: 12px;
   }
   .gestor-sidebar:not(.is-open) {
     visibility: hidden;
@@ -1906,4 +1944,14 @@ ol.calendar-grid {
   list-style: none;
   margin: 0;
   padding: 0;
+}
+
+/* Uma única busca: botão compacto no celular, campo completo em telas amplas. */
+@media (min-width: 1280px) {
+  .global-search {
+    display: flex;
+  }
+  .compact-search-toggle {
+    display: none;
+  }
 }

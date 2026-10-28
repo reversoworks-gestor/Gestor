@@ -1,0 +1,36 @@
+{
+  "method": "Chromium viewport/scale; sem teste físico de Safari ou emulação touch completa",
+  "orientations": [
+    {
+      "orientation": "vertical",
+      "width": 440,
+      "height": 956,
+      "scale": 3,
+      "titleClipped": false,
+      "overflow": false,
+      "mobileMenuVisible": true,
+      "modal": {
+        "fontSize": 16,
+        "top": 641.046875,
+        "bottom": 944
+      },
+      "pass": true
+    },
+    {
+      "orientation": "horizontal",
+      "width": 956,
+      "height": 440,
+      "scale": 3,
+      "titleClipped": false,
+      "overflow": false,
+      "mobileMenuVisible": true,
+      "modal": {
+        "fontSize": 16,
+        "top": 79.640625,
+        "bottom": 360.34375
+      },
+      "pass": true
+    }
+  ],
+  "text200Percent": true
+}

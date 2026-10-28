@@ -1,0 +1,29 @@
+[
+  {
+    "width": 440,
+    "title": "Visão geral",
+    "titleClipped": true,
+    "formVisible": true,
+    "searchButtons": 1,
+    "headerOverlap": false,
+    "overflow": false,
+    "targets": [
+      {
+        "label": "Abrir menu",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "label": "Abrir busca global",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "label": "Abrir perfil",
+        "width": 68,
+        "height": 44
+      }
+    ],
+    "pass": false
+  }
+]

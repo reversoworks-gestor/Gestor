@@ -1,0 +1,407 @@
+[
+  {
+    "width": 320,
+    "title": "Visão geral",
+    "titleClipped": false,
+    "formVisible": false,
+    "searchButtons": 1,
+    "headerOverlap": false,
+    "overflow": false,
+    "targets": [
+      {
+        "label": "Abrir menu",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "label": "Abrir busca global",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "label": "Abrir perfil",
+        "width": 44,
+        "height": 44
+      }
+    ],
+    "pass": true
+  },
+  {
+    "width": 375,
+    "title": "Visão geral",
+    "titleClipped": false,
+    "formVisible": false,
+    "searchButtons": 1,
+    "headerOverlap": false,
+    "overflow": false,
+    "targets": [
+      {
+        "label": "Abrir menu",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "label": "Abrir busca global",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "label": "Abrir perfil",
+        "width": 44,
+        "height": 44
+      }
+    ],
+    "pass": true
+  },
+  {
+    "width": 390,
+    "title": "Visão geral",
+    "titleClipped": false,
+    "formVisible": false,
+    "searchButtons": 1,
+    "headerOverlap": false,
+    "overflow": false,
+    "targets": [
+      {
+        "label": "Abrir menu",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "label": "Abrir busca global",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "label": "Abrir perfil",
+        "width": 44,
+        "height": 44
+      }
+    ],
+    "pass": true
+  },
+  {
+    "width": 429,
+    "title": "Visão geral",
+    "titleClipped": false,
+    "formVisible": false,
+    "searchButtons": 1,
+    "headerOverlap": false,
+    "overflow": false,
+    "targets": [
+      {
+        "label": "Abrir menu",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "label": "Abrir busca global",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "label": "Abrir perfil",
+        "width": 44,
+        "height": 44
+      }
+    ],
+    "pass": true
+  },
+  {
+    "width": 430,
+    "title": "Visão geral",
+    "titleClipped": false,
+    "formVisible": false,
+    "searchButtons": 1,
+    "headerOverlap": false,
+    "overflow": false,
+    "targets": [
+      {
+        "label": "Abrir menu",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "label": "Abrir busca global",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "label": "Abrir perfil",
+        "width": 44,
+        "height": 44
+      }
+    ],
+    "pass": true
+  },
+  {
+    "width": 440,
+    "title": "Visão geral",
+    "titleClipped": false,
+    "formVisible": false,
+    "searchButtons": 1,
+    "headerOverlap": false,
+    "overflow": false,
+    "targets": [
+      {
+        "label": "Abrir menu",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "label": "Abrir busca global",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "label": "Abrir perfil",
+        "width": 44,
+        "height": 44
+      }
+    ],
+    "pass": true
+  },
+  {
+    "width": 619,
+    "title": "Visão geral",
+    "titleClipped": false,
+    "formVisible": false,
+    "searchButtons": 1,
+    "headerOverlap": false,
+    "overflow": false,
+    "targets": [
+      {
+        "label": "Abrir menu",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "label": "Abrir busca global",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "label": "Abrir perfil",
+        "width": 44,
+        "height": 44
+      }
+    ],
+    "pass": true
+  },
+  {
+    "width": 620,
+    "title": "Visão geral",
+    "titleClipped": false,
+    "formVisible": false,
+    "searchButtons": 1,
+    "headerOverlap": false,
+    "overflow": false,
+    "targets": [
+      {
+        "label": "Abrir menu",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "label": "Abrir busca global",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "label": "Abrir perfil",
+        "width": 44,
+        "height": 44
+      }
+    ],
+    "pass": true
+  },
+  {
+    "width": 768,
+    "title": "Visão geral",
+    "titleClipped": false,
+    "formVisible": false,
+    "searchButtons": 1,
+    "headerOverlap": false,
+    "overflow": false,
+    "targets": [
+      {
+        "label": "Abrir menu",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "label": "Abrir busca global",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "label": "Abrir perfil",
+        "width": 44,
+        "height": 44
+      }
+    ],
+    "pass": true
+  },
+  {
+    "width": 899,
+    "title": "Visão geral",
+    "titleClipped": false,
+    "formVisible": false,
+    "searchButtons": 1,
+    "headerOverlap": false,
+    "overflow": false,
+    "targets": [
+      {
+        "label": "Abrir menu",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "label": "Abrir busca global",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "label": "Abrir perfil",
+        "width": 44,
+        "height": 44
+      }
+    ],
+    "pass": true
+  },
+  {
+    "width": 900,
+    "title": "Visão geral",
+    "titleClipped": false,
+    "formVisible": false,
+    "searchButtons": 1,
+    "headerOverlap": false,
+    "overflow": false,
+    "targets": [
+      {
+        "label": "Reverso Works",
+        "width": 81.84375,
+        "height": 44
+      },
+      {
+        "label": "Abrir busca global",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "label": "Abrir perfil",
+        "width": 171.0625,
+        "height": 44
+      }
+    ],
+    "pass": true
+  },
+  {
+    "width": 1024,
+    "title": "Visão geral",
+    "titleClipped": false,
+    "formVisible": false,
+    "searchButtons": 1,
+    "headerOverlap": false,
+    "overflow": false,
+    "targets": [
+      {
+        "label": "Reverso Works",
+        "width": 81.84375,
+        "height": 44
+      },
+      {
+        "label": "Abrir busca global",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "label": "Abrir perfil",
+        "width": 171.0625,
+        "height": 44
+      }
+    ],
+    "pass": true
+  },
+  {
+    "width": 1279,
+    "title": "Visão geral",
+    "titleClipped": false,
+    "formVisible": false,
+    "searchButtons": 1,
+    "headerOverlap": false,
+    "overflow": false,
+    "targets": [
+      {
+        "label": "Reverso Works",
+        "width": 81.84375,
+        "height": 44
+      },
+      {
+        "label": "Abrir busca global",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "label": "Abrir perfil",
+        "width": 171.0625,
+        "height": 44
+      }
+    ],
+    "pass": true
+  },
+  {
+    "width": 1280,
+    "title": "Visão geral",
+    "titleClipped": false,
+    "formVisible": true,
+    "searchButtons": 1,
+    "headerOverlap": false,
+    "overflow": false,
+    "targets": [
+      {
+        "label": "Reverso Works",
+        "width": 81.84375,
+        "height": 44
+      },
+      {
+        "label": "Pesquisar no Gestor",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "label": "Abrir perfil",
+        "width": 171.0625,
+        "height": 44
+      }
+    ],
+    "pass": true
+  },
+  {
+    "width": 1440,
+    "title": "Visão geral",
+    "titleClipped": false,
+    "formVisible": true,
+    "searchButtons": 1,
+    "headerOverlap": false,
+    "overflow": false,
+    "targets": [
+      {
+        "label": "Reverso Works",
+        "width": 81.84375,
+        "height": 44
+      },
+      {
+        "label": "Pesquisar no Gestor",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "label": "Abrir perfil",
+        "width": 171.0625,
+        "height": 44
+      }
+    ],
+    "pass": true
+  }
+]

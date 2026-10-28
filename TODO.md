@@ -20,3 +20,12 @@ A versão reconstruída e testada fica salva na branch de reconstrução e no ch
 
 - [x] Publicar a versão reconstruída em https://reversoworks-gestor.github.io/Gestor/, com base `/Gestor/`, logo e fontes carregando, histórico Git preservado e Firebase/dados existentes intactos.
 - [x] Confirmar build bem-sucedido do GitHub Pages e carregamento real da versão publicada, incluindo login e navegação de demonstração, sem gravações em produção.
+
+## Correção móvel da captura enviada em 28/10/2026
+
+- [x] Cabeçalho sem busca duplicada em celular, inclusive 430–440 px; título da página integralmente legível; menu, busca e perfil com alvos de toque de pelo menos 44 px; sem sobreposição ou overflow em 320, 375, 430, 440, 768, 1024, 1280 e 1440 px.
+- [x] Busca global, menu móvel e perfil continuam operacionais com teclado e toque; manter identidade automotiva e dados Firebase intactos; publicar a correção no mesmo endereço GitHub Pages e confirmar o build.
+
+## Dispositivo principal — iPhone 17 Pro Max
+
+- [x] Priorizar uso por toque no iPhone 17 Pro Max: cabeçalho legível na vertical e horizontal; navegação e busca acessíveis; campos com texto de pelo menos 16 px para evitar zoom de foco; áreas seguras de topo/laterais/base e espaço inferior para o indicador inicial. Verificar dimensões e ações em viewport equivalente; registrar a limitação de emulação de toque/Safari e não declarar teste físico sem acesso ao aparelho.

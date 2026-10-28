@@ -1,6 +1,7 @@
 {
   "edition": "Automotive Studio",
-  "applicationRevision": "8d22c5b",
+  "sourceRevision": "86199047ab8d51440eca51780c90e4cbc4adffa9",
+  "update": "iphone-priority-mobile-header",
   "base": "/Gestor/",
-  "publishedAt": "2026-10-28T21:22:03Z"
+  "publishedAt": "2026-10-28T22:00:00.201028+00:00"
 }
