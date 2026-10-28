@@ -1,62 +1,70 @@
-import { cn } from "@/lib/utils";
-import { AlertTriangle, RotateCcw } from "lucide-react";
-import { Component, ReactNode } from "react";
+import { AlertTriangle, RotateCcw, House } from "lucide-react";
+import { Component, type ErrorInfo, type ReactNode } from "react";
 
 interface Props {
   children: ReactNode;
 }
-
 interface State {
   hasError: boolean;
-  error: Error | null;
 }
 
 class ErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = { hasError: false, error: null };
+  state: State = { hasError: false };
+
+  static getDerivedStateFromError(): State {
+    return { hasError: true };
   }
 
-  static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error("Falha de interface do Gestor", error, info.componentStack);
   }
 
   render() {
-    if (this.state.hasError) {
-      return (
-        <div className="flex items-center justify-center min-h-screen p-8 bg-background">
-          <div className="flex flex-col items-center w-full max-w-2xl p-8">
-            <AlertTriangle
-              size={48}
-              className="text-destructive mb-6 flex-shrink-0"
-            />
-
-            <h2 className="text-xl mb-4">An unexpected error occurred.</h2>
-
-            <div className="p-4 w-full rounded bg-muted overflow-auto mb-6">
-              <pre className="text-sm text-muted-foreground whitespace-break-spaces">
-                {this.state.error?.stack}
-              </pre>
-            </div>
-
+    if (!this.state.hasError) return this.props.children;
+    return (
+      <main className="app-error-page">
+        <section
+          className="card card-body app-error-panel"
+          aria-labelledby="app-error-heading"
+        >
+          <AlertTriangle
+            size={32}
+            aria-hidden="true"
+            className="app-error-icon"
+          />
+          <p className="eyebrow">Reverso Gestor</p>
+          <h1 id="app-error-heading">Não foi possível abrir esta página.</h1>
+          <p className="muted" role="alert">
+            Ocorreu uma falha na interface. Tente recarregar ou volte à visão
+            geral.
+          </p>
+          <p className="helper">
+            Recarregar descarta alterações ainda não salvas, mas não apaga seus
+            registros salvos.
+          </p>
+          <div className="stack">
             <button
+              type="button"
+              className="btn btn-primary"
               onClick={() => window.location.reload()}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-lg",
-                "bg-primary text-primary-foreground",
-                "hover:opacity-90 cursor-pointer"
-              )}
             >
-              <RotateCcw size={16} />
-              Reload Page
+              <RotateCcw size={18} aria-hidden="true" /> Recarregar página
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => {
+                const url = new URL(window.location.href);
+                url.searchParams.delete("view");
+                window.location.assign(url.href);
+              }}
+            >
+              <House size={18} aria-hidden="true" /> Voltar à visão geral
             </button>
           </div>
-        </div>
-      );
-    }
-
-    return this.props.children;
+        </section>
+      </main>
+    );
   }
 }
-
 export default ErrorBoundary;

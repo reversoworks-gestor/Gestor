@@ -26,3 +26,7 @@ Corrigir o shell sem redesenhar os módulos nem alterar registros. A busca inlin
 ## Dispositivo prioritário confirmado
 
 O responsável informou em 28/10/2026 que usa prioritariamente o iPhone 17 Pro Max. O Gestor deve ser touch-first: leitura e ações principais confortáveis nesse aparelho, áreas seguras de topo/laterais/base, orientação vertical e horizontal e conteúdo utilizável com texto ampliado. Validar por viewport e emulação de toque; não apresentar emulação Chromium como teste físico de Safari/iPhone.
+
+## Compatibilidade ao abrir Estimativas
+
+A pilha da captura foi localizada no comparador de documentos que chama `localeCompare` diretamente em timestamps. Corrigir a leitura/ordenação aceitando ISO, época numérica, Date e Timestamp do Firestore, com tratamento de valores ausentes ou inválidos. Fazer a adaptação em memória, sem gravar, apagar ou migrar registros remotos. Proteger o fallback de erros com mensagem curta em português e ações acessíveis, sem pilha técnica pública. Manter o uso prioritário no iPhone 17 Pro Max e publicar no mesmo GitHub Pages.

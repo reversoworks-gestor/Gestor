@@ -29,3 +29,8 @@ A versão reconstruída e testada fica salva na branch de reconstrução e no ch
 ## Dispositivo principal — iPhone 17 Pro Max
 
 - [x] Priorizar uso por toque no iPhone 17 Pro Max: cabeçalho legível na vertical e horizontal; navegação e busca acessíveis; campos com texto de pelo menos 16 px para evitar zoom de foco; áreas seguras de topo/laterais/base e espaço inferior para o indicador inicial. Verificar dimensões e ações em viewport equivalente; registrar a limitação de emulação de toque/Safari e não declarar teste físico sem acesso ao aparelho.
+
+## Falha ao abrir Estimativas — 28/10/2026
+
+- [x] Estimativas, invoices e pedidos devem abrir com documentos legados cujos timestamps estejam ausentes, numéricos ou no formato Firestore; ordenar sem chamar métodos de string em valores incompatíveis; manter valores e registros originais sem gravação automática.
+- [ ] Falhas inesperadas devem exibir uma mensagem curta em português e ações utilizáveis no iPhone, sem pilha técnica pública ou rolagem horizontal; publicar a correção no endereço existente após testes de regressão.

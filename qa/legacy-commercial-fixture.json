@@ -1,0 +1,317 @@
+{
+  "clients": [
+    {
+      "id": "demo-client",
+      "name": "Cliente de demonstração",
+      "firstName": "Cliente",
+      "lastName": "de demonstração",
+      "email": "demo@example.test",
+      "phone": "",
+      "company": "Dados sintéticos",
+      "address": "",
+      "notes": "Registro fictício, sem vínculo com clientes reais."
+    }
+  ],
+  "vehicles": [
+    {
+      "id": "demo-vehicle",
+      "clientId": "demo-client",
+      "make": "Veículo",
+      "model": "de demonstração",
+      "year": 2020,
+      "plate": "DEMO-001",
+      "vin": "",
+      "color": "Prata",
+      "notes": "Dados sintéticos para explorar os fluxos."
+    }
+  ],
+  "orders": [
+    {
+      "id": "qa-missing-date",
+      "documentType": "Estimativa",
+      "status": "Rascunho",
+      "clientId": "demo-client",
+      "clientName": "Cliente de demonstração",
+      "vehicleId": "demo-vehicle",
+      "title": "QA Documento sem data",
+      "serviceType": "legacy-service",
+      "journeyStage": "evaluate",
+      "startDate": "2026-10-28",
+      "dueDate": "",
+      "materialId": "",
+      "materialName": "",
+      "materialGrams": 0,
+      "notes": "Dados de demonstração",
+      "lines": [
+        {
+          "id": "demo-line-0",
+          "service": "custom",
+          "kind": "service",
+          "taxable": false,
+          "label": "Restauração de faróis",
+          "quantity": 1,
+          "unitPrice": 100,
+          "description": "Escopo demonstrativo",
+          "unitPriceCents": 10000
+        }
+      ],
+      "payments": [],
+      "total": 100,
+      "currency": "USD",
+      "clientSnapshot": {
+        "name": "Cliente de demonstração",
+        "firstName": "Cliente",
+        "lastName": "de demonstração",
+        "email": "demo@example.test",
+        "phone": "",
+        "company": "Dados sintéticos",
+        "address": ""
+      },
+      "subtotalCents": 10000,
+      "subtotal": 100,
+      "taxCents": 0,
+      "tax": 0,
+      "totalCents": 10000
+    },
+    {
+      "id": "qa-numeric-date",
+      "documentType": "Estimativa",
+      "status": "Rascunho",
+      "clientId": "demo-client",
+      "clientName": "Cliente de demonstração",
+      "vehicleId": "demo-vehicle",
+      "title": "QA Documento época",
+      "serviceType": "headlights",
+      "journeyStage": "evaluate",
+      "startDate": "2026-10-28",
+      "dueDate": "",
+      "materialId": "",
+      "materialName": "",
+      "materialGrams": 0,
+      "notes": "Dados de demonstração",
+      "lines": [
+        {
+          "id": "demo-line-0",
+          "service": "custom",
+          "kind": "service",
+          "taxable": false,
+          "label": "Restauração de faróis",
+          "quantity": 1,
+          "unitPrice": 100,
+          "description": "Escopo demonstrativo",
+          "unitPriceCents": 10000
+        }
+      ],
+      "payments": [],
+      "total": 100,
+      "createdAt": 1609459200000,
+      "currency": "USD",
+      "clientSnapshot": {
+        "name": "Cliente de demonstração",
+        "firstName": "Cliente",
+        "lastName": "de demonstração",
+        "email": "demo@example.test",
+        "phone": "",
+        "company": "Dados sintéticos",
+        "address": ""
+      },
+      "subtotalCents": 10000,
+      "subtotal": 100,
+      "taxCents": 0,
+      "tax": 0,
+      "totalCents": 10000
+    },
+    {
+      "id": "qa-firestore-date",
+      "documentType": "Estimativa",
+      "status": "Rascunho",
+      "clientId": "demo-client",
+      "clientName": "Cliente de demonstração",
+      "vehicleId": "demo-vehicle",
+      "title": "QA Documento Firestore",
+      "serviceType": "headlights",
+      "journeyStage": "evaluate",
+      "startDate": "2026-10-28",
+      "dueDate": "",
+      "materialId": "",
+      "materialName": "",
+      "materialGrams": 0,
+      "notes": "Dados de demonstração",
+      "lines": [
+        {
+          "id": "demo-line-0",
+          "service": "custom",
+          "kind": "service",
+          "taxable": false,
+          "label": "Restauração de faróis",
+          "quantity": 1,
+          "unitPrice": 100,
+          "description": "Escopo demonstrativo",
+          "unitPriceCents": 10000
+        }
+      ],
+      "payments": [],
+      "total": 100,
+      "createdAt": {
+        "seconds": 1609459260,
+        "nanoseconds": 0
+      },
+      "currency": "USD",
+      "clientSnapshot": {
+        "name": "Cliente de demonstração",
+        "firstName": "Cliente",
+        "lastName": "de demonstração",
+        "email": "demo@example.test",
+        "phone": "",
+        "company": "Dados sintéticos",
+        "address": ""
+      },
+      "subtotalCents": 10000,
+      "subtotal": 100,
+      "taxCents": 0,
+      "tax": 0,
+      "totalCents": 10000
+    },
+    {
+      "id": "qa-iso-date",
+      "documentType": "Estimativa",
+      "status": "Rascunho",
+      "clientId": "demo-client",
+      "clientName": "Cliente de demonstração",
+      "vehicleId": "demo-vehicle",
+      "title": "QA Documento ISO",
+      "serviceType": "headlights",
+      "journeyStage": "evaluate",
+      "startDate": "2026-10-28",
+      "dueDate": "",
+      "materialId": "",
+      "materialName": "",
+      "materialGrams": 0,
+      "notes": "Dados de demonstração",
+      "lines": [
+        {
+          "id": "demo-line-0",
+          "service": "custom",
+          "kind": "service",
+          "taxable": false,
+          "label": "Restauração de faróis",
+          "quantity": 1,
+          "unitPrice": 100,
+          "description": "Escopo demonstrativo",
+          "unitPriceCents": 10000
+        }
+      ],
+      "payments": [],
+      "total": 100,
+      "createdAt": "2021-01-01T00:02:00.000Z",
+      "currency": "USD",
+      "clientSnapshot": {
+        "name": "Cliente de demonstração",
+        "firstName": "Cliente",
+        "lastName": "de demonstração",
+        "email": "demo@example.test",
+        "phone": "",
+        "company": "Dados sintéticos",
+        "address": ""
+      },
+      "subtotalCents": 10000,
+      "subtotal": 100,
+      "taxCents": 0,
+      "tax": 0,
+      "totalCents": 10000
+    }
+  ],
+  "materials": [
+    {
+      "id": "demo-petg",
+      "name": "PETG · demonstração",
+      "color": "Preto",
+      "type": "PETG",
+      "availableGrams": 1000,
+      "reorderAtGrams": 250,
+      "pricePerGram": 0.03,
+      "nozzleTemp": "230–250",
+      "bedTemp": "70–80",
+      "printNotes": "Propriedades devem ser conferidas no datasheet da marca."
+    }
+  ],
+  "printers": [
+    {
+      "id": "demo-printer",
+      "name": "Impressora de demonstração",
+      "model": "Perfil técnico sintético",
+      "status": "Pronta",
+      "material": "PETG",
+      "lastMaintenance": "",
+      "maintenance": [],
+      "maxNozzleTemp": 300,
+      "maxBedTemp": 120,
+      "maxChamberTemp": 50,
+      "nozzleDiameter": 0.4,
+      "compatibleMaterials": [
+        "PETG"
+      ],
+      "dryingAvailable": true,
+      "hardenedNozzle": false
+    }
+  ],
+  "parts": [],
+  "partRevisions": [],
+  "expenses": [],
+  "calendar": [
+    {
+      "id": "demo-event",
+      "title": "Inspeção inicial · demonstração",
+      "detail": "Apresentar condição, referências e limites antes de definir o serviço.",
+      "date": "2026-10-28T22:44:04.128Z",
+      "type": "calendar"
+    }
+  ],
+  "triages": [],
+  "catalogItems": [
+    {
+      "id": "catalog-headlights",
+      "name": "Restauração de faróis",
+      "description": "A restauração externa não corrige danos internos, trincas estruturais, refletores comprometidos ou falhas de vedação.",
+      "unitPrice": 0,
+      "taxable": false,
+      "kind": "service"
+    },
+    {
+      "id": "catalog-pdr",
+      "name": "PDR — reparo sem pintura",
+      "description": "A indicação depende da pintura, geometria, profundidade e acesso. Nem todo amassado é adequado ao PDR.",
+      "unitPrice": 0,
+      "taxable": false,
+      "kind": "service"
+    },
+    {
+      "id": "catalog-engineering",
+      "name": "Peças e engenharia",
+      "description": "Componentes críticos exigem validação de material, aplicação, montagem e requisitos de segurança.",
+      "unitPrice": 0,
+      "taxable": false,
+      "kind": "service"
+    },
+    {
+      "id": "catalog-customization",
+      "name": "Customização técnica",
+      "description": "Avaliar materiais, interfaces, montagem, manutenção e impacto no conjunto antes da alteração.",
+      "unitPrice": 0,
+      "taxable": false,
+      "kind": "service"
+    }
+  ],
+  "settings": [
+    {
+      "id": "studio",
+      "studioName": "Reverso Works",
+      "currency": "USD",
+      "taxRate": 0,
+      "address": "",
+      "phone": "",
+      "email": "",
+      "publicFooter": "Restore. Refine. Recreate. — Serviços sujeitos à avaliação e ao escopo aprovado."
+    }
+  ]
+}

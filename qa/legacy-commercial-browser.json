@@ -1,0 +1,9 @@
+{
+  "estimatesRead": true,
+  "chronologicalOrder": true,
+  "missingDateVisible": true,
+  "unknownServiceEdit": true,
+  "mobileNoOverflow": true,
+  "jsErrors": false,
+  "dataMode": "synthetic-browser-demo-only"
+}

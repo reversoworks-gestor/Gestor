@@ -1,7 +1,7 @@
 {
   "edition": "Automotive Studio",
-  "sourceRevision": "015b2ee38beaa3a8dab1ebd72415907c8bab55bd",
-  "update": "iphone-priority-and-cache-revalidation",
+  "sourceRevision": "e8e12ae5b9f8e61801021142f2c60c7b7d8eb776",
+  "update": "legacy-commercial-date-fix",
   "base": "/Gestor/",
-  "publishedAt": "2026-10-28T22:00:00.201028+00:00"
+  "publishedAt": "2026-10-28T22:46:01.678449+00:00"
 }

@@ -5,6 +5,7 @@ import {
   validatePayments,
 } from "../lib/finance";
 import type { Material, PartRevision } from "../lib/models";
+import { timestampIso } from "./recordDates";
 import {
   type Assessment,
   type CollectionKey,
@@ -487,6 +488,8 @@ export function loadLegacy<K extends CollectionKey>(
   if (key === "orders") {
     return {
       ...source,
+      createdAt: timestampIso(source.createdAt) ?? "",
+      updatedAt: timestampIso(source.updatedAt),
       currency: source.currency ?? "USD",
       lines: source.lines ?? [],
       payments: source.payments ?? [],
@@ -577,51 +580,47 @@ export function demoData(): StudioData {
       hardenedNozzle: false,
     },
   ];
-  data.orders = journey
-    .slice(0, 3)
-    .map((stage, i) =>
-      normalizeStudioOrder(
-        {
-          id: `demo-job-${i + 1}`,
-          documentType: "Invoice",
-          status: i === 0 ? "Rascunho" : "Aprovado",
-          clientId: "demo-client",
-          clientName: "Cliente de demonstração",
-          vehicleId: "demo-vehicle",
-          title: [
-            "Avaliação de faróis",
-            "Reparo de painel · PDR",
-            "Desenvolvimento de suporte",
-          ][i],
-          serviceType: ["headlights", "pdr", "engineering"][i] as any,
-          journeyStage: stage.id,
-          startDate: day,
-          dueDate: "",
-          materialId: "",
-          materialName: "",
-          materialGrams: 0,
-          notes: "Dados de demonstração",
-          lines: [
-            {
-              id: `demo-line-${i}`,
-              service: "custom",
-              kind: "service",
-              taxable: false,
-              label: ["Restauração de faróis", "PDR", "Estudo de componente"][
-                i
-              ],
-              quantity: 1,
-              unitPrice: 100 + i * 50,
-              description: "Escopo demonstrativo",
-            },
-          ],
-          payments: [],
-          total: 0,
-          createdAt: now,
-        },
-        data
-      )
-    );
+  data.orders = journey.slice(0, 3).map((stage, i) =>
+    normalizeStudioOrder(
+      {
+        id: `demo-job-${i + 1}`,
+        documentType: "Invoice",
+        status: i === 0 ? "Rascunho" : "Aprovado",
+        clientId: "demo-client",
+        clientName: "Cliente de demonstração",
+        vehicleId: "demo-vehicle",
+        title: [
+          "Avaliação de faróis",
+          "Reparo de painel · PDR",
+          "Desenvolvimento de suporte",
+        ][i],
+        serviceType: ["headlights", "pdr", "engineering"][i] as any,
+        journeyStage: stage.id,
+        startDate: day,
+        dueDate: "",
+        materialId: "",
+        materialName: "",
+        materialGrams: 0,
+        notes: "Dados de demonstração",
+        lines: [
+          {
+            id: `demo-line-${i}`,
+            service: "custom",
+            kind: "service",
+            taxable: false,
+            label: ["Restauração de faróis", "PDR", "Estudo de componente"][i],
+            quantity: 1,
+            unitPrice: 100 + i * 50,
+            description: "Escopo demonstrativo",
+          },
+        ],
+        payments: [],
+        total: 0,
+        createdAt: now,
+      },
+      data
+    )
+  );
   data.calendar = [
     {
       id: "demo-event",

@@ -25,6 +25,7 @@ import {
   useAction,
 } from "../components/ui";
 import { useGestor } from "../store";
+import { newestFirst } from "../recordDates";
 import {
   makeId,
   money,
@@ -85,8 +86,14 @@ function statusTone(
   return "neutral";
 }
 
+function serviceDefinition(serviceType?: ServiceType) {
+  return serviceType && Object.hasOwn(services, serviceType)
+    ? services[serviceType]
+    : undefined;
+}
+
 function serviceLabel(serviceType?: ServiceType) {
-  return serviceType ? services[serviceType].name : "Serviço a definir";
+  return serviceDefinition(serviceType)?.name ?? "Serviço a definir";
 }
 
 function initialDocument(
@@ -134,7 +141,7 @@ function newCustomServiceLine(serviceType: ServiceType): OrderLine {
     service: "custom",
     kind: "service",
     taxable: false,
-    label: services[serviceType].name,
+    label: serviceDefinition(serviceType)?.name ?? "Serviço personalizado",
     quantity: 1,
     unitPrice: 0,
     unitPriceCents: 0,
@@ -247,9 +254,7 @@ export default function CommercialPage() {
     });
     return inView
       .filter(order => includesQuery(order, ctx.search.trim()))
-      .sort((a, b) =>
-        (b.updatedAt || b.createdAt).localeCompare(a.updatedAt || a.createdAt)
-      );
+      .sort(newestFirst);
   }, [ctx.data.orders, ctx.search, filter]);
 
   const effectiveEditorTaxRate = editor?.taxRate ?? ctx.settings.taxRate;
@@ -1016,7 +1021,9 @@ export default function CommercialPage() {
               <Field
                 label="Restrições e premissas"
                 className="field-full"
-                help={services[editor.serviceType ?? "headlights"].limit}
+                help={
+                  serviceDefinition(editor.serviceType ?? "headlights")?.limit
+                }
               >
                 <textarea
                   value={editor.constraints ?? ""}

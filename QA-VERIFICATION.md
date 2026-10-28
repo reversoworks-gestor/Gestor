@@ -41,3 +41,9 @@ O iPhone 17 Pro Max foi registrado como dispositivo principal. Validados viewpor
 Método: Chromium com dimensões/escala equivalentes. O preset disponível não reproduz integralmente toque/Safari; não houve teste físico no iPhone 17 Pro Max. Essa limitação permanece explícita em `qa/iphone-priority-results.json`. Nenhum dado Firebase foi alterado.
 
 A verificação pública com revisão explícita passou em 375, 430, 440, 956 e 1280 px. Foi detectado HTML anterior no cache de uma sessão já aberta; a navegação agora solicita revalidação do documento, sem apagar armazenamento local, autenticação ou cache dos assets versionados. Chamadas privadas continuam fora da interceptação.
+
+## Falha ao selecionar Estimativas — corrigida em 28/10/2026
+
+A posição `Commercial-C9JSwWQd.js:2:3112` da captura corresponde ao comparador que chamava `localeCompare` diretamente em `updatedAt || createdAt`. Timestamps ausentes, numéricos ou Firestore reproduziram a falha em três testes de renderização antes da alteração. A ordenação agora interpreta os formatos suportados, usa a criação quando a atualização é inválida e mantém documentos sem data visíveis ao final da lista. O adaptador de leitura transforma datas válidas em ISO sem modificar a origem nem gravar registros remotos. Serviços antigos desconhecidos também deixam de derrubar a lista e o editor.
+
+A suíte passou em **94/94 testes**, incluindo 22 casos de timestamps, cinco renderizações comerciais e recuperação de erros. O navegador em 440×956 abriu e editou quatro documentos sintéticos com datas ISO, numéricas, Firestore e ausentes, sem exceção nem overflow. A tela de recuperação agora oferece ações em português e não exibe pilha técnica pública. Nenhuma estimativa, invoice, pagamento ou arquivo real foi apagado; o acesso administrativo ao Firebase e o alcance de uma eventual limpeza continuam não confirmados.
