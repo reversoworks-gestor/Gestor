@@ -1,0 +1,962 @@
+[
+  {
+    "view": "overview",
+    "width": 320,
+    "client": 305,
+    "scroll": 305,
+    "heading": "Visão geral",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "clients",
+    "width": 320,
+    "client": 305,
+    "scroll": 305,
+    "heading": "Clientes",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "vehicles",
+    "width": 320,
+    "client": 305,
+    "scroll": 305,
+    "heading": "Veículos",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "estimates",
+    "width": 320,
+    "client": 320,
+    "scroll": 320,
+    "heading": "Estimativas",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "invoices",
+    "width": 320,
+    "client": 305,
+    "scroll": 305,
+    "heading": "Invoices",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "orders",
+    "width": 320,
+    "client": 305,
+    "scroll": 305,
+    "heading": "Pedidos",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "production",
+    "width": 320,
+    "client": 305,
+    "scroll": 305,
+    "heading": "Produção",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "triage",
+    "width": 320,
+    "client": 305,
+    "scroll": 305,
+    "heading": "Triagem automotiva",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "calendar",
+    "width": 320,
+    "client": 305,
+    "scroll": 305,
+    "heading": "Calendário",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "inventory",
+    "width": 320,
+    "client": 305,
+    "scroll": 305,
+    "heading": "Materiais",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "printers",
+    "width": 320,
+    "client": 305,
+    "scroll": 305,
+    "heading": "Impressoras e manutenção",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "parts",
+    "width": 320,
+    "client": 320,
+    "scroll": 320,
+    "heading": "Peças e revisões",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "finance",
+    "width": 320,
+    "client": 305,
+    "scroll": 305,
+    "heading": "Visão financeira",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "expenses",
+    "width": 320,
+    "client": 305,
+    "scroll": 305,
+    "heading": "Despesas operacionais",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "more",
+    "width": 320,
+    "client": 305,
+    "scroll": 305,
+    "heading": "Áreas do estúdio",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "settings",
+    "width": 320,
+    "client": 305,
+    "scroll": 305,
+    "heading": "Configurações do estúdio",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "overview",
+    "width": 375,
+    "client": 360,
+    "scroll": 360,
+    "heading": "Visão geral",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "clients",
+    "width": 375,
+    "client": 360,
+    "scroll": 360,
+    "heading": "Clientes",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "vehicles",
+    "width": 375,
+    "client": 375,
+    "scroll": 375,
+    "heading": "Veículos",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "estimates",
+    "width": 375,
+    "client": 375,
+    "scroll": 375,
+    "heading": "Estimativas",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "invoices",
+    "width": 375,
+    "client": 360,
+    "scroll": 360,
+    "heading": "Invoices",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "orders",
+    "width": 375,
+    "client": 360,
+    "scroll": 360,
+    "heading": "Pedidos",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "production",
+    "width": 375,
+    "client": 360,
+    "scroll": 360,
+    "heading": "Produção",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "triage",
+    "width": 375,
+    "client": 360,
+    "scroll": 360,
+    "heading": "Triagem automotiva",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "calendar",
+    "width": 375,
+    "client": 360,
+    "scroll": 360,
+    "heading": "Calendário",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "inventory",
+    "width": 375,
+    "client": 360,
+    "scroll": 360,
+    "heading": "Materiais",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "printers",
+    "width": 375,
+    "client": 360,
+    "scroll": 360,
+    "heading": "Impressoras e manutenção",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "parts",
+    "width": 375,
+    "client": 375,
+    "scroll": 375,
+    "heading": "Peças e revisões",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "finance",
+    "width": 375,
+    "client": 360,
+    "scroll": 360,
+    "heading": "Visão financeira",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "expenses",
+    "width": 375,
+    "client": 360,
+    "scroll": 360,
+    "heading": "Despesas operacionais",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "more",
+    "width": 375,
+    "client": 360,
+    "scroll": 360,
+    "heading": "Áreas do estúdio",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "settings",
+    "width": 375,
+    "client": 360,
+    "scroll": 360,
+    "heading": "Configurações do estúdio",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "overview",
+    "width": 768,
+    "client": 753,
+    "scroll": 753,
+    "heading": "Visão geral",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "clients",
+    "width": 768,
+    "client": 768,
+    "scroll": 768,
+    "heading": "Clientes",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "vehicles",
+    "width": 768,
+    "client": 768,
+    "scroll": 768,
+    "heading": "Veículos",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "estimates",
+    "width": 768,
+    "client": 768,
+    "scroll": 768,
+    "heading": "Estimativas",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "invoices",
+    "width": 768,
+    "client": 753,
+    "scroll": 753,
+    "heading": "Invoices",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "orders",
+    "width": 768,
+    "client": 753,
+    "scroll": 753,
+    "heading": "Pedidos",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "production",
+    "width": 768,
+    "client": 753,
+    "scroll": 753,
+    "heading": "Produção",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "triage",
+    "width": 768,
+    "client": 753,
+    "scroll": 753,
+    "heading": "Triagem automotiva",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "calendar",
+    "width": 768,
+    "client": 753,
+    "scroll": 753,
+    "heading": "Calendário",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "inventory",
+    "width": 768,
+    "client": 753,
+    "scroll": 753,
+    "heading": "Materiais",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "printers",
+    "width": 768,
+    "client": 753,
+    "scroll": 753,
+    "heading": "Impressoras e manutenção",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "parts",
+    "width": 768,
+    "client": 768,
+    "scroll": 768,
+    "heading": "Peças e revisões",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "finance",
+    "width": 768,
+    "client": 753,
+    "scroll": 753,
+    "heading": "Visão financeira",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "expenses",
+    "width": 768,
+    "client": 753,
+    "scroll": 753,
+    "heading": "Despesas operacionais",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "more",
+    "width": 768,
+    "client": 753,
+    "scroll": 753,
+    "heading": "Áreas do estúdio",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "settings",
+    "width": 768,
+    "client": 753,
+    "scroll": 753,
+    "heading": "Configurações do estúdio",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "overview",
+    "width": 1024,
+    "client": 1009,
+    "scroll": 1009,
+    "heading": "Visão geral",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "clients",
+    "width": 1024,
+    "client": 1024,
+    "scroll": 1024,
+    "heading": "Clientes",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "vehicles",
+    "width": 1024,
+    "client": 1024,
+    "scroll": 1024,
+    "heading": "Veículos",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "estimates",
+    "width": 1024,
+    "client": 1024,
+    "scroll": 1024,
+    "heading": "Estimativas",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "invoices",
+    "width": 1024,
+    "client": 1009,
+    "scroll": 1009,
+    "heading": "Invoices",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "orders",
+    "width": 1024,
+    "client": 1024,
+    "scroll": 1024,
+    "heading": "Pedidos",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "production",
+    "width": 1024,
+    "client": 1009,
+    "scroll": 1009,
+    "heading": "Produção",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "triage",
+    "width": 1024,
+    "client": 1009,
+    "scroll": 1009,
+    "heading": "Triagem automotiva",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "calendar",
+    "width": 1024,
+    "client": 1009,
+    "scroll": 1009,
+    "heading": "Calendário",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "inventory",
+    "width": 1024,
+    "client": 1024,
+    "scroll": 1024,
+    "heading": "Materiais",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "printers",
+    "width": 1024,
+    "client": 1009,
+    "scroll": 1009,
+    "heading": "Impressoras e manutenção",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "parts",
+    "width": 1024,
+    "client": 1024,
+    "scroll": 1024,
+    "heading": "Peças e revisões",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "finance",
+    "width": 1024,
+    "client": 1009,
+    "scroll": 1009,
+    "heading": "Visão financeira",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "expenses",
+    "width": 1024,
+    "client": 1009,
+    "scroll": 1009,
+    "heading": "Despesas operacionais",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "more",
+    "width": 1024,
+    "client": 1024,
+    "scroll": 1024,
+    "heading": "Áreas do estúdio",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "settings",
+    "width": 1024,
+    "client": 1009,
+    "scroll": 1009,
+    "heading": "Configurações do estúdio",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "overview",
+    "width": 1280,
+    "client": 1265,
+    "scroll": 1265,
+    "heading": "Visão geral",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "clients",
+    "width": 1280,
+    "client": 1280,
+    "scroll": 1280,
+    "heading": "Clientes",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "vehicles",
+    "width": 1280,
+    "client": 1280,
+    "scroll": 1280,
+    "heading": "Veículos",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "estimates",
+    "width": 1280,
+    "client": 1280,
+    "scroll": 1280,
+    "heading": "Estimativas",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "invoices",
+    "width": 1280,
+    "client": 1265,
+    "scroll": 1265,
+    "heading": "Invoices",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "orders",
+    "width": 1280,
+    "client": 1280,
+    "scroll": 1280,
+    "heading": "Pedidos",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "production",
+    "width": 1280,
+    "client": 1265,
+    "scroll": 1265,
+    "heading": "Produção",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "triage",
+    "width": 1280,
+    "client": 1265,
+    "scroll": 1265,
+    "heading": "Triagem automotiva",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "calendar",
+    "width": 1280,
+    "client": 1265,
+    "scroll": 1265,
+    "heading": "Calendário",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "inventory",
+    "width": 1280,
+    "client": 1280,
+    "scroll": 1280,
+    "heading": "Materiais",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "printers",
+    "width": 1280,
+    "client": 1265,
+    "scroll": 1265,
+    "heading": "Impressoras e manutenção",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "parts",
+    "width": 1280,
+    "client": 1280,
+    "scroll": 1280,
+    "heading": "Peças e revisões",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "finance",
+    "width": 1280,
+    "client": 1265,
+    "scroll": 1265,
+    "heading": "Visão financeira",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "expenses",
+    "width": 1280,
+    "client": 1265,
+    "scroll": 1265,
+    "heading": "Despesas operacionais",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "more",
+    "width": 1280,
+    "client": 1280,
+    "scroll": 1280,
+    "heading": "Áreas do estúdio",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "settings",
+    "width": 1280,
+    "client": 1265,
+    "scroll": 1265,
+    "heading": "Configurações do estúdio",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "overview",
+    "width": 1440,
+    "client": 1425,
+    "scroll": 1425,
+    "heading": "Visão geral",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "clients",
+    "width": 1440,
+    "client": 1440,
+    "scroll": 1440,
+    "heading": "Clientes",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "vehicles",
+    "width": 1440,
+    "client": 1440,
+    "scroll": 1440,
+    "heading": "Veículos",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "estimates",
+    "width": 1440,
+    "client": 1440,
+    "scroll": 1440,
+    "heading": "Estimativas",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "invoices",
+    "width": 1440,
+    "client": 1425,
+    "scroll": 1425,
+    "heading": "Invoices",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "orders",
+    "width": 1440,
+    "client": 1440,
+    "scroll": 1440,
+    "heading": "Pedidos",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "production",
+    "width": 1440,
+    "client": 1425,
+    "scroll": 1425,
+    "heading": "Produção",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "triage",
+    "width": 1440,
+    "client": 1425,
+    "scroll": 1425,
+    "heading": "Triagem automotiva",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "calendar",
+    "width": 1440,
+    "client": 1425,
+    "scroll": 1425,
+    "heading": "Calendário",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "inventory",
+    "width": 1440,
+    "client": 1440,
+    "scroll": 1440,
+    "heading": "Materiais",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "printers",
+    "width": 1440,
+    "client": 1425,
+    "scroll": 1425,
+    "heading": "Impressoras e manutenção",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "parts",
+    "width": 1440,
+    "client": 1440,
+    "scroll": 1440,
+    "heading": "Peças e revisões",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "finance",
+    "width": 1440,
+    "client": 1425,
+    "scroll": 1425,
+    "heading": "Visão financeira",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "expenses",
+    "width": 1440,
+    "client": 1425,
+    "scroll": 1425,
+    "heading": "Despesas operacionais",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "more",
+    "width": 1440,
+    "client": 1440,
+    "scroll": 1440,
+    "heading": "Áreas do estúdio",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  },
+  {
+    "view": "settings",
+    "width": 1440,
+    "client": 1425,
+    "scroll": 1425,
+    "heading": "Configurações do estúdio",
+    "visible": true,
+    "cut": [],
+    "pass": true
+  }
+]

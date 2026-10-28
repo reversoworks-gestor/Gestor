@@ -1,0 +1,14 @@
+node_modules/
+**/node_modules/
+**/dist/
+.env
+.env.*
+!.env.example
+*.log
+*-debug.log
+__pycache__/
+**/__pycache__/
+*.pyc
+source/.vitest-emulators.*
+docs/Marketing-Book-Automotivo.pdf
+qa/evidence/authenticated-private-field.png

@@ -1,0 +1,17 @@
+[
+  {
+    "id": "part-delete-free",
+    "status": "PASS",
+    "observed": "Peça criada, exclusão confirmada, cartão removido e contexto não inerte; formulário pai não salvou novamente."
+  },
+  {
+    "id": "revision-download-remove-after-save",
+    "status": "PASS",
+    "observed": "STL real foi salvo, reaberto e Baixar STL foi habilitado e acionado sem erro de download; caminho de demonstração local aceito."
+  },
+  {
+    "id": "CAL-12",
+    "status": "PASS",
+    "observed": "Evento criado e removido por confirmação. O calendário permanece interativo, Novo evento e seed preservados, root não inerte."
+  }
+]

@@ -1,0 +1,139 @@
+{
+  "cases": [
+    {
+      "action": "Abrir a rota de triagem preservando ?preview=1",
+      "id": "PREVIEW-01",
+      "observed": "Revalidado no build estático 3001: a URL permaneceu em ?preview=1&view=triage e a faixa DEMONSTRAÇÃO foi exibida.",
+      "status": "PASS"
+    },
+    {
+      "action": "Verificar estado vazio do histórico",
+      "id": "EVAL-EMPTY-01",
+      "observed": "Revalidado: o histórico iniciou em 0, com “Nenhuma avaliação registrada”.",
+      "status": "PASS"
+    },
+    {
+      "action": "Submeter nova avaliação sem dados",
+      "id": "EVAL-VALID-01",
+      "observed": "PASS herdado da rodada anterior: o navegador bloqueou cliente obrigatório com alerta nativo e preservou o modal. Não foi repetido nesta rodada para concentrar os fluxos antes bloqueados.",
+      "status": "PASS"
+    },
+    {
+      "action": "Cancelar uma avaliação inválida/não salva",
+      "id": "EVAL-CANCEL-01",
+      "observed": "Revalidado no fluxo de anexo: PNG foi selecionado, Limpar seleção removeu-o e Cancelar fechou o modal sem criar registro.",
+      "status": "PASS"
+    },
+    {
+      "action": "Fechar modal por Escape",
+      "id": "EVAL-MODAL-01",
+      "observed": "PASS herdado da rodada anterior: Escape fechou Nova avaliação automotiva e restaurou a página; não foi repetido nesta rodada.",
+      "status": "PASS"
+    },
+    {
+      "action": "Criar avaliação de Restauração de faróis com cliente/veículo demo, campos completos, veredito e PNG",
+      "id": "EVAL-FAROIS-01",
+      "observed": "Criada e salva no build estável a avaliação “QA Faróis Final”, com Cliente/Veículo de demonstração, todos os quatro campos obrigatórios, veredito Viável e PNG; não houve erro de importação dinâmica.",
+      "status": "PASS"
+    },
+    {
+      "action": "Criar avaliação PDR — reparo sem pintura",
+      "id": "EVAL-PDR-01",
+      "observed": "Criada e salva “QA PDR Final” com cliente/veículo demo, campos obrigatórios e veredito Viável.",
+      "status": "PASS"
+    },
+    {
+      "action": "Criar avaliação Peças e engenharia crítica com Requer inspeção",
+      "id": "EVAL-ENG-01",
+      "observed": "Criada e salva “QA Engenharia Crítica Final” com serviço Peças e engenharia, criticidade marcada e Requer inspeção.",
+      "status": "PASS"
+    },
+    {
+      "action": "Criar avaliação Customização técnica",
+      "id": "EVAL-CUSTOM-01",
+      "observed": "Criada e salva “QA Custom Final” com serviço Customização técnica e veredito Não indicado.",
+      "status": "PASS"
+    },
+    {
+      "action": "Validar que item crítico exige veredito Requer inspeção",
+      "id": "EVAL-CRITICAL-01",
+      "observed": "Ao marcar o checkbox crítico, o veredito passou a Requer inspeção. A tentativa deliberada de salvar com Viável exibiu a validação de domínio; após restaurar Requer inspeção, o registro foi salvo.",
+      "status": "PASS"
+    },
+    {
+      "action": "Selecionar foto PNG em avaliação",
+      "id": "EVAL-UPLOAD-01",
+      "observed": "Revalidado além da seleção: qa-condition-final.png apareceu como pendente, foi persistido em QA Faróis Final como 1 foto, reaberto no editor e baixado pela ação Baixar.",
+      "status": "PASS"
+    },
+    {
+      "action": "Buscar, editar, excluir, abrir relatório e criar estimativa a partir de avaliação salva",
+      "id": "EVAL-HISTORY-01",
+      "observed": "QA Faróis Final foi localizado pela busca, editado, salvo e reaberto com a condição revisada; o relatório abriu nova aba, Criar documento navegou para ?preview=1&view=estimates, e o PNG persistido foi baixado. A exclusão confirmada removeu o registro depois dos testes.",
+      "status": "PASS"
+    },
+    {
+      "action": "Vincular veículo e alterar preset técnico",
+      "id": "MAT-PRESET-01",
+      "observed": "O veículo demo foi vinculado, projeto e função preenchidos e Engine Bay aplicado. A UI exibiu PA6-CF como recomendação principal antes dos parâmetros avançados; preset, vínculo e projeto permaneceram preservados durante o fluxo.",
+      "status": "PASS"
+    },
+    {
+      "action": "Editar manualmente parâmetros simples de ambiente e umidade",
+      "id": "MAT-SIMPLE-01",
+      "observed": "Ambiente foi alterado para Exterior / intempéries e Umidade para Água / exposição direta; os valores permaneceram na UI durante o preenchimento avançado.",
+      "status": "PASS"
+    },
+    {
+      "action": "Testar proteção de número negativo em Temperatura contínua",
+      "id": "MAT-NEGATIVE-01",
+      "observed": "A UI aceitou -10 °C como requisito térmico possível, mas, diferentemente do defeito anterior, preservou projeto QA Material Final, vínculo do veículo, preset Engine Bay e demais parâmetros; não houve reset destrutivo.",
+      "status": "PASS"
+    },
+    {
+      "action": "Preencher carga, geometria, infill, paredes, limites e impressora em parâmetros avançados",
+      "id": "MAT-ADVANCED-01",
+      "observed": "Foram exercitados modelo Tração/compressão axial, orientação Z, impressora demo, 500 N, 25 mm², 100 mm, 10000 ciclos, carga sustentada atravessando camadas, 120 g, custo 40, 6 paredes, 45% infill, câmara fechada, secagem controlada e bico endurecido.",
+      "status": "PASS"
+    },
+    {
+      "action": "Salvar documento técnico, reabrir para persistência e vincular a invoice via modal",
+      "id": "MAT-SAVE-01",
+      "observed": "O documento técnico foi efetivamente salvo: o histórico exibiu “Triagem de material · QA Material Final”, vinculado ao cliente/veículo demo e Requer inspeção. O modal também vinculou uma análise a “Invoice · Avaliação de faróis · Cliente de demonstração”. A reabertura específica do documento técnico salvo não foi concluída antes de o browser de demonstração ser encerrado; ao abrir nova instância, o estado demo por navegador iniciou vazio. Não foi tratado como defeito de produto.",
+      "status": "BLOCKED"
+    },
+    {
+      "action": "Abrir relatório técnico e validar ranking atualizado",
+      "id": "MAT-REPORT-01",
+      "observed": "Relatório técnico foi acionado e abriu uma nova aba intitulada “Relatório técnico — QA Material Final”; o ranking PA6-CF foi observado após Engine Bay antes da configuração avançada.",
+      "status": "PASS"
+    },
+    {
+      "action": "Cancelar seleção local de anexo antes de salvar",
+      "id": "EVAL-ATTACH-CANCEL-02",
+      "observed": "Anexo PNG foi selecionado, removido por Limpar seleção e o modal foi cancelado sem persistência.",
+      "status": "PASS"
+    },
+    {
+      "action": "Excluir avaliação livre com foto persistida",
+      "id": "EVAL-DELETE-PHOTO-02",
+      "observed": "Após download e demais verificações, a exclusão confirmada de QA Faróis Final removeu o cartão com foto do histórico.",
+      "status": "PASS"
+    },
+    {
+      "action": "Excluir avaliações sintéticas livres após testes",
+      "id": "EVAL-DELETE-FREE-03",
+      "observed": "As avaliações PDR, Engenharia crítica e Customização criadas no teste foram removidas por confirmação de UI.",
+      "status": "PASS"
+    },
+    {
+      "action": "Vincular análise de material a invoice sintética pelo modal",
+      "id": "MAT-INVOICE-01",
+      "observed": "Em “Salvar análise”, foi escolhida a opção “Adicionar a estimativa ou invoice”; o modal exibiu as três invoices sintéticas, a primeira foi selecionada e Adicionar ao documento foi confirmado.",
+      "status": "PASS"
+    }
+  ],
+  "issues": [],
+  "module": "Avaliações automotivas e triagem de material (preview=1)",
+  "summary": "Revalidação realizada exclusivamente no preview estático 3001 com ?preview=1, sem login, Firebase, API ou produção. A falha anterior de importação dinâmica no salvamento não se reproduziu: quatro avaliações foram criadas, editadas, reabertas, convertidas em documento, reportadas, pesquisadas, anexadas/baixadas e removidas. O reset destrutivo do seletor por entrada -10 também não se reproduziu. Não há issue real remanescente observada. MAT-SAVE-01 fica BLOCKED apenas no subpasso de reabertura após o encerramento do browser demo; o salvamento e o vínculo por modal foram observados com sucesso, e o estado efêmero por navegador não foi classificado como defeito."
+}

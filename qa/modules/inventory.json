@@ -1,0 +1,97 @@
+{
+  "cases": [
+    {
+      "action": "Carregar Estoque em preview=1 e verificar seed",
+      "id": "INV-01",
+      "observed": "Reexecutado diretamente na URL estática com preview=1: carregou sem HMR/429/erro de import; a UI mostrou 1 material PETG · demonstração, saldo 1.000 g e nenhuma alocação.",
+      "status": "PASS"
+    },
+    {
+      "action": "Validar obrigatório ao salvar material sem nome",
+      "id": "INV-02",
+      "observed": "Reexecutado: em Novo material técnico vazio, Salvar material manteve o diálogo aberto e levou o foco ao Nome do material obrigatório; screenshot de validação registrado.",
+      "status": "PASS"
+    },
+    {
+      "action": "Cancelar rascunho de novo material",
+      "id": "INV-03",
+      "observed": "Reexecutado: foi digitado Rascunho QA cancelar e acionado Cancelar; o snapshot posterior da lista não contém o rascunho e preservou apenas PETG antes da criação de QA.",
+      "status": "PASS"
+    },
+    {
+      "action": "Preencher todos os grupos técnicos de novo material",
+      "id": "INV-04",
+      "observed": "Reexecutado integralmente: QA Nylon CF — removível recebeu identificação, 35 números técnicos nos grupos mecânico/térmico/químico/processo, textos, 3 selects, 2 checkboxes, URL, fonte e notas. Snapshot antes do save exibiu os valores, e o cartão criado mostrou família/fabricante/variante/cor e confiança Alta.",
+      "status": "PASS"
+    },
+    {
+      "action": "Selecionar e persistir Última atualização da fonte",
+      "id": "INV-05",
+      "observed": "Reexecutado com o novo controle: fill AAAA-MM-DD definiu 2026-10-27; Escolher data abriu o modal aninhado, Ano=2026/Mês=10/Dia=27 e Aplicar data retornou ao formulário sem descartá-lo. A data continuou visível no formulário reaberto após salvar.",
+      "status": "PASS"
+    },
+    {
+      "action": "Campos numéricos preservam zero explícito",
+      "id": "INV-06",
+      "observed": "Reexecutado: Resistência à fluência=0, Resistência à fadiga=0 e Sensibilidade à umidade=0 ficaram explicitamente exibidos no snapshot do formulário completo antes do salvamento.",
+      "status": "PASS"
+    },
+    {
+      "action": "Bloquear número negativo",
+      "id": "INV-07",
+      "observed": "PASS herdado do caso anterior para Ponto de reposição: o campo tem min=0 e -1 ficou inválido com rangeUnderflow. Nesta rodada, o controle Quantidade (g) também reteve o modal ao submeter -1, sem registrar movimentação.",
+      "status": "PASS"
+    },
+    {
+      "action": "Salvar, editar e reabrir material novo",
+      "id": "INV-08",
+      "observed": "Após salvar QA Nylon CF — removível, a métrica passou para 2 e o cartão foi exibido. Editar reabriu o registro com data 2026-10-27, valor por grama 0.1234 e notas técnicas persistidos.",
+      "status": "PASS"
+    },
+    {
+      "action": "Repor 100 g no PETG demo",
+      "id": "INV-09",
+      "observed": "Reexecutado: Repor PETG · demonstração, Quantidade=100 e Registrar reposição atualizaram o cartão/snapshot de 1.000 g para 1.100 g.",
+      "status": "PASS"
+    },
+    {
+      "action": "Consumir 50 g e validar saldo 1.050 g",
+      "id": "INV-10",
+      "observed": "Reexecutado após a reposição: Consumir PETG · demonstração, Quantidade=50 e Registrar consumo atualizaram o saldo observável de 1.100 g para 1.050 g.",
+      "status": "PASS"
+    },
+    {
+      "action": "Bloquear zero, negativo e consumo acima do saldo",
+      "id": "INV-11",
+      "observed": "Reexecutado: submissões de reposição 0 e -1 permaneceram no modal do input com mínimo 0.001, sem movimento; consumo 1.050,001 mostrou no modal o erro Saldo insuficiente para o consumo solicitado e não fechou/alterou o saldo.",
+      "status": "PASS"
+    },
+    {
+      "action": "Editar propriedades sem sobrescrever saldo",
+      "id": "INV-12",
+      "observed": "Reexecutado: Editar PETG, alterar Cor para Azul QA e salvar preservou no cartão o saldo de 1.050 g, confirmando que alteração de propriedade não regrava saldo.",
+      "status": "PASS"
+    },
+    {
+      "action": "Buscar e excluir material novo sem referências",
+      "id": "INV-13",
+      "observed": "Reexecutado: busca nylon cf exibiu somente QA Nylon CF — removível e ocultou PETG; a confirmação de exclusão foi cancelada uma vez e o registro persistiu, depois Confirmar removeu o material. A busca exibiu Nenhum material encontrado até Limpar busca.",
+      "status": "PASS"
+    },
+    {
+      "action": "Reserva apresentada somente como alocação de invoices",
+      "id": "INV-14",
+      "observed": "Reexecutado no carregamento inicial: o cartão PETG exibiu Reservado por invoices — Nenhuma alocação e o texto esclareceu que Reservado reflete alocações de invoices e não deve ser somado ao saldo.",
+      "status": "PASS"
+    },
+    {
+      "action": "Exercer exclusão livre final e estado vazio",
+      "id": "INV-15",
+      "observed": "Após limpar a busca, a exclusão confirmada do PETG restante exibiu Nenhum material cadastrado e o CTA Cadastrar material, validando o estado vazio do módulo.",
+      "status": "PASS"
+    }
+  ],
+  "issues": [],
+  "module": "Estoque — materiais",
+  "summary": "Revalidação final concluída exclusivamente pela UI do build estático em preview=1&view=inventory, sem login, Firebase, API ou produção. As falhas anteriores de data foram resolvidas: data textual e modal aninhado preservaram o formulário, salvaram e reabriram corretamente. Todos os casos antes FAIL/NOT_RUN foram concluídos como PASS; não há issues reais remanescentes observadas neste módulo."
+}

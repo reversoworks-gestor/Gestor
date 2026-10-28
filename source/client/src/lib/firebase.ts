@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import {
   browserLocalPersistence,
+  connectAuthEmulator,
   getAuth,
   setPersistence,
   type User,
@@ -8,17 +9,28 @@ import {
 import {
   addDoc,
   collection,
+  connectFirestoreEmulator,
   doc,
   getDoc,
   getFirestore,
+  runTransaction,
   serverTimestamp,
   setDoc,
   updateDoc,
 } from "firebase/firestore";
-import { deleteObject, getBlob, getStorage, ref as storageRef, uploadBytes } from "firebase/storage";
+import {
+  connectStorageEmulator,
+  deleteObject,
+  getBlob,
+  getStorage,
+  ref as storageRef,
+  uploadBytes,
+} from "firebase/storage";
 import type { Attachment } from "./models";
 import { sanitizeFileName } from "./finance";
 
+export const USING_EMULATORS =
+  import.meta.env.DEV && import.meta.env.VITE_USE_FIREBASE_EMULATORS === "true";
 const firebaseConfig = {
   apiKey: "AIzaSyCZC7S6h5xqRPElWjSqc60guG8gOkuT9dQ",
   authDomain: "reverso-works.firebaseapp.com",
@@ -30,11 +42,27 @@ const firebaseConfig = {
 
 export const WORKSPACE_ID = "reverso-private";
 
-const app = initializeApp(firebaseConfig);
+const app = initializeApp(
+  USING_EMULATORS
+    ? {
+        ...firebaseConfig,
+        projectId: "demo-reverso-qa",
+        authDomain: "localhost",
+        storageBucket: "demo-reverso-qa.appspot.com",
+        apiKey: "demo-only-public-key",
+      }
+    : firebaseConfig
+);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
-void setPersistence(auth, browserLocalPersistence);
+if (USING_EMULATORS) {
+  const host = import.meta.env.VITE_FIREBASE_EMULATOR_HOST || "127.0.0.1";
+  connectAuthEmulator(auth, `http://${host}:9099`, { disableWarnings: true });
+  connectFirestoreEmulator(db, host, 8080);
+  connectStorageEmulator(storage, host, 9199);
+}
+void setPersistence(auth, browserLocalPersistence).catch(() => undefined);
 
 export function workspaceDoc() {
   return doc(db, "workspaces", WORKSPACE_ID);
@@ -53,41 +81,44 @@ export async function prepareWorkspace(user: User) {
   const ref = workspaceDoc();
   const snapshot = await getDoc(ref);
 
-  if (!snapshot.exists()) {
-    await setDoc(ref, {
-      name: "Reverso Works",
-      ownerUid: user.uid,
-      allowedEmails: [email],
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
-  }
+  if (!snapshot.exists())
+    throw new Error(
+      "O workspace privado ainda não foi provisionado. O responsável deve configurar o proprietário administrativamente antes de liberar acesso."
+    );
 
   const workspace = await getDoc(ref);
-  const allowedEmails = (workspace.data()?.allowedEmails ?? []).map((item: string) =>
-    item.toLowerCase(),
+  const allowedEmails = (workspace.data()?.allowedEmails ?? []).map(
+    (item: string) => item.toLowerCase()
   );
 
   if (!allowedEmails.includes(email)) {
-    throw new Error("Esta conta não está autorizada para o espaço Reverso Works.");
+    throw new Error(
+      "Esta conta não está autorizada para o espaço Reverso Works."
+    );
   }
 
   return workspace.data();
 }
 
 export async function addWorkspaceEmail(email: string) {
-  const ref = workspaceDoc();
-  const snapshot = await getDoc(ref);
-  const allowedEmails = (snapshot.data()?.allowedEmails ?? []).map((item: string) =>
-    item.toLowerCase(),
-  );
   const normalized = email.trim().toLowerCase();
-
-  if (!normalized || allowedEmails.includes(normalized)) return;
-
-  await updateDoc(ref, {
-    allowedEmails: [...allowedEmails, normalized],
-    updatedAt: serverTimestamp(),
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized))
+    throw new Error("Informe um e-mail válido.");
+  await runTransaction(db, async transaction => {
+    const reference = workspaceDoc();
+    const snapshot = await transaction.get(reference);
+    if (snapshot.data()?.ownerUid !== auth.currentUser?.uid)
+      throw new Error(
+        "Somente o responsável pelo espaço pode autorizar integrantes."
+      );
+    const allowedEmails: string[] = (snapshot.data()?.allowedEmails ?? []).map(
+      (item: string) => item.toLowerCase()
+    );
+    if (allowedEmails.includes(normalized)) return;
+    transaction.update(reference, {
+      allowedEmails: [...allowedEmails, normalized],
+      updatedAt: serverTimestamp(),
+    });
   });
 }
 
@@ -95,7 +126,7 @@ export async function logActivity(
   type: string,
   title: string,
   detail: string,
-  metadata: Record<string, unknown> = {},
+  metadata: Record<string, unknown> = {}
 ) {
   await addDoc(workspaceCollection("calendar"), {
     type,
@@ -107,7 +138,10 @@ export async function logActivity(
   });
 }
 
-export async function uploadStlAttachment(recordId: string, file: File): Promise<Attachment> {
+export async function uploadStlAttachment(
+  recordId: string,
+  file: File
+): Promise<Attachment> {
   if (!file.name.toLowerCase().endsWith(".stl")) {
     throw new Error("Selecione um arquivo .STL.");
   }
@@ -142,7 +176,10 @@ const documentTypes: Record<string, string> = {
   stl: "model/stl",
 };
 
-export async function uploadDocumentAttachment(recordId: string, file: File): Promise<Attachment> {
+export async function uploadDocumentAttachment(
+  recordId: string,
+  file: File
+): Promise<Attachment> {
   const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
   const contentType = documentTypes[extension];
   if (!contentType) throw new Error("Anexe apenas PDF, PNG, JPG ou STL.");
@@ -168,14 +205,18 @@ export async function uploadDocumentAttachment(recordId: string, file: File): Pr
   };
 }
 
-export async function downloadStoredAttachment(attachment: Attachment): Promise<void> {
+export async function downloadStoredAttachment(
+  attachment: Attachment
+): Promise<void> {
   const path = attachment.storagePath;
   const allowedPrefixes = [
     `workspaces/${WORKSPACE_ID}/documents/`,
     `workspaces/${WORKSPACE_ID}/stl/`,
   ];
-  if (!path || !allowedPrefixes.some((prefix) => path.startsWith(prefix))) {
-    throw new Error("O arquivo não possui um caminho autenticado válido neste workspace.");
+  if (!path || !allowedPrefixes.some(prefix => path.startsWith(prefix))) {
+    throw new Error(
+      "O arquivo não possui um caminho autenticado válido neste workspace."
+    );
   }
 
   const blob = await getBlob(storageRef(storage, path));
@@ -190,14 +231,25 @@ export async function downloadStoredAttachment(attachment: Attachment): Promise<
   window.setTimeout(() => URL.revokeObjectURL(objectUrl), 30_000);
 }
 
-export async function deleteStoredAttachment(attachment: Attachment): Promise<void> {
+export async function deleteStoredAttachment(
+  attachment: Attachment
+): Promise<void> {
   if (!attachment.storagePath) return;
   const allowedPrefixes = [
     `workspaces/${WORKSPACE_ID}/documents/`,
     `workspaces/${WORKSPACE_ID}/stl/`,
   ];
-  if (!allowedPrefixes.some((prefix) => attachment.storagePath?.startsWith(prefix))) {
-    throw new Error("O caminho do anexo não pertence às áreas autorizadas deste workspace.");
+  if (
+    !allowedPrefixes.some(prefix => attachment.storagePath?.startsWith(prefix))
+  ) {
+    throw new Error(
+      "O caminho do anexo não pertence às áreas autorizadas deste workspace."
+    );
   }
-  await deleteObject(storageRef(storage, attachment.storagePath));
+  try {
+    await deleteObject(storageRef(storage, attachment.storagePath));
+  } catch (error) {
+    if ((error as { code?: string }).code !== "storage/object-not-found")
+      throw error;
+  }
 }

@@ -1,39 +1,64 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedIn() {
-      return request.auth != null;
-    }
-
-    function workspaceExists() {
-      return exists(/databases/$(database)/documents/workspaces/reverso-private);
-    }
-
-    function isWorkspaceMember() {
-      return signedIn()
-        && workspaceExists()
-        && request.auth.token.email != null
+    function signedIn() { return request.auth != null; }
+    function workspaceExists() { return exists(/databases/$(database)/documents/workspaces/reverso-private); }
+    function member() {
+      return signedIn() && workspaceExists() && request.auth.token.email != null
         && request.auth.token.email.lower() in get(/databases/$(database)/documents/workspaces/reverso-private).data.allowedEmails;
     }
-
-    function isWorkspaceOwner() {
-      return signedIn()
-        && workspaceExists()
-        && get(/databases/$(database)/documents/workspaces/reverso-private).data.ownerUid == request.auth.uid;
+    function owner() { return member() && get(/databases/$(database)/documents/workspaces/reverso-private).data.ownerUid == request.auth.uid; }
+    function nonnegative(value) { return value is number && value >= 0; }
+    function validLine(line) {
+      return line is map && line.quantity is number && line.quantity > 0
+        && nonnegative(line.unitPrice) && nonnegative(line.unitPriceCents)
+        && line.label is string && line.label.size() > 0;
     }
-
+    function lineAt(data, index) { return index >= data.lines.size() || validLine(data.lines[index]); }
+    function validPayment(payment) {
+      return payment is map && nonnegative(payment.amount) && nonnegative(payment.amountCents)
+        && payment.method is string && payment.method.size() > 0 && payment.date is string;
+    }
+    function paymentAt(data, index) { return index >= data.get('payments', []).size() || validPayment(data.payments[index]); }
+    function linesGroup0(data) { return lineAt(data, 0) && lineAt(data, 1) && lineAt(data, 2) && lineAt(data, 3) && lineAt(data, 4) && lineAt(data, 5) && lineAt(data, 6) && lineAt(data, 7) && lineAt(data, 8) && lineAt(data, 9); }
+    function linesGroup1(data) { return lineAt(data, 10) && lineAt(data, 11) && lineAt(data, 12) && lineAt(data, 13) && lineAt(data, 14) && lineAt(data, 15) && lineAt(data, 16) && lineAt(data, 17) && lineAt(data, 18) && lineAt(data, 19); }
+    function paymentsGroup0(data) { return paymentAt(data, 0) && paymentAt(data, 1) && paymentAt(data, 2) && paymentAt(data, 3) && paymentAt(data, 4) && paymentAt(data, 5) && paymentAt(data, 6) && paymentAt(data, 7) && paymentAt(data, 8) && paymentAt(data, 9); }
+    function paymentsGroup1(data) { return paymentAt(data, 10) && paymentAt(data, 11) && paymentAt(data, 12) && paymentAt(data, 13) && paymentAt(data, 14) && paymentAt(data, 15) && paymentAt(data, 16) && paymentAt(data, 17) && paymentAt(data, 18) && paymentAt(data, 19); }
+    function validOrder(data) {
+      return data.clientId is string && exists(/databases/$(database)/documents/workspaces/reverso-private/clients/$(data.clientId))
+        && data.lines is list && data.lines.size() > 0 && data.lines.size() <= 20
+        && data.get('payments', []) is list && data.get('payments', []).size() <= 20
+        && data.lines.size() + data.get('payments', []).size() <= 20
+        && (data.get('completed', false) == false || (data.get('finishApproved', false) && data.get('fitApproved', false) && data.get('clientApproved', false) && data.get('journeyStage', '') == 'check' && data.get('inspectionNotes', '').size() > 0))
+        && nonnegative(data.total) && nonnegative(data.totalCents)
+        && nonnegative(data.subtotalCents) && nonnegative(data.taxCents)
+        && data.totalCents == data.subtotalCents + data.taxCents
+        && data.startDate is string && data.startDate.matches('^(19|20)[0-9]{2}-[0-9]{2}-[0-9]{2}$|^2100-[0-9]{2}-[0-9]{2}$')
+        && (data.get('vehicleId', '') == '' || getAfter(/databases/$(database)/documents/workspaces/reverso-private/vehicles/$(data.vehicleId)).data.clientId == data.clientId)
+        && (linesGroup0(data) && (data.lines.size() <= 10 || linesGroup1(data))) && (data.get('payments', []).size() == 0 || (paymentsGroup0(data) && (data.payments.size() <= 10 || paymentsGroup1(data))));
+    }
+    function validRecord(collection) {
+      return (collection != 'materials' || (nonnegative(request.resource.data.availableGrams) && nonnegative(request.resource.data.reorderAtGrams) && nonnegative(request.resource.data.pricePerGram)))
+        && (collection != 'catalogItems' || nonnegative(request.resource.data.unitPrice))
+        && (collection != 'expenses' || (nonnegative(request.resource.data.amount) && nonnegative(request.resource.data.amountCents)))
+        && (collection != 'vehicles' || (request.resource.data.year is int && request.resource.data.year >= 1900 && request.resource.data.year <= 2100 && exists(/databases/$(database)/documents/workspaces/reverso-private/clients/$(request.resource.data.clientId))))
+        && (collection != 'settings' || (request.resource.data.taxRate is number && request.resource.data.taxRate >= 0 && request.resource.data.taxRate <= 1))
+        && (collection != 'orders' || validOrder(request.resource.data))
+        && (collection != 'partRevisions' || getAfter(/databases/$(database)/documents/workspaces/reverso-private/parts/$(request.resource.data.partId)).data.currentRevisionId == request.resource.data.id);
+    }
     match /workspaces/reverso-private {
-      allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid;
-      allow read: if signedIn() && (!workspaceExists() || isWorkspaceMember());
-      allow update, delete: if isWorkspaceOwner();
-
-      match /{document=**} {
-        allow read, write: if isWorkspaceMember();
+      allow create: if false; // Provisionamento administrativo, nunca pelo cliente.
+      allow get: if signedIn() && (!workspaceExists() || member());
+      allow update: if owner() && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.allowedEmails is list
+        && request.auth.token.email.lower() in request.resource.data.allowedEmails;
+      allow delete: if false;
+      match /{collection}/{recordId} {
+        allow read: if member();
+        allow create, update: if owner() && validRecord(collection);
+        allow delete: if false; // Remoções arquivam o registro; preservam evidências e vínculos.
       }
     }
-
-    match /users/{userId}/{document=**} {
-      allow read: if signedIn() && request.auth.uid == userId;
-    }
+    match /users/{userId}/{document=**} { allow read: if signedIn() && request.auth.uid == userId; }
   }
 }

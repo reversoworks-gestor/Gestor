@@ -1,0 +1,85 @@
+{
+  "cases": [
+    {
+      "action": "Abrir Clientes no preview seguro e verificar dados seed",
+      "id": "CLI-001",
+      "observed": "PASS herdado e reobservado no build estático: URL permaneceu em ?preview=1&view=clients, aviso de Demonstração local visível, contadores iniciais Clientes 1/Veículos 1 e cartão Cliente de demonstração com 1 veículo e demo@example.test.",
+      "status": "PASS"
+    },
+    {
+      "action": "Abrir novo cliente e submeter formulário vazio",
+      "id": "CLI-002",
+      "observed": "Reexecutado: Novo cliente abriu e Cadastrar cliente vazio manteve o modal aberto com validação nativa de obrigatório no Primeiro nome.",
+      "status": "PASS"
+    },
+    {
+      "action": "Cancelar formulário de cliente vazio/erro",
+      "id": "CLI-003",
+      "observed": "Reexecutado após a validação vazia: Cancelar fechou explicitamente o modal e retornou à lista; não houve o fechamento inesperado observado na rodada anterior.",
+      "status": "PASS"
+    },
+    {
+      "action": "Preencher cadastro completo de cliente",
+      "id": "CLI-004",
+      "observed": "Reexecutado em lote no modal estável: Primeiro nome Mariana, Último nome Albuquerque, Empresa, e-mail, telefone, endereço e notas permaneceram visíveis; Nome completo renderizou Mariana Albuquerque.",
+      "status": "PASS"
+    },
+    {
+      "action": "Salvar cliente completo e reabrir para confirmar persistência",
+      "id": "CLI-005",
+      "observed": "Cadastrar cliente aumentou o contador de 1 para 2, selecionou Mariana Albuquerque e exibiu cartão com contatos/endereço e toast Registro salvo. O botão Editar reabriu o mesmo registro com os valores preenchidos.",
+      "status": "PASS"
+    },
+    {
+      "action": "Limpar por teclado os campos opcionais e salvar",
+      "id": "CLI-006",
+      "observed": "A limpeza em lote exibiu os campos vazios mas os valores anteriores reapareceram após salvar; a entrada UI individual vazia para Empresa foi persistida e o cartão mudou para Pessoa física. O atalho disponibilizado Control+A foi convertido em Meta+A e inseriu o caractere A, impedindo concluir com segurança a limpeza por teclado de todos os opcionais.",
+      "status": "BLOCKED"
+    },
+    {
+      "action": "Buscar cliente criado e editar dados",
+      "id": "CLI-007",
+      "observed": "Busca nesta lista por Mariana e Busca global por Mariana reduziram a UI ao cartão correto. O registro foi reaberto por Editar e salvo novamente; a remoção individual de Empresa foi confirmada visualmente por Pessoa física.",
+      "status": "PASS"
+    },
+    {
+      "action": "Exercitar botões Selecionar, Ver veículos e Editar do cliente seed",
+      "id": "CLI-008",
+      "observed": "Selecionar no cliente seed atualizou o painel Cliente selecionado para Cliente de demonstração com 1 veículo; Ver veículos navegou para ?preview=1&view=vehicles e preservou preview=1. O botão Editar específico do seed não foi acionado antes da interrupção.",
+      "status": "NOT_RUN"
+    },
+    {
+      "action": "Abrir veículo vinculado e testar todos os campos (marca, modelo, ano, placa, VIN, cor e notas)",
+      "id": "VEH-001",
+      "observed": "Reexecutado: foi criado para Mariana Albuquerque o Toyota Corolla XEi, ano 2024, placa qa1a234 (renderizada QA1A234), VIN 1HGCM82633A004352, cor Azul metálico e notas. Após salvar, contador Veículos passou de 1 a 2 e tabela mostrou vínculo, placa, VIN e cor.",
+      "status": "PASS"
+    },
+    {
+      "action": "Testar required/erro/valid/cancel/salvo/edição de veículo e proteção de input numérico",
+      "id": "VEH-002",
+      "observed": "Cadastrar veículo vazio mostrou validação nativa required e Cancelar fechou o modal. Com Ano 1885, o navegador rejeitou o submit com Value must be greater than or equal to 1886; após substituir por 2024, o veículo foi salvo. Editar reabriu os valores e salvar Cor Azul pérola atualizou a tabela.",
+      "status": "PASS"
+    },
+    {
+      "action": "Aplicar filtros e buscas de veículos",
+      "id": "VEH-003",
+      "observed": "O seletor Filtrar veículos por cliente foi exercitado: Todos os clientes revelou as duas linhas, e o vínculo selecionado Mariana mostrou somente seu Toyota. As buscas textual local/global específicas da tela de veículos não foram concluídas antes da interrupção.",
+      "status": "NOT_RUN"
+    },
+    {
+      "action": "Tentar excluir cliente com vínculo e confirmar rejeição",
+      "id": "DEL-001",
+      "observed": "Não iniciado nesta rodada final antes da interrupção; a UI de edição do seed não foi aberta para acionar a confirmação de remoção protegida.",
+      "status": "NOT_RUN"
+    },
+    {
+      "action": "Excluir veículo sem documentos e depois o cliente, confirmando estados finais",
+      "id": "DEL-002",
+      "observed": "Não iniciado nesta rodada final antes da interrupção; o Toyota de QA ainda permanecia criado e vinculado a Mariana no último snapshot.",
+      "status": "NOT_RUN"
+    }
+  ],
+  "issues": [],
+  "module": "Reverso Gestor — Clientes e veículos (preview=1)",
+  "summary": "Revalidação executada somente no preview estático com preview=1, sem login, Firebase, API ou leitura de estado interno. A regressão anterior de fechamento espontâneo do modal de cliente não se reproduziu: cadastro, salvamento, reabertura, seleção, navegação e veículo completo funcionaram. A execução foi interrompida antes de concluir Editar do seed, buscas textuais de veículos e os dois fluxos de exclusão; estes permanecem explicitamente NOT_RUN. A limpeza por teclado de todos os opcionais ficou BLOCKED porque o atalho de teclado disponível foi interpretado incorretamente, embora a limpeza individual por entrada UI tenha persistido."
+}

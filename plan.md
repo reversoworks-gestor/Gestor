@@ -1,40 +1,16 @@
-# Plano de implementação — Reverso Gestor
+# Reverso Gestor — reconstrução automotiva
 
-## Escopo e abordagem
+## Direção aprovada
+Recriar completamente o Gestor para a Reverso Works Automotive Restoration & Engineering Studio. Em 28/10/2026 o usuário autorizou explicitamente substituir a paleta anterior do Gestor pelo novo marketing book automotivo. Preservar a logo oficial, Inter e SF Mono/fallback monoespaçado. Incorporar faróis, PDR, peças sob medida e customização, com o método Avaliar → Definir → Desenvolver → Executar → Conferir. O usuário autorizou o desenvolvimento do início ao fim sem revisões intermediárias.
 
-Reaproveitar o código-fonte React/TypeScript, Vite e Firebase já existente no repositório `reversoworks-gestor/Gestor`, em vez de reconstruir sobre o bundle compilado. Trabalhar exclusivamente na branch `manus/reverso-gestor-reconstruction`; preservar `main`, a publicação GitHub Pages e o workspace Firebase real. Corrigir comportamentos encontrados na revisão das áreas e conectar os controles aos fluxos, estados e mensagens adequados. Quando existir dependência remota, manter o modo de demonstração sem gravação real e indicar claramente seus limites.
+## Arquitetura
+Preservar React/TypeScript/Vite e a autenticação e persistência Firebase da base existente. A nova interface usa módulos separados em `source/client/src/gestor`: domínio automotivo e validação; adaptador de estado/persistência; componentes acessíveis; páginas operacionais por domínio. Manter bibliotecas de finanças, seleção de material e PDFs existentes, corrigindo regras e apresentação. Reusar coleções legadas (`clients`, `orders`, `materials`, `printers`, `parts`, `partRevisions`, `expenses`, `calendar`, `triages`, `catalogItems`); novas entidades automotivas usam coleções aditivas de veículos e avaliações. Não apagar, migrar destrutivamente nem redefinir dados antigos. Campos opcionais novos mantêm compatibilidade.
 
-## Estrutura do projeto
-
-- `source/client/src/App.tsx`: autenticação Firebase, abertura do workspace e modo de demonstração.
-- `source/client/src/pages/Home.tsx`: navegação, telas operacionais, formulários, ações e ligação à persistência Firestore/Storage.
-- `source/client/src/components/DocumentDialog.tsx`: criação e edição de estimativas/invoices, itens, pagamentos, anexos e notas.
-- `source/client/src/components/MaterialSelector.tsx`: triagem técnica e decisão de material.
-- `source/client/src/lib/`: modelos, regras financeiras, seleção de material, documentos, formatação e adaptadores Firebase.
-- `source/client/src/index.css`: tokens visuais, responsividade, componentes e acessibilidade.
-- `source/client/public/`: PWA, arquivos oficiais da marca e imagens técnicas existentes.
-- Testes Vitest junto aos módulos de domínio; verificações TypeScript/build pelo pacote existente.
-
-## Decisões de implementação
-
-- Manter React, TypeScript, Vite e a integração Firebase existente; não migrar dados nem alterar regras/deploy externos nesta tarefa.
-- Tratar `Comando Técnico — Sistema Operacional` como a única referência visual: logo oficial branca fornecida, Preto Operacional, Grafite Operacional/Camada, Linha Técnica, Branco Operacional e Ciano Reverso; gradiente somente no CTA primário; Inter e fallback monoespaçado para dados.
-- Priorizar correções de integridade e de campo: datas locais, validação numérica, status de impressoras, estoque, filtros/rotulagem de produção, taxas e anexos dos documentos e estados de demonstração.
-- Preservar o caráter operacional e os módulos existentes; não criar funcionalidades decorativas ou prometer persistência que a prévia não oferece.
-- Implementar documentação de trabalho e regressões verificáveis no código da branch. Usar preview local com `?preview=1`; não executar gravações, uploads ou exclusões no Firebase de produção.
+## Funcionalidades
+Início e busca global; clientes e veículos; cadastro automotivo com modelo/ano/placa e necessidade; estimativas, invoices, pedidos e pagamentos; jornada de atendimento e produção; avaliação de faróis/PDR/peças/customização e triagem de material; anexos autenticados e revisões; calendário; estoque, reservas e movimentos atômicos; impressoras/manutenção; financeiro/despesas; catálogo e acesso de equipe. Criação, edição, cancelamento, pesquisa, seleção, validação, erros, estados ocupados e feedback precisam refletir operações reais. Não incluir integrações comerciais não solicitadas nem prometer validação de peças críticas sem evidências.
 
 ## Design
+Verde profundo #031A17 dominante, verde estúdio #062C27 nas superfícies, #0C3931 nas camadas, dourado fosco #C6A55F nas ações/assinaturas e branco #F5F7FA. Cinza claro #C5CDC7 auxiliar. Não usar gradientes decorativos; CTA dourado sólido. Estados semânticos continuam identificados por texto/ícone e cores de estado somente quando necessárias. Navegação lateral em desktop e menu móvel utilizável; respiro, linhas finas, informação contextual e ações explícitas. Sem imagens decorativas no sistema; evidências reais anexadas pelos usuários. Foco visível, modais com contenção/restauração, teclado, WCAG AA e prefers-reduced-motion.
 
-- **Movimento:** Comando Técnico — Sistema Operacional, derivado do Gestor e definido nos ativos oficiais do projeto.
-- **Princípios:** precisão operacional; hierarquia e rastreabilidade; contraste e legibilidade; feedback explícito com próximos passos.
-- **Cor:** base escura dominante para segurança e foco; grafites em camadas para organizar dados; ciano funcional para foco/seleção/ações secundárias; semântica de estado apenas quando necessária; gradiente reservado ao CTA primário.
-- **Layout:** navegação operacional existente, títulos/descrições de contexto, cartões e tabelas em superfícies grafite, linhas técnicas discretas e composição responsiva para iPhone e desktop.
-- **Elementos recorrentes:** metadados e IDs monoespaçados; status acompanhados de texto/rótulo; foco ciano visível.
-- **Interação:** controles devem refletir estado, ação, carregamento e resultado; formulário valida junto ao campo e fornece erro/recuperação; movimento curto e funcional, respeitando `prefers-reduced-motion`.
-- **Tipografia:** Inter para interface e SF Mono/fallback monoespaçado para IDs, códigos, medidas e status.
-- **Logo:** somente o arquivo oficial; versão branca sobre fundo escuro, sem recorte, recoloração ou efeito.
-- **Essência/voz:** sistema privado de operação e engenharia da Reverso Works; técnico, claro e responsável. Microcopy aponta evidências, pendências e próximos passos sem alegações absolutas.
-
-## Entrega
-
-Revisar páginas, campos, controles e fluxos essenciais usando o código, testes automatizados e preview. Corrigir as falhas reproduzíveis; registrar as dependências de credenciais/serviços que não possam ser certificadas sem acesso explícito ao ambiente Firebase real. A branch de trabalho não publica o site nem altera a branch publicada.
+## Ambiente e entrega
+Workspace gerenciado `/home/ubuntu/reversogestor`, com código em `source/`. Testes unitários e de integração, emuladores Firebase com projeto `demo-reverso-qa` sem credenciais reais, testes públicos de interface com dados sintéticos e navegador. Jamais executar QA no Firebase de produção. Código será sincronizado para a branch de reconstrução no repositório existente `reversoworks-gestor/Gestor`; preservar main, histórico e publicação existente. Salvar checkpoint gerenciado da mesma versão para Preview. Não declarar que produção foi implantada ou que a validação de produção ocorreu sem comprovação.

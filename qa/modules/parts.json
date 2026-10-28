@@ -1,0 +1,120 @@
+{
+  "cases": [
+    {
+      "action": "Abrir ?preview=1&view=parts",
+      "id": "parts-empty-state",
+      "observed": "O build estático abriu exclusivamente com preview=1&view=parts, exibindo Demonstração local, 0 de 0 peça(s) e Nenhuma peça cadastrada.",
+      "status": "PASS"
+    },
+    {
+      "action": "Submeter Nova peça sem nome",
+      "id": "part-required-name",
+      "observed": "Nova peça permaneceu aberta e Nome da peça exibiu a validação nativa ‘Please fill out this field.’.",
+      "status": "PASS"
+    },
+    {
+      "action": "Cancelar Nova peça vazia",
+      "id": "part-cancel",
+      "observed": "Cancelar voltou ao estado vazio sem criar registro.",
+      "status": "PASS"
+    },
+    {
+      "action": "Criar Peça QA A — Suporte Farol",
+      "id": "part-create",
+      "observed": "A peça foi efetivamente criada pela UI: lista passou a 1 de 1, card exibiu QA A — Suporte Farol e 1 vinculada(s).",
+      "status": "PASS"
+    },
+    {
+      "action": "Editar a peça, selecionar invoice, salvar e reabrir",
+      "id": "part-invoice-association-persistence",
+      "observed": "Ao reabrir Gerenciar peça, a checkbox de Cliente de demonstração · Avaliação de faróis · Rascunho permaneceu marcada.",
+      "status": "PASS"
+    },
+    {
+      "action": "Fechar edição reaberta",
+      "id": "part-close-edit",
+      "observed": "PASS herdado e reconfirmado: Fechar retornou ao card mantendo QA A e a invoice vinculada.",
+      "status": "PASS"
+    },
+    {
+      "action": "Submeter nova revisão sem título",
+      "id": "revision-required-title",
+      "observed": "Nova revisão permaneceu aberta e Título da versão vazio exibiu a validação nativa ‘Please fill out this field.’.",
+      "status": "PASS"
+    },
+    {
+      "action": "Preencher versão com -1",
+      "id": "revision-negative-version",
+      "observed": "Com título preenchido, VERSÃO=-1 chegou ao Salvar e foi rejeitada no domínio com ‘A versão não pode ser negativa. Use um identificador como v1 ou 1.0.’; nenhum histórico negativo foi criado.",
+      "status": "PASS"
+    },
+    {
+      "action": "Selecionar fixture STL e clicar Remover da fila",
+      "id": "revision-stl-queue-remove",
+      "observed": "fixture-valid.stl entrou em STL pendente de envio; Remover da fila retirou a pendência e restaurou Salvar revisão.",
+      "status": "PASS"
+    },
+    {
+      "action": "Selecionar fixture STL e cancelar a revisão",
+      "id": "revision-stl-cancel-no-orphan",
+      "observed": "Após reenfileirar fixture-valid.stl e clicar Cancelar, a peça retornou com 0 revisão(ões), sem órfão.",
+      "status": "PASS"
+    },
+    {
+      "action": "Salvar revisão válida com título, versão, notas, invoice e STL e reabrir",
+      "id": "revision-save-reopen-currentRevisionId",
+      "observed": "Foram salvos pela UI Peça, versão 1.0, título Revisão QA STL v1, notas, as três invoices e um STL; histórico exibiu 1 revisão, 1 STL e revisão atual.",
+      "status": "PASS"
+    },
+    {
+      "action": "Criar segunda peça e mover revisão",
+      "id": "revision-move-other-part",
+      "observed": "QA B — Base Auxiliar foi criada e o select Peça da edição moveu a revisão para B; depois B exibiu 1 revisão e QA A ficou com 0.",
+      "status": "PASS"
+    },
+    {
+      "action": "Tentar excluir peça com revisão",
+      "id": "part-delete-blocked-with-revision",
+      "observed": "Ao gerenciar QA B com 1 revisão, apareceu ‘Remova ou mova as revisões antes de excluir a peça.’ e o botão Excluir peça não foi renderizado.",
+      "status": "PASS"
+    },
+    {
+      "action": "Buscar peças e histórico",
+      "id": "parts-search-history",
+      "observed": "Busca por ‘geometria’ encontrou a revisão pelas notas; termo inexistente mostrou Nenhuma peça corresponde à busca e Limpar busca restaurou o histórico.",
+      "status": "PASS"
+    },
+    {
+      "action": "Baixar e remover STL salvo",
+      "id": "revision-download-remove-after-save",
+      "observed": "O STL salvo foi reaberto e removido: Remover mostrou Remoção pendente, Salvar persistiu e Detalhes passou a Nenhum STL anexado. Baixar STL ficou desabilitado no preview por caminho autenticado privado; a tentativa UI foi exercitada, mas download real é limitação intencional do demo a ser coberta no emulador autenticado.",
+      "status": "BLOCKED"
+    },
+    {
+      "action": "Remover revisão e verificar remoção de referências",
+      "id": "revision-delete-no-refs",
+      "observed": "Excluir revisão exigiu confirmação; após confirmá-la, QA B exibiu 0 revisão(ões) e Revisão atual: Ainda não definida.",
+      "status": "PASS"
+    },
+    {
+      "action": "Excluir peça livre após remover a revisão",
+      "id": "part-delete-free",
+      "observed": "Com QA B livre (0 revisão(ões)), Excluir peça e Confirmar foram acionados via refs atuais. A tela fechou o modal, porém continuou em 2 de 2 peça(s), QA B permaneceu visível e foi mostrado o toast ‘Peça salva com os vínculos de invoice.’ em vez da remoção.",
+      "status": "FAIL"
+    }
+  ],
+  "issues": [
+    {
+      "expected": "A confirmação deveria remover QA B, reduzir o contador para 1 de 2 e mostrar a confirmação de remoção segura.",
+      "observed": "O modal fechou, mas QA B continuou listada, o contador permaneceu 2 de 2 e a UI mostrou ‘Peça salva com os vínculos de invoice.’.",
+      "steps": [
+        "Mover/remover todas as revisões de QA B — Base Auxiliar até o card mostrar 0 revisão(ões).",
+        "Abrir Gerenciar peça, clicar Excluir peça e, no modal Confirmar ação, clicar Confirmar.",
+        "Aguardar a conclusão da UI e observar a lista."
+      ],
+      "title": "Confirmação de exclusão de peça livre não remove o registro"
+    }
+  ],
+  "module": "Peças e revisões",
+  "summary": "Revalidação feita exclusivamente no build estático com preview=1, sem login, Firebase, APIs ou leitura de estado interno. Foram confirmados os fluxos de peça, associação, validação negativa, fila/cancelamento de STL, salvamento/reabertura, busca, movimentação, proteção de exclusão, remoção de anexo e remoção de revisão. Não houve HMR/429/recarga durante os fluxos observados. O download de STL ficou intencionalmente bloqueado no demo por caminho autenticado privado; não foi tratado como defeito. Permanece uma falha real na confirmação de exclusão de peça livre."
+}

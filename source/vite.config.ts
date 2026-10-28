@@ -19,5 +19,18 @@ export default defineConfig({
   build: {
     outDir: "../dist",
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "react-runtime": ["react", "react-dom"],
+          "firebase-runtime": [
+            "firebase/app",
+            "firebase/auth",
+            "firebase/firestore",
+            "firebase/storage",
+          ],
+        },
+      },
+    },
   },
 });

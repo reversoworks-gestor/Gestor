@@ -1,0 +1,96 @@
+{
+  "cases": [
+    {
+      "action": "Abrir Financeiro no preview e conferir seed de invoices",
+      "id": "FIN-01",
+      "observed": "Reexecutado em https://3001-iozme06mt31jgctzk16mf-ca40f2fc.us5.manus.computer/?preview=1&view=finance: UI exibiu 3 invoices sintéticos, US$450,00 de total/subtotal, US$0,00 recebido, US$450,00 a receber e as linhas de US$200,00, US$150,00 e US$100,00.",
+      "status": "PASS"
+    },
+    {
+      "action": "Transitar da aba Financeiro para Despesas e verificar estado vazio",
+      "id": "FIN-02",
+      "observed": "Reexecutado: a aba Despesas alterou o título para “Despesas operacionais” e exibiu 0 lançamentos, US$0,00 de despesas, US$0,00 recebido, US$0,00 de saldo e “Nenhuma despesa registrada”.",
+      "status": "PASS"
+    },
+    {
+      "action": "Abrir formulário de nova despesa e submeter vazio",
+      "id": "EXP-01",
+      "observed": "PASS herdado da rodada anterior: foi observado que o modal expõe Título, Categoria, Fornecedor, Valor, Data e Notas e que a submissão vazia o mantém aberto com validação de obrigatoriedade para Título e Categoria.",
+      "status": "PASS"
+    },
+    {
+      "action": "Cancelar formulário vazio",
+      "id": "EXP-02",
+      "observed": "PASS herdado da rodada anterior: Cancelar fechou o formulário vazio e restaurou a lista vazia com 0 lançamentos.",
+      "status": "PASS"
+    },
+    {
+      "action": "Validar valor negativo",
+      "id": "EXP-03",
+      "observed": "PASS herdado da rodada anterior: -5 foi rejeitado por mínimo 0; a submissão permaneceu no modal sem criar lançamento.",
+      "status": "PASS"
+    },
+    {
+      "action": "Validar NaN/não numérico",
+      "id": "EXP-04",
+      "observed": "PASS herdado da rodada anterior: “NaN” foi sanitizado para vazio, ficou inválido por obrigatoriedade e não criou lançamento.",
+      "status": "PASS"
+    },
+    {
+      "action": "Preencher todos os campos e salvar despesa válida",
+      "id": "EXP-05",
+      "observed": "Reexecutado com Título “Tintas para reparo QA”, Categoria “Materiais”, Fornecedor “Fornecedor QA Ltda.”, Valor 123.45, Data 2026-10-15 e Notas. Ao Registrar despesa, a lista exibiu a linha completa, data 15 de out. de 2026, US$123,45, uma categoria Materiais e toast “Despesa registrada.”; métricas foram atualizadas para uma despesa e saldo -US$123,45.",
+      "status": "PASS"
+    },
+    {
+      "action": "Alterar Data do formulário pela UI nativa",
+      "id": "EXP-06",
+      "observed": "Reexecutado pelo controle atualizado, sem popup nativo: “Escolher data” abriu modal com selects Ano/Mês/Dia; foram selecionados 2026/outubro/15 e “Aplicar data”. O textbox do formulário passou a 2026-10-15, os demais campos foram preservados e a despesa foi salva/listada em 15 de out. de 2026.",
+      "status": "PASS"
+    },
+    {
+      "action": "Reabrir, editar e excluir despesa salva",
+      "id": "EXP-07",
+      "observed": "Reexecutado: Editar reabriu todos os valores persistidos. Título, valor e notas foram alterados e Salvar alterações atualizou a lista e total para US$124,50, com toast “Despesa atualizada.”. Remover abriu confirmação explícita; Cancelar preservou a linha. Na segunda tentativa, Confirmar removeu a despesa, removeu Materiais do filtro e exibiu “Despesa removida.”.",
+      "status": "PASS"
+    },
+    {
+      "action": "Filtrar por período e categoria e limpar filtros",
+      "id": "FIN-03",
+      "observed": "Reexecutado: A partir de e Até foram preenchidos como 2026-10-15 e Categoria foi definida como Materiais, mantendo somente a despesa criada. Ambos os limites mudados para 2026-10-16 produziram 0 lançamentos e “Nenhuma despesa corresponde aos filtros”. Limpar filtros restaurou os campos vazios, Todas as categorias e a despesa. Também foi exercida busca global: “reparo QA” manteve a despesa, “naoexiste-QA” produziu estado vazio.",
+      "status": "PASS"
+    },
+    {
+      "action": "Alternar moeda USD/BRL sem conversão",
+      "id": "FIN-04",
+      "observed": "Reexecutado: ao trocar USD por BRL, a tela indicou “Todos os valores estão em BRL; esta tela não faz conversão nem combina moedas” e mostrou R$0,00/0 lançamentos, sem converter a despesa USD. Ao voltar para USD, a despesa e US$124,50 retornaram.",
+      "status": "PASS"
+    },
+    {
+      "action": "Exportar CSV",
+      "id": "FIN-05",
+      "observed": "Reexecutado via botão Exportar CSV com os 3 invoices e a despesa visíveis. A UI exibiu “CSV financeiro exportado.” e o download /home/ubuntu/Downloads/financeiro-inicio-atual.csv (752 bytes) continha cabeçalho, as três invoices de 200.00/150.00/100.00 e a linha da despesa em 2026-10-15 com total 123.45.",
+      "status": "PASS"
+    },
+    {
+      "action": "Verificar coerência emissão versus created e transição inversa Despesas→Financeiro",
+      "id": "FIN-06",
+      "observed": "A transição inversa foi reexecutada pela aba Financeiro, retornando a “Visão financeira” e à URL com preview=1&view=finance. As três invoices apresentaram 28 de out. de 2026 no Financeiro e “Emissão: 2026-10-28” na tela aberta pelo controle “Abrir invoices”; o formulário de edição confirmou “Data de emissão ou início: 2026-10-28”. Contudo, nenhum timestamp/campo “created” é exposto na UI de Financeiro, na lista de invoices ou no formulário de edição, portanto a comparação emissão-versus-created solicitada não é verificável somente pela interface. O formulário foi cancelado sem salvar.",
+      "status": "BLOCKED"
+    }
+  ],
+  "issues": [
+    {
+      "expected": "Para validar visualmente coerência entre emissão e criação, a UI deve apresentar a data/hora de criação pertinente ou o critério de aceitação deve depender apenas da data de emissão exibida.",
+      "observed": "A UI mostra a data de emissão/início e prazo/entrega, mas não mostra created/createdAt em nenhuma das telas visíveis; a comparação solicitada não pode ser concluída sem violar a restrição de não ler estado interno.",
+      "steps": [
+        "Abrir Financeiro com ?preview=1&view=finance.",
+        "Usar “Abrir invoices” e observar Emissão: 2026-10-28 nas três invoices.",
+        "Abrir Editar da invoice e inspecionar os campos de data visíveis sem salvar."
+      ],
+      "title": "Timestamp de criação de invoice não é exposto para comparação visual"
+    }
+  ],
+  "module": "Financeiro / Despesas (build estático preview=1)",
+  "summary": "QA FINAL executada exclusivamente no build estático com preview=1; não houve login, Firebase, API, produção, eval nem leitura de estado interno. Dos 13 casos anteriores, 12 estão PASS (incluindo todos os antes NOT_RUN/BLOCKED relativos a criação, data, edição/exclusão, filtros, moeda, CSV e transições) e 1 está BLOCKED somente pela ausência de created exposto visualmente. A despesa de teste foi removida e a recarga da mesma URL confirmou o estado final limpo: 3 invoices sintéticos/US$450,00 e 0 despesas."
+}

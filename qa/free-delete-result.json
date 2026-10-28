@@ -1,0 +1,5 @@
+{
+  "id": "DEL-002",
+  "status": "PASS",
+  "observed": "Cliente QA Exclusão livre final e veículo Marca QA Modelo QA livre/2024 foram criados, salvos e reabertos. Removi primeiro o veículo e depois o cliente por confirmações, ambos desapareceram; o seed permaneceu e root.inert voltou a false."
+}

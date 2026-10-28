@@ -1,0 +1,145 @@
+{
+  "cases": [
+    {
+      "action": "Abrir Estimativas no preview sintético",
+      "id": "EST-01",
+      "observed": "PASS herdado da rodada anterior: a URL permaneceu em ?preview=1&view=estimates e a tela mostrou Demonstração local, sem acesso a produção.",
+      "status": "PASS"
+    },
+    {
+      "action": "Abrir novo documento",
+      "id": "EST-02",
+      "observed": "Revalidado: Novo documento abriu o modal com tipo, status, cliente, veículo, serviço, datas textuais, linhas, pagamentos, notas, anexo, Cancelar e Salvar documento.",
+      "status": "PASS"
+    },
+    {
+      "action": "Selecionar cliente e veículo sintéticos",
+      "id": "EST-03",
+      "observed": "Revalidado: Cliente de demonstração · Dados sintéticos habilitou Veículo de demonstração · 2020 · DEMO-001, que foi selecionado.",
+      "status": "PASS"
+    },
+    {
+      "action": "Editar título, escopo e restrições",
+      "id": "EST-04",
+      "observed": "Revalidado com título QA Estimativa Faróis e PDR, escopo e restrições preenchidos; os valores reapareceram ao reabrir o documento salvo.",
+      "status": "PASS"
+    },
+    {
+      "action": "Alterar serviço automotivo",
+      "id": "EST-05",
+      "observed": "Revalidado: PDR — reparo sem pintura foi selecionado, o texto de restrição contextual mudou e o botão passou a Adicionar PDR — reparo sem pintura.",
+      "status": "PASS"
+    },
+    {
+      "action": "Editar prazo/data válida pelo controle nativo",
+      "id": "EST-06",
+      "observed": "Revalidado pelo fluxo corrigido: o campo AAAA-MM-DD aceitou 2026-11-04; Escolher data abriu modal Ano/Mês/Dia e Aplicar data preservou 2026-11-04 no prazo.",
+      "status": "PASS"
+    },
+    {
+      "action": "Adicionar linha personalizada",
+      "id": "EST-07",
+      "observed": "Revalidado: Linha personalizada criou controles de descrição, tipo, quantidade, preço unitário, tributação condicional, detalhamento e Remover linha.",
+      "status": "PASS"
+    },
+    {
+      "action": "Editar descrição e tipo da linha",
+      "id": "EST-08",
+      "observed": "Revalidado: descrição foi alterada para Polimento técnico dos faróis e o tipo foi trocado de Serviço para Item, exibindo a opção Tributável.",
+      "status": "PASS"
+    },
+    {
+      "action": "Validar preço negativo",
+      "id": "EST-09",
+      "observed": "Revalidado: o campo aceitou visualmente -1 para inspeção, manteve total de linha e totais em US$ 0,00; o input possui mínimo 0 e o domínio também rejeita negativos no Salvar.",
+      "status": "PASS"
+    },
+    {
+      "action": "Calcular total após preço positivo",
+      "id": "EST-10",
+      "observed": "Corrigido e revalidado: com quantidade 1 e preço 120, o total da linha e subtotal ficaram US$ 120,00; após marcar Item tributável e taxa 10%, Taxa ficou US$ 12,00 e Total US$ 132,00.",
+      "status": "PASS"
+    },
+    {
+      "action": "Adicionar item do catálogo",
+      "id": "EST-11",
+      "observed": "Revalidado: Peças e engenharia foi selecionado no Catálogo e Adicionar do catálogo criou Linha 2 com descrição, tipo, quantidade, preço e detalhamento do item catalogado.",
+      "status": "PASS"
+    },
+    {
+      "action": "Taxa, material reservado e quantidade reservada",
+      "id": "EST-12",
+      "observed": "Revalidado: taxa de 10% incidiu em item tributável; PETG · demonstração · disponível: 1000 g habilitou Quantidade reservada (g), preenchida com 100, e o documento salvou com estoque reconciliado.",
+      "status": "PASS"
+    },
+    {
+      "action": "Adicionar pagamento com método, data e amount=0",
+      "id": "EST-13",
+      "observed": "Revalidado: Adicionar pagamento criou Método, Valor e Data; Pix, 0 e 2026-10-29 foram aceitos, com mensagem Valor zero registrado explicitamente e total de pagamentos US$ 0,00.",
+      "status": "PASS"
+    },
+    {
+      "action": "Bloquear pagamento acima do total",
+      "id": "EST-14",
+      "observed": "Revalidado: com total US$ 132,00, valor de pagamento 133 e Salvar, o modal permaneceu aberto e exibiu A soma dos pagamentos não pode exceder o total.; o valor foi então restaurado para 0.",
+      "status": "PASS"
+    },
+    {
+      "action": "Anexar PNG/PDF e salvar anexo",
+      "id": "EST-15",
+      "observed": "Revalidado: PDF temporário permitido entrou como aguardando envio e foi removido antes de salvar; PNG permitido qa-anexo.png entrou como aguardando envio, foi salvo e reapareceu no editor reaberto.",
+      "status": "PASS"
+    },
+    {
+      "action": "Download/remover anexo e cancelar remoção",
+      "id": "EST-16",
+      "observed": "Revalidado: Baixar do PNG gerou /home/ubuntu/Downloads/qa-anexo.png (68 bytes); Remover marcou a exclusão, Cancelar preservou o anexo ao reabrir, e uma segunda remoção seguida de Salvar efetivou a exclusão.",
+      "status": "PASS"
+    },
+    {
+      "action": "Salvar, reabrir e validar persistência",
+      "id": "EST-17",
+      "observed": "Revalidado: após Salvar, a lista mostrou 1 documento, cliente, serviço PDR, emissão 2026-10-28, entrega 2026-11-04 e total US$ 132,00; Editar reabriu com campos, linhas, taxa, material, pagamento zero, nota pública e anexo persistidos.",
+      "status": "PASS"
+    },
+    {
+      "action": "Gerar PDF",
+      "id": "EST-18",
+      "observed": "Revalidado: Baixar PDF exibiu PDF preparado para download. e gerou cliente-de-demonstracao-estimativa-order-782c638f-272f-4b7c-8ba2-3231511df620.pdf em Downloads, com 938348 bytes.",
+      "status": "PASS"
+    },
+    {
+      "action": "Cancelar rascunho sem salvar",
+      "id": "EST-19",
+      "observed": "Não reexecutado como novo rascunho independente nesta rodada. Foi confirmado Cancelar de edição após remoção preparada, que fechou o modal sem persistir a remoção, mas não é evidência suficiente para classificar o cancelamento de um novo rascunho como PASS.",
+      "status": "NOT_RUN"
+    },
+    {
+      "action": "Converter estimativa e abrir invoice sem alterar snapshot de cliente",
+      "id": "EST-20",
+      "observed": "A estimativa salva exibiu Converter em invoice, mas a conversão e a posterior inspeção do snapshot de cliente não foram executadas nesta rodada.",
+      "status": "NOT_RUN"
+    },
+    {
+      "action": "Exercitar aba/lista de Invoices",
+      "id": "INV-01",
+      "observed": "A aba Invoices permaneceu disponível, mas não foi exercitada nesta rodada.",
+      "status": "NOT_RUN"
+    },
+    {
+      "action": "Exercitar abas e filtros de Pedidos",
+      "id": "ORD-01",
+      "observed": "A aba Pedidos permaneceu disponível, mas abas e filtros não foram exercitados nesta rodada.",
+      "status": "NOT_RUN"
+    },
+    {
+      "action": "Recuperação da tela de erro",
+      "id": "EST-21",
+      "observed": "PASS herdado da rodada anterior: Reload Page recuperou a lista de Estimativas mantendo preview=1. Não foi necessário reproduzir o erro no build estático estável.",
+      "status": "PASS"
+    }
+  ],
+  "issues": [],
+  "module": "Documentos — Estimativas / Invoices / Pedidos (preview=1)",
+  "summary": "QA final exclusivamente pela UI do build estático preview=1. Foram resolvidos os casos antes BLOCKED/FAIL de data e cálculo: data modal/textbox funciona e preço positivo atualiza unitPriceCents, subtotal, taxa e total. Fluxos efetivamente observados incluíram cliente→veículo, serviço, linhas personalizadas e catálogo, taxa/material, pagamento zero e bloqueio de excesso, anexos pendentes/cancelados/salvos/baixados/removidos, salvar/reabrir, PDF e cancelamento de alteração de remoção. Não foram observados HMR, 429, recarga, erro de import dinâmico ou desmontagem inesperada durante esta execução. EST-19, EST-20, INV-01 e ORD-01 continuam NOT_RUN por não terem sido efetivamente exercitados antes do encerramento."
+}

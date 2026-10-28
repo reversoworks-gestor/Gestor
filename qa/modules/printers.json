@@ -1,0 +1,79 @@
+{
+  "cases": [
+    {
+      "action": "Abrir Impressoras no preview seguro",
+      "id": "PRN-01",
+      "observed": "PASS herdado da QA anterior; nesta rodada o módulo permaneceu na URL estática https://3001-iozme06mt31jgctzk16mf-ca40f2fc.us5.manus.computer/?preview=1&view=printers, com banner de Demonstração local e 1 impressora sintética.",
+      "status": "PASS"
+    },
+    {
+      "action": "Criar perfil vazio e cancelar",
+      "id": "PRN-02",
+      "observed": "PASS herdado da QA anterior; a validação obrigatória e o cancelamento de perfil vazio não precisaram ser repetidos nesta rodada estável.",
+      "status": "PASS"
+    },
+    {
+      "action": "Validar número negativo",
+      "id": "PRN-03",
+      "observed": "PASS herdado da QA anterior; a rejeição de valor negativo pelo mínimo do campo não precisou ser repetida nesta rodada estável.",
+      "status": "PASS"
+    },
+    {
+      "action": "Criar perfil completo em Em manutenção",
+      "id": "PRN-04",
+      "observed": "Revalidado com perfil descartável completo: nome, modelo, material, três temperaturas, diâmetro, volume, materiais compatíveis e os dois recursos foram preenchidos e salvos; o cartão exibiu todos os valores. A criação anterior em Em manutenção permanece PASS herdado; nesta rodada o status exercitado foi Pausada.",
+      "status": "PASS"
+    },
+    {
+      "action": "Editar perfil e estados operacionais",
+      "id": "PRN-05",
+      "observed": "Revalidado: o perfil QA foi reaberto com todos os valores persistidos, o status foi alterado de Pausada para Pronta, salvo, e o cartão passou a mostrar Pronta.",
+      "status": "PASS"
+    },
+    {
+      "action": "Persistir recursos bico endurecido e secagem",
+      "id": "PRN-06",
+      "observed": "Revalidado: Bico endurecido disponível e Secagem controlada disponível foram marcados no perfil QA; após salvar e reabrir, o cartão e o formulário exibiram ambos como disponíveis/marcados.",
+      "status": "PASS"
+    },
+    {
+      "action": "Abrir manutenção e validar estado vazio",
+      "id": "PRN-07",
+      "observed": "Revalidado após excluir o único registro QA: o modal mostrou Entradas registradas 0, Última concluída Não registrada e Nenhuma manutenção registrada. O valor padrão de data real observado na QA anterior é herdado.",
+      "status": "PASS"
+    },
+    {
+      "action": "Validar manutenção vazia e cancelamento",
+      "id": "PRN-08",
+      "observed": "PASS herdado da QA anterior para validação obrigatória e cancelamento de rascunho. Nesta rodada também foi exercitado cancelamento de exclusão protegida de perfil, que manteve o cartão intacto.",
+      "status": "PASS"
+    },
+    {
+      "action": "Preencher manutenção agendada com data real",
+      "id": "PRN-09",
+      "observed": "Concluído por UI no build estável: Atividade, textbox Data da manutenção=2026-11-15, Situação=Agendada e Notas foram preenchidos; Salvar manutenção exibiu Manutenção registrada., 1 entrada e Agendada: Calibração QA agendada · 15 de nov. de 2026 no cartão.",
+      "status": "PASS"
+    },
+    {
+      "action": "Concluir manutenção, validar última concluída, reabrir, editar e excluir",
+      "id": "PRN-10",
+      "observed": "Concluído por UI: o registro agendado foi reaberto, título/notas editados e situação alterada para Concluída; após salvar, modal e cartão mostraram Última concluída 15 de nov. de 2026. A exclusão exigiu confirmação, foi confirmada e retornou o modal a 0 entradas, Nenhuma manutenção registrada e Última concluída Não registrada.",
+      "status": "PASS"
+    },
+    {
+      "action": "Pesquisa e estado vazio de busca",
+      "id": "PRN-11",
+      "observed": "Concluído por UI: busca por SEM_CORRESPONDENCIA_QA_2026 mostrou 0 impressoras encontradas e Nenhuma impressora corresponde à busca; Limpar busca restaurou a lista com a impressora de demonstração.",
+      "status": "PASS"
+    },
+    {
+      "action": "Excluir o perfil QA criado",
+      "id": "PRN-12",
+      "observed": "Concluído por UI: o perfil QA descartável foi criado, salvo, reaberto e editado; Excluir abriu confirmação com o aviso sobre o histórico. Cancelar preservou o perfil; em seguida Confirmar removeu-o, exibiu Impressora removida. e a lista voltou a 1 impressora de demonstração.",
+      "status": "PASS"
+    }
+  ],
+  "issues": [],
+  "module": "Impressoras e manutenção",
+  "summary": "Revalidação final concluída exclusivamente no preview estático com preview=1&view=printers, sem login, Firebase, API ou produção. Todos os IDs anteriores foram reconciliados como PASS; os PASS não repetidos estão explicitamente marcados como herdados. Os itens antes BLOCKED/NOT_RUN (PRN-09 a PRN-12) foram efetivamente executados por UI e aprovados. Não foram observados defeitos funcionais nem falhas de infraestrutura nesta rodada."
+}

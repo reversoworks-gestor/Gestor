@@ -124,7 +124,14 @@ export type MaintenanceEntry = {
 
 export type OrderLine = {
   id: string;
-  service: "scan" | "cad" | "print" | "post" | "hardware" | "shipping" | "custom";
+  service:
+    | "scan"
+    | "cad"
+    | "print"
+    | "post"
+    | "hardware"
+    | "shipping"
+    | "custom";
   kind?: "item" | "service";
   taxable?: boolean;
   label: string;
@@ -151,6 +158,7 @@ export type CatalogItem = {
   name: string;
   description: string;
   unitPrice: number;
+  currency?: "USD" | "BRL";
   taxable: boolean;
   kind: "item" | "service";
   updatedAt?: string;
@@ -173,7 +181,12 @@ export type Attachment = {
   contentType?: string;
   uploadedAt?: string;
 };
-export type ProductionStage = "planning" | "approval" | "production" | "quality" | "shipping";
+export type ProductionStage =
+  | "planning"
+  | "approval"
+  | "production"
+  | "quality"
+  | "shipping";
 
 export type Order = {
   id: string;
@@ -182,7 +195,16 @@ export type Order = {
   status: "Rascunho" | "Enviado" | "Aprovado" | "Em produção";
   clientId: string;
   clientName: string;
-  clientSnapshot?: Pick<Client, "name" | "firstName" | "lastName" | "email" | "phone" | "company" | "address">;
+  clientSnapshot?: Pick<
+    Client,
+    | "name"
+    | "firstName"
+    | "lastName"
+    | "email"
+    | "phone"
+    | "company"
+    | "address"
+  >;
   title: string;
   dueDate: string;
   startDate: string;

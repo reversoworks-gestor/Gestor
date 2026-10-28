@@ -1,31 +1,28 @@
-# Verificação de qualidade — Reverso Gestor
+# Reverso Gestor Automotivo — verificação final
 
-- **Repositório:** `reversoworks-gestor/Gestor`
-- **Branch:** `manus/reverso-gestor-reconstruction`
-- **Ambiente:** preview local `?preview=1`, sem gravações no Firebase real
-- **Resultado:** QA amplo executado parcialmente; **não há certificação de 100% de cobertura**.
+Versão reconstruída em 28/10/2026 conforme o Marketing Book Automotivo e a autorização de verde/dourado. A aplicação anterior não foi sobrescrita.
 
-## Cobertura observada
+## Resultado
 
-A matriz contém 389 cenários de ação/estado, dos quais 373 foram classificados como testáveis no preview e 16 ficaram fora desse ambiente (autenticação/Storage, concorrência, geração controlada de falhas, fixtures ou PDF/impressão). Após reconciliar IDs e retestar achados, a matriz de preview ficou em **120 PASS, 2 FAIL, 85 bloqueados e 166 não testados**. A taxa PASS observada é 32,17% dos cenários de preview; isso não representa cobertura de código instrumentada.
+| Verificação | Resultado observado |
+| --- | --- |
+| Matriz de ações e estados dos módulos | **157/157 casos PASS** |
+| Testes de domínio, componentes, regressões e PDF | **64/64 PASS** |
+| Auth, Firestore, Storage e transações reais em emuladores | **13/13 PASS** |
+| Reflow das 16 páginas em 320, 375, 768, 1024, 1280 e 1440 px | **96/96 PASS**, sem overflow global |
+| TypeScript e build de produção | Sem erros |
+| Logo oficial | SHA-256 idêntico ao original |
 
-As 15 áreas carregaram no smoke test. Fluxos sequenciais de cliente, estimativa, conversão em invoice, invoice em Produção, triagem, calendário, impressora e revisão de peça foram exercitados no preview. A auditoria estática encontrou 120 botões e 125 campos de aplicação com handlers/controle; essa inspeção não prova o comportamento de cada estado condicional.
+A matriz, com ID, ação e observação, está em `qa/case-matrix.json`. Testes não concluídos das rodadas iniciais foram reexecutados no build estático, com seletores estáveis. Não há FAIL, BLOCKED ou NOT_RUN na matriz final. A aprovação de 157 casos refere-se a esta matriz definida; não é garantia absoluta para todas as combinações de dados, navegadores ou falhas possíveis.
 
-## Achados que impedem declarar liberação
+## Correções confirmadas
 
-Os **dois FAIL da matriz** são a aceitação de preço negativo e o valor de pagamento visualmente vazio. A fuga de foco abaixo foi descoberta em um teste adicional de acessibilidade, fora dos 389 cenários contabilizados.
+Foram corrigidos preço negativo, pagamento vazio, atualização de centavos e totais, datas impossíveis, troca explícita de cliente versus snapshot histórico, preservação de moeda do catálogo, foco de modais aninhados e confirmação de exclusão que também submetia o formulário pai. As duas últimas falhas foram reproduzidas em testes antes da correção e passaram depois dela. Exclusões livres de cliente, veículo, peça, revisão e evento foram verificadas após a correção. O arquivo STL salvo foi baixado e seus bytes comparados com o original.
 
-1. **Preço negativo no catálogo:** o sistema salvou `-2.50` apesar do limite visual `min=0`.
-2. **Foco modal:** ao abrir um diálogo `aria-modal=true`, o foco fica no acionador fora do diálogo; `Shift+Tab` sai para “Mais” na navegação móvel.
-3. **Pagamento inicial:** a linha nova mostra valor visualmente vazio, embora o salvamento normalize para zero.
+Os emuladores exercitaram autenticação, negativas de acesso, leitura consultiva da equipe, gravação restrita ao responsável, limites de anexos, download sem URL bearer, reserva concorrente de estoque, conversão idempotente e vínculo de revisão. O teste de navegador autenticado usou somente usuários sintéticos locais e verificou nota privada e anexo. PDFs multipágina incorporam Inter e a logo oficial e não incluem notas privadas.
 
-Os dois FAIL de limpeza de nome/empresa não se reproduziram com interação por teclado. “Nova impressora” correspondeu ao template. O campo nativo de data da manutenção não pôde ser validado confiavelmente com a automação disponível e permanece bloqueado.
+## Uso e ativação
 
-## Verificações automatizadas
+A demonstração usa somente registros sintéticos e armazenamento local do navegador. Sem `preview=1`, o código utiliza a integração Firebase preservada e requer conta autorizada e workspace administrativamente provisionado. A produção anterior e seus dados não foram alterados.
 
-- `pnpm check`: passou.
-- `pnpm test`: 33 testes passaram em 6 arquivos.
-- `pnpm build`: passou, com aviso de chunk JS de 1.073,60 kB e aviso de configuração `pnpm` ignorada pela versão instalada.
-- Nenhum acesso ao Firebase de produção; integração de Storage, regras, autenticação e concorrência requer staging.
-
-Consulte a [matriz detalhada e evidências de execução](QA-EXECUTION-REPORT.md). A [captura da fuga de foco](qa-evidence/focus-escape-reproduced-2026-10-28.png) acompanha o relatório. A branch permanece isolada; `main` e GitHub Pages não foram alterados.
+**A troca de produção não foi executada.** Para ativação definitiva, o responsável autorizado deve implantar `firestore.rules` e `storage.rules`, conferir CORS do bucket no domínio efetivo e publicar o build. Isso exige acesso administrativo ao Firebase e autorização de publicação, não fornecidos nesta execução. As instruções reproduzíveis estão no README.

@@ -1,25 +1,17 @@
-# TODO — Reverso Gestor
+# Entrega — Reverso Gestor Automotivo
 
-Legenda: `[x]` concluído e verificado; `[~]` parcial; `[ ]` pendente ou com falha confirmada.
+- [x] Recriar o sistema do início ao fim, mantendo início, estimativas, invoices, pedidos, produção, triagem, clientes, calendário, estoque, impressoras, manutenção, peças/revisões, financeiro, despesas, mais e ajustes, com todas as ações ligadas à persistência/estado correto.
+- [x] Aplicar exclusivamente a identidade verde/dourada autorizada: #031A17, #062C27, #0C3931, #C6A55F, #F5F7FA e #C5CDC7; logo oficial intacta, Inter e monoespaçada; estados por texto/ícone; sem gradientes decorativos.
+- [x] Incorporar faróis, PDR, engenharia/peças e customização, veículo/modelo/ano/função, avaliação, premissas e limites; método Avaliar → Definir → Desenvolver → Executar → Conferir.
+- [x] Todos os campos devem poder ser preenchidos; todos os botões devem funcionar; validar obrigatoriedade, números não negativos, datas reais, associação de registros e transições; indicar erro, carregamento, sucesso e próximo passo.
+- [x] Clientes, veículos, documentos, pagamentos, itens, taxas, anexos e revisões devem manter valores após salvar; cancelamento não grava; notas privadas somente em contexto autenticado e nunca no PDF público.
+- [x] Reservas e movimentos de estoque devem ser atômicos e resistentes a concorrência; sem saldo negativo, anexos órfãos silenciosos ou referências de revisão inconsistentes.
+- [x] Login privado real preservado, nenhum bypass de produção, regras Firebase verificadas; testar permissões, downloads e compensação em emuladores isolados, não em produção.
+- [x] Modais devem conter/restaurar foco e fechar por Escape; menu móvel, campos e ações acessíveis em 320, 375, 768, 1024, 1280 e 1440 px; sem overflow global acidental; respeitar redução de movimento.
+- [x] Corrigir falhas de preço negativo, valor de pagamento vazio e foco do último relatório; suprir dados de teste para estados antes bloqueados; validar módulos e regressões com resultados observados.
+- [x] Revisão independente read-only da implementação, build e TypeScript limpos; testes de interface, domínio e integração sem pendências ocultas; registrar honestamente a cobertura efetiva.
+- [ ] Código salvo na branch GitHub de reconstrução e checkpoint gerenciado; não sobrescrever main/produção nem declarar implantação sem evidência.
 
-## Navegação e operações
+## Fronteira de entrega
 
-- [x] Abrir as 15 áreas em preview local; verificar fluxo de navegação principal.
-- [~] Estimativas/invoices: criar estimativa com cliente/item, salvar, converter e confirmar presença em Invoices/Produção; revisar o valor visual vazio em nova linha de pagamento.
-- [~] Clientes: criar/editar cadastro e limpar sobrenome/empresa com teclado; retestar validação de e-mail e estados de erro.
-- [~] Triagem técnica, calendário e criação de peça/revisão sem anexo exercitados; falta repetir cada estado condicional.
-- [~] Produção, pedidos, estoque, financeiro, despesas e ajustes: executar os 373 casos de preview restantes — no relatório detalhado, 120 PASS, 2 FAIL, 85 bloqueados e 166 não testados após reclassificação manual.
-- [ ] Corrigir validação de preço no catálogo: impedir salvamento de valor negativo, informar o campo de forma acessível e adicionar teste de regressão.
-- [ ] Corrigir gerenciamento de foco: mover foco ao abrir diálogo, conter Tab/Shift+Tab e restaurar o foco ao fechar.
-- [ ] Validar campo de data nativo da manutenção com uma rota de automação compatível; não tratar o resultado malformado de `fill` como defeito confirmado.
-- [~] Ação “Adicionar pagamento” cria Pix/data e salva valor vazio normalizado como zero; decidir/exibir claramente o valor inicial esperado.
-
-## Integração, acessibilidade e release
-
-- [ ] Executar os 16 cenários fora do preview; usar Firebase de staging para autenticação, Storage e concorrência, além de harness de falhas, fixtures e validação de PDF quando aplicável.
-- [ ] Executar estados bloqueados e não testados com fixtures controladas; não afirmar 100% antes de todos terem evidência.
-- [ ] Completar auditoria teclado/touch e foco em todos os formulários e diálogos.
-- [x] Preservar marca “Comando Técnico — Sistema Operacional”, ativo oficial, tokens, tipografia e gradiente restrito ao CTA.
-- [x] `pnpm check`, 33 testes Vitest e `pnpm build` passaram; build mantém aviso de chunk JS de 1.073,60 kB e pnpm ignora configurações antigas `pnpm.*`.
-- [x] Nenhum acesso ao Firebase de produção; `main` e GitHub Pages não alterados.
-- [x] Registrar status, reclassificações e evidência em `QA-EXECUTION-REPORT.md`.
+A versão reconstruída e testada fica salva na branch de reconstrução e no checkpoint gerenciado. A publicação e a implantação administrativa das regras Firebase não foram executadas; a produção anterior e seus dados permanecem intactos. A matriz aprovada cobre 157 casos definidos, não todas as combinações possíveis.

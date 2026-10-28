@@ -1,0 +1,97 @@
+{
+  "cases": [
+    {
+      "action": "Validar Nome do estúdio obrigatório",
+      "id": "SET-01",
+      "observed": "PASS herdado da QA anterior: ao limpar Nome do estúdio e salvar, a UI exibiu ‘Informe o nome do estúdio.’ e não persistiu.",
+      "status": "PASS"
+    },
+    {
+      "action": "Validar formato de E-mail público",
+      "id": "SET-02",
+      "observed": "PASS herdado da QA anterior: com ‘email-invalido’, o submit foi bloqueado pela validação nativa, sem sucesso ou persistência.",
+      "status": "PASS"
+    },
+    {
+      "action": "Salvar e reabrir dados comerciais válidos",
+      "id": "SET-03",
+      "observed": "PASS herdado da QA anterior: dados comerciais completos foram salvos, o toast de sucesso foi observado e os valores persistiram ao reabrir preview=1.",
+      "status": "PASS"
+    },
+    {
+      "action": "Selecionar moeda BRL",
+      "id": "SET-04",
+      "observed": "Executado nesta rodada: selecionei BRL e a UI passou a identificar a configuração como BRL; a tabela formatou os valores com R$. A alteração foi salva com o toast ‘Configurações do estúdio salvas.’.",
+      "status": "PASS"
+    },
+    {
+      "action": "Confirmar não conversão de histórico de valor não-zero ao trocar moeda",
+      "id": "SET-05",
+      "observed": "Executado nesta rodada: criei ‘QA Moeda Não Conversão’ por 12.5, que a tabela mostrou como US$ 12,50; após selecionar e salvar BRL, o mesmo registro apareceu como R$ 12,50. Os algarismos do valor não foram convertidos.",
+      "status": "PASS"
+    },
+    {
+      "action": "Testar cancelamento do formulário de item",
+      "id": "SET-06",
+      "observed": "PASS herdado da QA anterior: no modal Novo item, preencher item e preço negativo e acionar Cancelar fechou o modal sem inserir o registro.",
+      "status": "PASS"
+    },
+    {
+      "action": "Validar nome obrigatório de novo item",
+      "id": "CAT-01",
+      "observed": "PASS herdado da QA anterior: Salvar item vazio manteve o modal aberto e não adicionou item à tabela.",
+      "status": "PASS"
+    },
+    {
+      "action": "Bloquear preço unitário negativo",
+      "id": "CAT-02",
+      "observed": "PASS herdado da QA anterior: o preço -12.5 foi bloqueado no submit nativo; nenhum registro negativo foi criado.",
+      "status": "PASS"
+    },
+    {
+      "action": "Criar item com todos os campos",
+      "id": "CAT-03",
+      "observed": "PASS herdado da QA anterior: foi criado item com nome, descrição, tipo, preço e tributação, exibido na tabela com toast de sucesso. Nesta rodada, a criação de item não-zero confirmou também a gravação e a formatação monetária.",
+      "status": "PASS"
+    },
+    {
+      "action": "Editar item customizado",
+      "id": "CAT-04",
+      "observed": "Executado nesta rodada: abri o item customizado, alterei nome para ‘QA Moeda Editado’, descrição, Tipo para Item, preço para 18.75 e tributação; ao salvar, a tabela exibiu Item, R$ 18,75 e Tributável, com toast de sucesso.",
+      "status": "PASS"
+    },
+    {
+      "action": "Remover item customizado e reabrir",
+      "id": "CAT-05",
+      "observed": "Executado nesta rodada: Remover abriu confirmação específica para ‘QA Moeda Editado’; após Confirmar, houve toast ‘Item removido do catálogo.’. Ao reabrir a mesma URL com preview=1, o item não reapareceu.",
+      "status": "PASS"
+    },
+    {
+      "action": "Editar/remover item padrão e confirmar que não reaparece",
+      "id": "CAT-06",
+      "observed": "Executado nesta rodada: ‘Customização técnica’ foi editado para ‘Customização técnica QA’ com descrição e preço R$ 1,25, salvo, removido mediante confirmação e não apareceu ao reabrir a mesma rota preview=1.",
+      "status": "PASS"
+    },
+    {
+      "action": "Verificar autorização de equipe em modo Demo",
+      "id": "TEAM-01",
+      "observed": "Executado nesta rodada: a UI do preview mostra ‘O modo de demonstração não simula autorização de acesso. Para autorizar uma conta, use um workspace Firebase ou o emulador autenticado.’; não houve tentativa de API/Firebase.",
+      "status": "PASS"
+    },
+    {
+      "action": "Observar estados pending/error/success dos botões de Ajustes",
+      "id": "STATE-01",
+      "observed": "PASS herdado da QA anterior: foram observados erros de validação e toasts de sucesso para configurações e catálogo; operações no preview foram síncronas, sem estado pending visual perceptível.",
+      "status": "PASS"
+    },
+    {
+      "action": "Validar transição e persistência do estado vazio do Catálogo",
+      "id": "CAT-07",
+      "observed": "Executado nesta rodada: removi os três itens restantes, cada qual com confirmação, e a UI exibiu ‘Nenhum item no catálogo’, a explicação de cadastro e o botão ‘Cadastrar item’. Após reabrir a mesma URL com preview=1, o estado vazio permaneceu.",
+      "status": "PASS"
+    }
+  ],
+  "issues": [],
+  "module": "Ajustes — Reverso Gestor (preview=1)",
+  "summary": "Revalidação final concluída exclusivamente na UI do build estável em preview=1; não houve login, Firebase, API ou produção. Todos os IDs anteriores foram reconciliados como PASS, incluindo os quatro antes pendentes (SET-05 e CAT-04 a CAT-06). A rodada também exercitou o estado vazio persistente do catálogo (CAT-07). Nenhum defeito real foi observado no módulo Ajustes."
+}

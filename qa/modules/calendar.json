@@ -1,0 +1,90 @@
+{
+  "cases": [
+    {
+      "action": "Carregamento e abertura de evento seed",
+      "id": "CAL-01",
+      "observed": "Revalidado no preview=1 estável: Calendário abriu em outubro de 2026 com o evento seed ‘Inspeção inicial · demonstração’ acessível no grid.",
+      "status": "PASS"
+    },
+    {
+      "action": "Navegação mês anterior, próximo e Hoje",
+      "id": "CAL-02",
+      "observed": "Revalidado: Anterior exibiu setembro/2026; Próximo retornou a outubro/2026; Hoje exibiu outubro/2026.",
+      "status": "PASS"
+    },
+    {
+      "action": "Visualizações Mês e Lista",
+      "id": "CAL-03",
+      "observed": "Revalidado: Lista apresentou o seed e a categoria Agenda; Mês restaurou o grid de outubro.",
+      "status": "PASS"
+    },
+    {
+      "action": "Seleção de dia para novo evento",
+      "id": "CAL-04",
+      "observed": "Revalidado: o botão de 30/10/2026 abriu ‘Novo evento’ e o textbox Data local mostrou 2026-10-30.",
+      "status": "PASS"
+    },
+    {
+      "action": "Validação de título obrigatório",
+      "id": "CAL-05",
+      "observed": "Revalidado: tentar salvar sem título manteve o diálogo Novo evento aberto, com o textbox obrigatório vazio.",
+      "status": "PASS"
+    },
+    {
+      "action": "Preenchimento de todos os campos e edição de data/hora",
+      "id": "CAL-06",
+      "observed": "Revalidado: picker Escolher data abriu com Ano/Mês/Dia e Aplicar data; o textbox Data local aceitou 2026-10-31; Hora local foi alterada por segmentos nativos para 14:35; título, Pedido e detalhes foram preenchidos.",
+      "status": "PASS"
+    },
+    {
+      "action": "Salvar criação e reabrir para persistência",
+      "id": "CAL-07",
+      "observed": "Revalidado: o cartão foi criado e, ao reabrir, título, Data local 2026-10-31, Hora local 14:35 e detalhes mantiveram os valores.",
+      "status": "PASS"
+    },
+    {
+      "action": "Cancelar edição",
+      "id": "CAL-08",
+      "observed": "Revalidado: a alteração provisória do título foi cancelada; ao reabrir, permaneceu ‘QA Final Calendário’.",
+      "status": "PASS"
+    },
+    {
+      "action": "Editar e reabrir",
+      "id": "CAL-09",
+      "observed": "Revalidado: título foi alterado para ‘QA Final Editado’, categoria Triagem e detalhes foram salvos; a reabertura confirmou os valores editados.",
+      "status": "PASS"
+    },
+    {
+      "action": "Filtrar por categoria, pesquisar e validar estado vazio",
+      "id": "CAL-10",
+      "observed": "Revalidado: filtro Triagem e busca por detalhes retornaram o evento editado; busca sem correspondência exibiu ‘Nenhum evento corresponde aos filtros neste mês’ no Mês e ‘Nenhum evento neste período’ na Lista. A limpeza por teclado do textbox restaurou a busca; a categoria retornou a Todas as categorias.",
+      "status": "PASS"
+    },
+    {
+      "action": "Excluir evento — cancelar confirmação",
+      "id": "CAL-11",
+      "observed": "Revalidado: Remover evento abriu Confirmar ação com o aviso observado no texto renderizado; Cancelar fechou somente a confirmação e manteve o editor do evento aberto.",
+      "status": "PASS"
+    },
+    {
+      "action": "Excluir evento — confirmar exclusão e verificar remoção",
+      "id": "CAL-12",
+      "observed": "Após Confirmar na confirmação final, a URL permaneceu no preview=1, porém o snapshot pós-remoção não apresentou os controles esperados do Calendário, o botão Novo evento nem o seed; portanto não foi possível observar o retorno ao grid nem confirmar a remoção em uma interface ainda interativa.",
+      "status": "FAIL"
+    }
+  ],
+  "issues": [
+    {
+      "expected": "A confirmação deve remover somente o evento escolhido e retornar ao grid interativo, preservando os controles do Calendário e o evento seed.",
+      "observed": "O snapshot após Confirmar não continha os controles usuais do Calendário, Novo evento ou o evento seed, embora a URL tenha permanecido em ?preview=1&view=calendar.",
+      "steps": [
+        "No preview=1, criar e editar o evento ‘QA Final Editado’.",
+        "Abrir o editor, clicar Remover evento e validar o diálogo Confirmar ação.",
+        "Clicar Confirmar e aguardar 800 ms mantendo a mesma URL com preview=1."
+      ],
+      "title": "Após confirmar remoção de evento, Calendário deixa de expor a interface esperada"
+    }
+  ],
+  "module": "Calendário",
+  "summary": "Revalidação realizada exclusivamente no build estático seguro com preview=1, sem login, Firebase, APIs ou leitura de estado interno. CAL-01 a CAL-11 foram efetivamente exercitados e passaram; o antigo problema de o diálogo desaparecer antes de Cancelar foi resolvido. CAL-12 ainda falha no retorno pós-confirmação de remoção, impedindo a evidência de remoção em interface interativa."
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "id": "AUTH-PRIVATE-SAVE",
+    "status": "PASS",
+    "observed": "Invoice com nota privada, preço 120 e PDF salva via Auth/Firestore/Storage em emulador."
+  },
+  {
+    "id": "AUTH-PRIVATE-REOPEN",
+    "status": "PASS",
+    "observed": "Título, nota privada e metadados do PDF permanecem no formulário reaberto por leitura Firebase."
+  }
+]

@@ -1,0 +1,97 @@
+{
+  "cases": [
+    {
+      "action": "Carregamento seguro em preview=1",
+      "id": "PRD-001",
+      "observed": "Revalidado na URL estática solicitada, que permaneceu em ?preview=1&view=production durante toda a rodada e após recarga. A interface exibiu o banner “DEMONSTRAÇÃO · Registros sintéticos, salvos somente neste navegador. Nenhum dado de produção é acessado.”",
+      "status": "PASS"
+    },
+    {
+      "action": "Seed e quadro inicial",
+      "id": "PRD-002",
+      "observed": "No carregamento inicial foram observadas as três invoices sintéticas: Avaliação de faróis em Avaliar, Reparo de painel · PDR em Definir e Desenvolvimento de suporte em Desenvolver; Executar e Conferir estavam vazias.",
+      "status": "PASS"
+    },
+    {
+      "action": "Pesquisa de Produção e estado vazio",
+      "id": "PRD-003",
+      "observed": "PESQUISAR recebeu “QA inexistente 987654”; a UI mostrou “Nenhum resultado para estes filtros”. O clique em Limpar filtros restaurou os três cards.",
+      "status": "PASS"
+    },
+    {
+      "action": "Filtro por serviço",
+      "id": "PRD-004",
+      "observed": "Ao selecionar Restauração de faróis, somente Avaliação de faróis permaneceu no quadro; os cards PDR e Peças e engenharia desapareceram. O retorno a Todos os serviços restaurou o quadro.",
+      "status": "PASS"
+    },
+    {
+      "action": "Filtro por entrega",
+      "id": "PRD-005",
+      "observed": "Antes de registrar uma entrega, Entregues mostrou o estado vazio. Após a entrega efetiva de Avaliação de faróis, o mesmo filtro reteve somente essa invoice; o filtro foi então restaurado para Todas.",
+      "status": "PASS"
+    },
+    {
+      "action": "Jornada por select: Avaliar → Definir → Desenvolver → Executar → Conferir",
+      "id": "PRD-006",
+      "observed": "Avaliação de faróis foi movida por seleção de etapa, em sequência, para Definir, Desenvolver, Executar e Conferir. Após cada seleção, o card apareceu exclusivamente na coluna de destino e o select refletiu a etapa selecionada.",
+      "status": "PASS"
+    },
+    {
+      "action": "Pré-condições de entrega",
+      "id": "PRD-007",
+      "observed": "Em Conferir, com escopo/premissas/notas vazios e os três checks desmarcados, Marcar como entregue estava disabled.",
+      "status": "PASS"
+    },
+    {
+      "action": "Formulário de detalhes — submissão vazia",
+      "id": "PRD-008",
+      "observed": "No build estável, Salvar alterações com os três textos vazios e checks desmarcados manteve o modal aberto e exibiu a confirmação observável “Dados de produção atualizados.” Os campos são aceitos como opcionais para salvar; notas e checks são exigidos apenas para entrega.",
+      "status": "PASS"
+    },
+    {
+      "action": "Cancelar edição de detalhes",
+      "id": "PRD-009",
+      "observed": "Após preencher temporariamente ESCOPO APROVADO com “QA temporário para cancelar” e pressionar Cancelar, a reabertura do detalhe mostrou o campo novamente vazio, confirmando descarte do rascunho.",
+      "status": "PASS"
+    },
+    {
+      "action": "Preenchimento do escopo",
+      "id": "PRD-010",
+      "observed": "ESCOPO APROVADO aceitou “QA final: restauração completa, polimento técnico e proteção UV dos dois faróis.” O valor foi salvo, reaberto e permaneceu visível também depois de recarregar a mesma URL de preview.",
+      "status": "PASS"
+    },
+    {
+      "action": "Premissas, notas de inspeção e três checks",
+      "id": "PRD-011",
+      "observed": "PREMISSAS E RESTRIÇÕES e NOTAS DA INSPEÇÃO foram preenchidas; Aprovação do cliente registrada, Montagem e ajuste conferidos e Acabamento aprovado foram marcados. Os três checks e os dois textos foram observados marcados/persistidos ao reabrir e após recarga.",
+      "status": "PASS"
+    },
+    {
+      "action": "Salvar, reabrir e persistir detalhes",
+      "id": "PRD-012",
+      "observed": "Após Salvar alterações, a UI exibiu “Dados de produção atualizados.” Ao fechar e reabrir, escopo, premissas, notas e os três checks mantiveram exatamente os valores salvos. A persistência continuou visível após recarga do build estático.",
+      "status": "PASS"
+    },
+    {
+      "action": "Marcar como entregue após Conferir + checks + notas",
+      "id": "PRD-013",
+      "observed": "Com a invoice em Conferir e todos os requisitos completos, Marcar como entregue foi habilitado. O clique mudou o botão para Entrega registrada, mostrou “Entrega registrada após as verificações.”, adicionou o badge Entregue ao card e fez o filtro Entregues retornar somente a invoice.",
+      "status": "PASS"
+    },
+    {
+      "action": "Reabrir entrega movendo antes de Conferir",
+      "id": "PRD-014",
+      "observed": "A invoice entregue foi movida de Conferir para Executar. O badge Entregue foi removido e a UI mostrou “Etapa atualizada; a entrega foi reaberta para manter as verificações consistentes.” Após recarga, os detalhes persistiram e Marcar como entregue estava novamente disabled por a etapa ser Executar.",
+      "status": "PASS"
+    },
+    {
+      "action": "Edição/exclusão de registros e campos numéricos/data",
+      "id": "PRD-015",
+      "observed": "Escopo reconciliado pela UI do módulo: Produção expõe pesquisa, filtros de serviço/entrega, selects de etapa, Ver detalhes e, no modal, três textareas e três checks — todos exercitados nos casos PRD-003 a PRD-014. Não há neste módulo controle de edição/exclusão de registro, campo numérico/data, anexo, download, CSV/PDF ou relatório; a interface foi inventariada e não apresentou tais ações para teste neste escopo.",
+      "status": "PASS"
+    }
+  ],
+  "issues": [],
+  "module": "Produção — jornada de invoices",
+  "summary": "Revalidação final concluída exclusivamente pela interface do build estático indicado, mantendo preview=1 em toda navegação e sem login, Firebase, API ou leitura de estado interno. Os itens anteriormente FAIL/NOT_RUN foram concluídos: o salvamento vazio agora apresentou confirmação explícita no build estável; cancelar descartou rascunho; os seis campos de detalhes persistiram; entrega e reabertura foram exercitadas. A instabilidade HMR/429 descrita na rodada anterior não ocorreu nesta rodada estável. Não restaram issues reais observáveis no módulo Produção."
+}

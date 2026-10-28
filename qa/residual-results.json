@@ -1,0 +1,114 @@
+[
+  {
+    "files": [],
+    "ok": true,
+    "value": {
+      "cases": [
+        {
+          "id": "CLI-006",
+          "observed": "Criei Ana Maria da Silva com empresa, e-mail, telefone, endereço e notas; após salvar e reabrir, os dados persistiram. Limpei sobrenome, empresa, e-mail, telefone, endereço e notas individualmente, confirmei os seis valores vazios no DOM visível, salvei e reabri; Ana Maria permaneceu e todos os opcionais permaneceram vazios.",
+          "status": "PASS"
+        },
+        {
+          "id": "CLI-008",
+          "observed": "Editei o primeiro nome do seed Cliente de demonstração para Cliente QA Cancelado e usei Cancelar. Ao reabrir, o formulário exibiu novamente Cliente e de demonstração, comprovando descarte sem salvamento.",
+          "status": "PASS"
+        },
+        {
+          "id": "VEH-003",
+          "observed": "No módulo Veículos, o filtro pelo cliente Ana Maria exibiu nenhum veículo e o filtro Cliente de demonstração exibiu o único seed Veículo de demonstração, placa DEMO-001. A busca local DEMO-001 e a busca global DEMO-001 mantiveram o registro visível.",
+          "status": "PASS"
+        },
+        {
+          "id": "DEL-001",
+          "observed": "A tentativa confirmada de remover Cliente de demonstração foi bloqueada pela mensagem visível: Não é possível remover este cliente enquanto houver 1 veículo(s), 3 pedido(s) vinculado(s).",
+          "status": "PASS"
+        },
+        {
+          "id": "DEL-002",
+          "observed": "Não executado antes do encerramento da sessão de QA.",
+          "status": "NOT_RUN"
+        }
+      ],
+      "issues": [
+        "DEL-002 não foi executado."
+      ],
+      "module": "customers"
+    }
+  },
+  {
+    "files": [],
+    "ok": true,
+    "value": {
+      "cases": [
+        {
+          "id": "EST-19",
+          "observed": "No preview, preenchi um novo rascunho com cliente e veículo de demonstração, título, escopo e linha de serviço precificada em US$ 19,99. Após Cancelar, o modal fechou e a lista voltou a exibir 0 documentos; o título do rascunho não apareceu.",
+          "status": "PASS"
+        },
+        {
+          "id": "EST-20",
+          "observed": "Criei e salvei a estimativa QA EST-20 Conversão Invoice com cliente/veículo seed, serviço Restauração de faróis e total visível de US$ 123,45. Converter em invoice abriu Invoices, onde a invoice exibiu Cliente de demonstração, serviço, valor US$ 123,45 e status Aprovado. Ao retornar a Estimativas, o botão Converter em invoice não era mais exibido para o documento; Invoices permaneceu com 4 documentos, sem duplicação.",
+          "status": "PASS"
+        },
+        {
+          "id": "INV-01",
+          "observed": "Na invoice convertida, abri Editar invoice emitida, alterei a nota pública para “QA INV-01 edição persistida.” e salvei. Ao reabrir, a nota permaneceu preenchida; também permaneceram tipo Invoice, cliente de demonstração, título, linha a US$ 123,45 e total de US$ 123,45.",
+          "status": "PASS"
+        },
+        {
+          "id": "ORD-01",
+          "observed": "Naveguei pelas abas visíveis Estimativas, Invoices e Pedidos. Em Pedidos, os 3 documentos visíveis incluíram os seeds aprovados e a invoice convertida. A busca QA-ORD-01-SEM-RESULTADO-9F3A mostrou 0 documentos e o estado vazio; ao limpar somente esse campo, o valor DOM ficou vazio e os 3 pedidos voltaram a aparecer.",
+          "status": "PASS"
+        }
+      ],
+      "issues": [],
+      "module": "commercial"
+    }
+  },
+  {
+    "files": [],
+    "ok": true,
+    "value": {
+      "cases": [
+        {
+          "id": "MAT-SAVE-01",
+          "observed": "Em preview=1, foi selecionado o veículo seed Veículo de demonstração · 2020 · DEMO-001 e o projeto QA persistência; o modal confirmou e salvou como documento técnico (toast: Documento técnico salvo no workspace do Gestor). A mesma URL exata foi reaberta na mesma sessão, sem fechar o navegador: o histórico manteve 1 registro Triagem de material · QA persistência, associado ao Cliente de demonstração/DEMO-001. Editar reabriu dados persistidos: título, serviço Peças e engenharia, cliente, veículo, condição e objetivo com QA persistência/PETG. No modal Adicionar a estimativa ou invoice, a invoice seed Invoice · Desenvolvimento de suporte · Cliente de demonstração foi selecionável e habilitou Adicionar ao documento; o modal foi cancelado antes da confirmação para não criar um segundo registro de análise.",
+          "status": "PASS"
+        }
+      ],
+      "issues": [],
+      "module": "triage"
+    }
+  },
+  {
+    "files": [],
+    "ok": true,
+    "value": {
+      "cases": [
+        {
+          "id": "FIN-06",
+          "observed": "UI em preview=1: a lista de Invoices exibiu 3 documentos, todos com Emissão: 2026-10-28; em Financeiro, o filtro ‘A partir de 2026-10-28’ manteve os 3 documentos/US$ 450,00 e ‘Até 2026-10-27’ retornou 0 documentos/US$ 0,00. Estado restaurado (campos de data vazios) e USD novamente exibiu 3 invoices/US$ 450,00; BRL mostrou 0 documentos/R$ 0,00, sem conversão ou mistura. Inspeção de Finance.tsx: invoiceDate (linhas 93–99) aplica dayValue(startDate) || dayValue(createdAt) || dayValue(dueDate), portanto startDate (emissão) tem prioridade sobre createdAt e dueDate. invoiceFinancials atribui date: invoiceDate(order) (123–125); filteredInvoices filtra dateIsInRange(invoice.date, ...) (216–232); exportCsv usa filteredInvoices e grava invoice.date (364–377).",
+          "status": "PASS"
+        }
+      ],
+      "issues": [],
+      "module": "finance"
+    }
+  },
+  {
+    "files": [],
+    "ok": true,
+    "value": {
+      "cases": [
+        {
+          "id": "SET-05",
+          "observed": "No preview=1, iniciou em USD; criei ‘QA SET-05 USD 12.50’ e a tabela exibiu US$12,50. Após selecionar BRL e salvar as configurações, a linha antiga continuou US$12,50. Ao reabrir o item, a ajuda visível disse: ‘Moeda deste item: USD. A troca da moeda do estúdio não converte o valor deste item.’ O novo ‘QA SET-05 BRL 18.75’ foi salvo e exibido como R$18,75. Ambos os itens QA foram removidos; a verificação final do DOM visível retornou 0 ocorrências de ‘QA SET-05’. A moeda do estúdio permanece BRL, conforme ação requerida.",
+          "status": "PASS"
+        }
+      ],
+      "issues": [],
+      "module": "settings"
+    }
+  }
+]
