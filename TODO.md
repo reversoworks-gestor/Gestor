@@ -14,4 +14,4 @@
 
 ## Fronteira de entrega
 
-A versão reconstruída e testada fica salva na branch de reconstrução e no checkpoint gerenciado. A publicação e a implantação administrativa das regras Firebase não foram executadas; a produção anterior e seus dados permanecem intactos. A matriz aprovada cobre 157 casos definidos, não todas as combinações possíveis.
+A versão reconstruída e testada fica salva na branch de reconstrução e no checkpoint gerenciado. A implantação administrativa das regras Firebase não foi executada; a publicação gerenciada segue a preferência ativa do Dashboard; a produção anterior e seus dados permanecem intactos. A matriz aprovada cobre 157 casos definidos, não todas as combinações possíveis.
