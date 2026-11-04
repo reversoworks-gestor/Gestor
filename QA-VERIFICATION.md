@@ -59,3 +59,7 @@ Nenhum dado real foi excluído, migrado ou preenchido automaticamente no Firebas
 Retomada de 04/11/2026: os dois documentos reenviados são idênticos aos implementados. A revisão independente não identificou impedimento confirmado no registro de recebimentos; a regressão de interface confirmou parcela manual e preservação do ledger. **18/18 testes de emuladores** aprovados, incluindo conflitos de revisão, mapas de workflow substituídos integralmente, histórico CAD preservado e conversão de estimativa oficial aprovada. **24/24 combinações de páginas atualizadas e viewport** aprovadas. Um job FAR sintético foi persistido em Pós-venda com pagamento quitado, sem alertas e sem overflow em 440 px. Não houve teste físico no iPhone nem gravação no Firebase real.
 
 O roteiro reproduzível `qa/check_service_flows.py` concluiu as nove etapas, validou bloqueio de salto, upload de fotos, custo de material explícito, parcela recebida única, saldo quitado e estado persistido de Pós-venda. A revalidação usou somente demonstração local em viewport móvel.
+
+## Implantação dos serviços e pipelines — confirmada
+
+A atualização foi publicada em https://reversoworks-gestor.github.io/Gestor/. O build GitHub Pages `540832d` concluiu com status `built`; o marcador público confirma 21 itens e nove etapas, com sourceCommit `363d123`. A implantação alterou frontend/código, não dados nem regras do Firebase.

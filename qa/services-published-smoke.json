@@ -1,0 +1,24 @@
+[
+  {
+    "view": "settings",
+    "mode": "demo",
+    "viewport": [
+      440,
+      956
+    ],
+    "catalogCount": 21,
+    "pipelineCount": null,
+    "pass": true
+  },
+  {
+    "view": "production",
+    "mode": "demo",
+    "viewport": [
+      440,
+      956
+    ],
+    "catalogCount": null,
+    "pipelineCount": 9,
+    "pass": true
+  }
+]

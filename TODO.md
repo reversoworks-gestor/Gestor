@@ -49,4 +49,4 @@ A versão reconstruída e testada fica salva na branch de reconstrução e no ch
 ## Retomada e implantação desta atualização
 
 - [x] Conferir os arquivos reenviados de serviços e pipelines sem criar itens ou preços adicionais, preservar os dados Firebase e retomar o trabalho interrompido.
-- [ ] Salvar a versão atualizada e confirmar a implantação no endereço GitHub Pages existente após a validação final.
+- [x] Salvar a versão atualizada e confirmar a implantação no endereço GitHub Pages existente após a validação final.
