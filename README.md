@@ -56,3 +56,9 @@ Moeda é fixada em documentos, despesas e itens do catálogo. Trocar a moeda do 
 ## Publicação em GitHub Pages
 
 Endereço solicitado: https://reversoworks-gestor.github.io/Gestor/. O build de produção usa `VITE_GITHUB_PAGES=true`, base `/Gestor/`, e está servido pela branch `main:/`, com `.nojekyll`. O código-fonte e o histórico foram preservados. Implantar o frontend não altera as regras ou os dados do Firebase; as novas regras dependem de acesso administrativo.
+
+## Catálogo e processos — 04/11/2026
+
+O catálogo oficial é versionado em `gestor/serviceCatalog.ts`: 4 categorias e 21 itens ativos com preço nulo. Ajustes apresenta serviços, dependências e pacotes; o formulário comercial expande pacotes e exige valores manuais. O fluxo operacional em Produção usa os nove status do Documento 2, ficha financeira, imagens antes/depois e tarefas automáticas por categoria. Os portões são validados no núcleo de domínio antes da persistência. A regra do fit test impede impressão final sem encaixe aprovado, data, responsável e versão CAD; rejeição exige nova revisão sem apagar o histórico. Os documentos fornecidos estão em docs/SERVICOS-OFICIAIS-2026-11-04.md e docs/PROCESSOS-OFICIAIS-2026-11-04.md.
+
+Nenhuma limpeza ou migração remota é realizada por esta versão: os registros antigos continuam históricos; mudanças de código não apagam clientes, carros, máquinas, documentos ou arquivos no Firebase. A exclusão autorizada em tarefa anterior continua separada e requer acesso administrativo confirmado.

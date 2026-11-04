@@ -6,6 +6,8 @@ import {
 } from "../lib/finance";
 import type { Material, PartRevision } from "../lib/models";
 import { timestampIso } from "./recordDates";
+import { transitionIssues, validateWorkflowSave } from "./jobWorkflow";
+import { findService } from "./serviceCatalog";
 import {
   type Assessment,
   type CollectionKey,
@@ -258,6 +260,34 @@ export function normalizeStudioOrder(
 ): StudioOrder {
   requireText(source.id, "ID");
   requireText(source.title, "Título");
+  if (source.workflow) {
+    validateWorkflowSave(source, data);
+    const previous = data?.orders.find(
+      order =>
+        order.id === source.id ||
+        (source.documentType === "Invoice" &&
+          Boolean(source.sourceEstimateId) &&
+          order.id === source.sourceEstimateId)
+    );
+    const previousStage = previous?.workflow?.stage ?? "lead";
+    if (source.workflow.stage !== previousStage) {
+      const issues = transitionIssues(
+        { ...source, workflow: { ...source.workflow, stage: previousStage } },
+        source.workflow.stage,
+        data
+      );
+      if (issues.length) throw new Error(issues.join(" "));
+    }
+    for (const line of source.lines) {
+      const official = findService(line.serviceCode ?? "");
+      if (!official || official.type === "Pacote")
+        throw new Error(
+          "Use serviços individuais do catálogo oficial nas linhas do job."
+        );
+      if (line.label !== official.name)
+        throw new Error("O nome do serviço oficial deve ser preservado.");
+    }
+  }
   requireText(source.clientId, "Cliente");
   if (!["Estimativa", "Orçamento", "Invoice"].includes(source.documentType))
     throw new Error("Tipo de documento inválido.");
@@ -271,7 +301,13 @@ export function normalizeStudioOrder(
     );
   if (!source.lines?.length)
     throw new Error("Adicione ao menos um item ou serviço.");
-  requireDate(source.startDate, "Emissão");
+  requireDate(
+    source.startDate,
+    "Emissão",
+    Boolean(
+      source.workflow && ["lead", "evaluation"].includes(source.workflow.stage)
+    )
+  );
   requireDate(source.dueDate, "Entrega", true);
   if (source.dueDate && source.dueDate < source.startDate)
     throw new Error("A entrega não pode anteceder a emissão.");
@@ -280,6 +316,7 @@ export function normalizeStudioOrder(
   if (source.journeyStage && !journey.some(s => s.id === source.journeyStage))
     throw new Error("Etapa inválida.");
   if (
+    !source.workflow &&
     source.completed &&
     (!(source.finishApproved && source.fitApproved && source.clientApproved) ||
       source.journeyStage !== "check")
@@ -287,7 +324,7 @@ export function normalizeStudioOrder(
     throw new Error(
       "A entrega exige etapa Conferir, acabamento, montagem e aprovação do cliente registrados."
     );
-  if (source.completed)
+  if (source.completed && !source.workflow)
     requireText(source.inspectionNotes, "Notas de conferência para entrega");
   if (source.currency && !["USD", "BRL"].includes(source.currency))
     throw new Error("Moeda inválida.");
@@ -325,6 +362,21 @@ export function normalizeStudioOrder(
     return { ...p, amountCents: toCents(p.amount) };
   });
   const totals = calculateOrderTotals(lines, source.taxRate ?? 0);
+  if (source.workflow) {
+    const quoted = lines.some(line => line.pricePending)
+      ? null
+      : centsToAmount(totals.totalCents);
+    if (
+      quoted === null
+        ? source.workflow.quotedAmount !== null
+        : source.workflow.quotedAmount === null ||
+          toCents(source.workflow.quotedAmount) !== toCents(quoted)
+    )
+      throw new Error(
+        "O valor orçado deve corresponder aos preços manuais das linhas. Edite os valores em Estimativas / Invoices; preço pendente mantém cotação nula."
+      );
+  }
+
   if (
     !Number.isSafeInteger(totals.totalCents) ||
     lines.some(line => !Number.isSafeInteger(line.unitPriceCents))
@@ -332,10 +384,29 @@ export function normalizeStudioOrder(
     throw new Error(
       "Valor monetário excede a precisão segura. Divida o documento em valores menores."
     );
-  const error = validatePayments(totals.totalCents, payments);
+  const error = validatePayments(
+    source.workflow?.finalAmount != null
+      ? toCents(source.workflow.finalAmount)
+      : totals.totalCents,
+    payments
+  );
   if (error) throw new Error(error);
   return safeRecord({
     ...source,
+    status: source.workflow
+      ? source.workflow.stage === "production" ||
+        source.workflow.stage === "quality"
+        ? "Em produção"
+        : ["approved", "scheduled", "delivered", "aftercare"].includes(
+              source.workflow.stage
+            )
+          ? "Aprovado"
+          : source.workflow.stage === "quote"
+            ? "Enviado"
+            : "Rascunho"
+      : source.status,
+    // Workflow stage owns delivery; legacy completed flag keeps its original independent gates.
+    completed: source.workflow ? false : source.completed,
     currency: source.currency ?? "USD",
     lines,
     payments,
@@ -554,14 +625,7 @@ export function demoData(): StudioData {
       printNotes: "Propriedades devem ser conferidas no datasheet da marca.",
     },
   ];
-  data.catalogItems = Object.entries(services).map(([key, service]) => ({
-    id: `catalog-${key}`,
-    name: service.name,
-    description: service.limit,
-    unitPrice: 0,
-    taxable: false,
-    kind: "service",
-  }));
+  data.catalogItems = []; // Catálogo oficial versionado em serviceCatalog.ts; preços nulos.
   data.printers = [
     {
       id: "demo-printer",
@@ -608,9 +672,15 @@ export function demoData(): StudioData {
             service: "custom",
             kind: "service",
             taxable: false,
-            label: ["Restauração de faróis", "PDR", "Estudo de componente"][i],
+            serviceCode: ["FAR-01", "PDR-01", "P3D-01"][i],
+            label: [
+              "Headlight Restoration",
+              "Paintless Dent Removal",
+              "Discontinued Part — OEM-Style Replacement",
+            ][i],
             quantity: 1,
-            unitPrice: 100 + i * 50,
+            unitPrice: 0,
+            pricePending: true,
             description: "Escopo demonstrativo",
           },
         ],

@@ -222,7 +222,14 @@ describe("Domínio automotivo do Gestor", () => {
   });
   it("preserva a moeda de catálogo legado quando o estúdio muda de moeda", () => {
     const data = demoData();
-    const item = { ...data.catalogItems[0], unitPrice: 12.5 };
+    const item = {
+      id: "legacy-catalog",
+      name: "Item histórico",
+      description: "Fixture legada",
+      unitPrice: 12.5,
+      kind: "service" as const,
+      taxable: false,
+    };
     data.catalogItems[0] = item;
     expect(
       normalizeRecord("catalogItems", { ...item, currency: "BRL" }, data)
@@ -231,7 +238,11 @@ describe("Domínio automotivo do Gestor", () => {
   });
   it("fixa BRL em novo catálogo e aceita leitura sem contexto", () => {
     const item = {
-      ...demoData().catalogItems[0],
+      name: "Item histórico BRL",
+      description: "Fixture legada",
+      unitPrice: 12.5,
+      kind: "service" as const,
+      taxable: false,
       id: "new-brl",
       currency: "BRL" as const,
     };

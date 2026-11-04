@@ -1,3 +1,4 @@
+import type { JobWorkflow } from "./jobWorkflow";
 import type {
   Attachment,
   CalendarEvent,
@@ -12,6 +13,7 @@ import type {
   ViewId,
 } from "../lib/models";
 export type ServiceType =
+  | "detailing"
   | "headlights"
   | "pdr"
   | "engineering"
@@ -27,6 +29,12 @@ export const services: Record<
   ServiceType,
   { name: string; verb: string; limit: string }
 > = {
+  detailing: {
+    name: "Detailing & Paint Care",
+    verb: "Refine",
+    limit:
+      "Correção e proteção dependem da avaliação da pintura, do test spot e da cura do produto aplicado.",
+  },
   headlights: {
     name: "Restauração de faróis",
     verb: "Restore",
@@ -72,6 +80,7 @@ export type Vehicle = {
   updatedAt?: string;
 };
 export type Assessment = {
+  serviceCode?: string;
   id: string;
   serviceType: ServiceType;
   vehicleId: string;
@@ -88,6 +97,7 @@ export type Assessment = {
 };
 export type StudioExpense = Expense & { currency?: "USD" | "BRL" };
 export type StudioOrder = Order & {
+  workflow?: JobWorkflow;
   currency?: "USD" | "BRL";
   vehicleId?: string;
   serviceType?: ServiceType;

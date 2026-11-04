@@ -1,8 +1,11 @@
+import { jobChargeTotals } from "../gestor/jobCharges";
 import { PDFDocument, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import interUrl from "@fontsource/inter/files/inter-latin-400-normal.woff?url";
 import type { Order } from "./models";
-import { centsToAmount, sanitizeFileName } from "./finance";
+import type { JobWorkflow } from "../gestor/jobWorkflow";
+import { pipeline, workflowPayment } from "../gestor/jobWorkflow";
+import { centsToAmount, sanitizeFileName, toCents } from "./finance";
 
 export type PublicStudio = {
   studioName?: string;
@@ -12,6 +15,7 @@ export type PublicStudio = {
   publicFooter?: string;
 };
 type PublicDocument = Order & {
+  workflow?: JobWorkflow;
   currency?: "USD" | "BRL";
   scope?: string;
   constraints?: string;
@@ -22,6 +26,8 @@ const amount = (value: number, currency: string) =>
 /** Deliberately excludes privateNote and internal inspection annotations. No line truncation. */
 export function invoicePdfLines(order: PublicDocument, studio?: PublicStudio) {
   const currency = order.currency ?? "USD";
+  const charges = jobChargeTotals(order);
+  const pending = charges.pending;
   const type = order.documentType === "Invoice" ? "INVOICE" : "ESTIMATIVA";
   return [
     `${type} · ${order.id}`,
@@ -40,24 +46,49 @@ export function invoicePdfLines(order: PublicDocument, studio?: PublicStudio) {
       ? [`Contato: ${order.clientSnapshot.email}`]
       : []),
     `Emissão: ${order.startDate || order.createdAt.slice(0, 10)} · Entrega: ${order.dueDate || "A definir"}`,
-    `Estado: ${order.status} · Moeda: ${currency}`,
+    `Estado: ${order.workflow ? pipeline.find(stage => stage.id === order.workflow?.stage)?.name : order.status} · Moeda: ${currency}`,
+    ...(order.workflow?.packageCode
+      ? [`Pacote: ${order.workflow.packageCode} (serviços individuais abaixo)`]
+      : []),
     "",
     "ITENS E SERVIÇOS",
     ...order.lines.flatMap((line, index) => [
-      `${index + 1}. ${line.label}`,
+      `${index + 1}. ${line.serviceCode ? line.serviceCode + " · " : ""}${line.label}`,
       line.description || "Escopo descrito abaixo.",
-      `${line.quantity} ${line.unit ?? "unidades"} × ${amount(centsToAmount(line.unitPriceCents ?? Math.round(line.unitPrice * 100)), currency)}`,
+      line.pricePending
+        ? "Preço: por avaliação — ainda não orçado."
+        : `${line.quantity} ${line.unit ?? "unidades"} × ${amount(centsToAmount(line.unitPriceCents ?? toCents(line.unitPrice)), currency)}`,
     ]),
     "",
-    `Subtotal: ${amount(centsToAmount(order.subtotalCents ?? Math.round((order.subtotal ?? order.total) * 100)), currency)}`,
-    `Impostos: ${amount(centsToAmount(order.taxCents ?? Math.round((order.tax ?? 0) * 100)), currency)}`,
-    `Total: ${amount(centsToAmount(order.totalCents ?? Math.round(order.total * 100)), currency)}`,
+    pending
+      ? "Subtotal: a definir por avaliação"
+      : `Subtotal: ${amount(centsToAmount(charges.subtotalCents), currency)}`,
+    pending
+      ? "Impostos: a definir"
+      : `Impostos: ${amount(centsToAmount(charges.taxCents), currency)}`,
+    ...(order.workflow && charges.adjustmentCents
+      ? [
+          `Ajuste explícito sobre a cotação: ${amount(centsToAmount(charges.adjustmentCents), currency)} — incluído no total cobrado.`,
+        ]
+      : []),
+    pending
+      ? "Total: a definir por avaliação"
+      : `Total: ${amount(centsToAmount(charges.totalCents), currency)}`,
     "",
+    ...(order.workflow
+      ? [
+          "FINANCEIRO DO JOB",
+          `Valor orçado: ${order.workflow.quotedAmount === null ? "A definir por avaliação" : amount(order.workflow.quotedAmount, currency)}`,
+          `Valor final cobrado: ${order.workflow.finalAmount === null ? "Ainda não definido" : amount(order.workflow.finalAmount, currency)}`,
+          `Saldo: ${workflowPayment(order.workflow, order.payments ?? []).balance === null ? "A definir" : amount(workflowPayment(order.workflow, order.payments ?? []).balance!, currency)}`,
+          "",
+        ]
+      : []),
     "PAGAMENTOS",
     ...(order.payments?.length
       ? order.payments.map(
           p =>
-            `${p.date} · ${p.method} · ${amount(centsToAmount(p.amountCents ?? Math.round(p.amount * 100)), currency)}`
+            `${p.date} · ${p.method} · ${amount(centsToAmount(p.amountCents ?? toCents(p.amount)), currency)}`
         )
       : ["Nenhum pagamento registrado."]),
     ...(order.scope ? ["", "ESCOPO", order.scope] : []),

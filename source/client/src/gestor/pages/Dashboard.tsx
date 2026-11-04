@@ -15,26 +15,30 @@ import {
 } from "lucide-react";
 import { Badge, Button, EmptyState, PageHeading } from "../components/ui";
 import { useGestor } from "../store";
+import { pipeline, workflowForOrder, type PipelineStage } from "../jobWorkflow";
+import { officialServices, serviceCategories } from "../serviceCatalog";
+import "../processStyles.css";
 import {
   dateLabel,
-  journey,
   money,
   services,
   vehicleLabel,
   type Assessment,
-  type JourneyStage,
-  type StudioOrder,
 } from "../types";
 
 const stageTone: Record<
-  JourneyStage,
+  PipelineStage,
   "neutral" | "gold" | "warning" | "success"
 > = {
-  evaluate: "warning",
-  define: "gold",
-  develop: "gold",
-  execute: "neutral",
-  check: "success",
+  lead: "neutral",
+  evaluation: "warning",
+  quote: "gold",
+  approved: "success",
+  scheduled: "gold",
+  production: "gold",
+  quality: "warning",
+  delivered: "success",
+  aftercare: "success",
 };
 
 function dateTime(value: string) {
@@ -42,19 +46,6 @@ function dateTime(value: string) {
   const normalized = value.length === 10 ? `${value}T12:00:00` : value;
   const result = new Date(normalized).getTime();
   return Number.isFinite(result) ? result : Number.POSITIVE_INFINITY;
-}
-
-function orderJourneyStage(order: StudioOrder): JourneyStage {
-  if (order.journeyStage) return order.journeyStage;
-  if (order.productionStage === "planning") return "evaluate";
-  if (order.productionStage === "approval") return "define";
-  if (order.productionStage === "production") return "execute";
-  if (
-    order.productionStage === "quality" ||
-    order.productionStage === "shipping"
-  )
-    return "check";
-  return "evaluate";
 }
 
 function serviceName(serviceType?: keyof typeof services) {
@@ -80,36 +71,46 @@ export default function DashboardPage() {
     );
     const inJourney = data.orders.filter(
       order =>
-        !order.completed &&
-        order.documentType === "Invoice" &&
-        (order.status === "Aprovado" || order.status === "Em produção")
+        !["delivered", "aftercare"].includes(workflowForOrder(order).stage)
     );
     const inspectionQueue = data.triages.filter(
       assessment =>
         assessment.verdict === "Pendente" ||
         assessment.verdict === "Requer inspeção"
     );
-    const approvedValue = data.orders
-      .filter(
-        order =>
-          order.documentType === "Invoice" &&
-          (order.currency ?? "USD") === settings.currency &&
-          (order.status === "Aprovado" || order.status === "Em produção")
+    const approvedJobs = data.orders.filter(
+      order =>
+        (order.currency ?? "USD") === settings.currency &&
+        ["approved", "scheduled", "production", "quality"].includes(
+          workflowForOrder(order).stage
+        )
+    );
+    const approvedAmounts = approvedJobs
+      .map(order =>
+        order.workflow
+          ? (order.workflow.finalAmount ?? order.workflow.quotedAmount)
+          : Number.isFinite(order.total)
+            ? order.total
+            : null
       )
-      .reduce(
-        (sum, order) => sum + (Number.isFinite(order.total) ? order.total : 0),
-        0
-      );
+      .filter((amount): amount is number => amount !== null);
+    const approvedValue = approvedAmounts.reduce(
+      (sum, amount) => sum + amount,
+      0
+    );
     const now = new Date();
     now.setHours(0, 0, 0, 0);
     const upcomingEvents = data.calendar
       .filter(event => dateTime(event.date) >= now.getTime())
       .sort((left, right) => dateTime(left.date) - dateTime(right.date))
       .slice(0, 5);
-    const stageOrders = journey.map(stage => ({
+    const stageOrders = pipeline.map(stage => ({
       ...stage,
-      orders: inJourney
-        .filter(order => orderJourneyStage(order) === stage.id)
+      total: data.orders.filter(
+        order => workflowForOrder(order).stage === stage.id
+      ).length,
+      orders: data.orders
+        .filter(order => workflowForOrder(order).stage === stage.id)
         .slice(0, 4),
     }));
     const assessments = [...data.triages]
@@ -129,6 +130,7 @@ export default function DashboardPage() {
       inJourney,
       inspectionQueue,
       approvedValue,
+      hasApprovedPricing: approvedAmounts.length > 0,
       upcomingEvents,
       stageOrders,
       assessments,
@@ -139,7 +141,7 @@ export default function DashboardPage() {
   const nextEvent = dashboard.upcomingEvents[0];
 
   return (
-    <div className="dashboard-page stack">
+    <div className="dashboard-page stack process-dashboard">
       <PageHeading
         eyebrow="Operação em andamento"
         title="Visão geral"
@@ -170,7 +172,7 @@ export default function DashboardPage() {
           <div>
             <p className="stat-label">Em jornada</p>
             <p className="stat-value">{dashboard.inJourney.length}</p>
-            <p className="helper">Pedidos aprovados ou em execução</p>
+            <p className="helper">Do Lead à qualidade · inclui estimativas</p>
           </div>
         </article>
         <article className="stat">
@@ -190,9 +192,13 @@ export default function DashboardPage() {
           <div>
             <p className="stat-label">Volume aprovado</p>
             <p className="stat-value stat-value-money">
-              {money(dashboard.approvedValue, settings.currency)}
+              {dashboard.hasApprovedPricing
+                ? money(dashboard.approvedValue, settings.currency)
+                : "Não definido"}
             </p>
-            <p className="helper">Pedidos aprovados e em produção</p>
+            <p className="helper">
+              Valores explícitos · aprovados até qualidade
+            </p>
           </div>
         </article>
         <article className="stat">
@@ -218,25 +224,25 @@ export default function DashboardPage() {
         <div className="card-head split">
           <div>
             <p className="eyebrow">Método Reverso</p>
-            <h2 id="journey-heading">Jornada de atendimento e produção</h2>
+            <h2 id="journey-heading">Pipeline universal · 9 etapas</h2>
           </div>
           <Button variant="ghost" onClick={() => navigate("production")}>
-            Ver produção <ArrowRight size={16} />
+            Ver todos os jobs <ArrowRight size={16} />
           </Button>
         </div>
         <div
-          className="journey-board"
+          className="process-dashboard-board"
           aria-label="Pedidos distribuídos pela jornada"
         >
           {dashboard.stageOrders.map(stage => (
             <section
-              className="journey-column"
+              className="process-dashboard-stage"
               key={stage.id}
               aria-labelledby={`stage-${stage.id}`}
             >
               <div className="journey-column-head">
                 <Badge tone={stageTone[stage.id]}>{stage.name}</Badge>
-                <span className="mono muted">{stage.orders.length}</span>
+                <span className="mono muted">{stage.total}</span>
               </div>
               <p id={`stage-${stage.id}`} className="journey-detail">
                 {stage.detail}
@@ -264,7 +270,11 @@ export default function DashboardPage() {
                               order.clientName ||
                               "Cliente não informado"}
                         </span>
-                        <small>{serviceName(order.serviceType)}</small>
+                        <small>
+                          {order.workflow
+                            ? order.workflow.serviceCodes.join(" · ")
+                            : `Legado · etapa inferida · ${serviceName(order.serviceType)}`}
+                        </small>
                       </button>
                     );
                   })
@@ -404,14 +414,24 @@ export default function DashboardPage() {
             <h2 id="services-heading">Especialidades atendidas</h2>
           </div>
           <div className="card-body service-grid">
-            {Object.entries(services).map(([key, service]) => (
+            {Object.entries(serviceCategories).map(([key, name]) => (
               <article className="service-card" key={key}>
                 <div className="service-card-icon">
                   <Wrench size={18} aria-hidden="true" />
                 </div>
                 <div>
-                  <h3>{service.name}</h3>
-                  <p>{service.limit}</p>
+                  <h3>
+                    {key} · {name}
+                  </h3>
+                  <p>
+                    {officialServices
+                      .filter(service => service.category === key)
+                      .map(service => service.code)
+                      .join(" · ")}
+                  </p>
+                  <p className="helper">
+                    Preço por avaliação · sem valores padrão
+                  </p>
                 </div>
                 <Button variant="ghost" onClick={() => navigate("triage")}>
                   Iniciar avaliação <ArrowRight size={15} />

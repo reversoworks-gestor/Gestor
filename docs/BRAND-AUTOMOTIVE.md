@@ -14,7 +14,7 @@ A logo branca é o arquivo oficial copiado sem edição. Seu fundo preto é pres
 
 **Automotive Restoration & Engineering Studio — Restore. Refine. Recreate.**
 
-O Gestor organiza restauração externa de faróis, PDR, desenvolvimento de peças e customização técnica. A operação segue **Avaliar → Definir → Desenvolver → Executar → Conferir**. Registros conectam cliente, veículo, condição observada, objetivo, escopo, premissas, documentação e verificações de entrega.
+O Gestor organiza o catálogo oficial de 04/11/2026: Detailing & Paint Care, Paintless Dent Removal, Headlight Restoration e 3D Parts, OEM & Custom. A operação segue **Lead → Avaliação → Orçamento enviado → Aprovado → Agendado → Em produção → Controle de qualidade → Entregue / Pago → Pós-venda**. Registros conectam cliente, veículo, condição observada, objetivo, escopo, premissas, documentação e verificações de entrega.
 
 Restauração externa de faróis não corrige danos internos, trincas estruturais, refletores comprometidos ou falhas de vedação. A indicação de PDR depende de pintura, geometria e acesso. Desenvolvimento de peças não substitui validação de material, montagem e aplicação. Fotografias auxiliam a triagem, mas não substituem inspeção. Componentes críticos exigem inspeção e validação específica; o sistema não emite certificação automática de segurança.
 

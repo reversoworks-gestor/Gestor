@@ -14,6 +14,7 @@ import {
   safeRecord,
 } from "./domain";
 import { type StudioData, type StudioOrder, makeId } from "./types";
+import { timestampIso } from "./recordDates";
 
 const recordRef = (
   database: Firestore,
@@ -21,20 +22,63 @@ const recordRef = (
   key: string,
   id: string
 ) => doc(database, "workspaces", workspace, key, id);
-/** The transaction always reads the current server balance before calculating a reservation delta. */
+
+/** Shared by Firestore transactions and the demo's locked read/modify/write. */
+export function prepareOrderSave(
+  input: StudioOrder,
+  old: StudioOrder | undefined,
+  data: StudioData
+): StudioOrder {
+  const currentToken = timestampIso(old?.updatedAt);
+  if (
+    old &&
+    (timestampIso(input.updatedAt) !== currentToken ||
+      (!currentToken &&
+        (input.updatedAt !== undefined || old.updatedAt !== undefined)))
+  )
+    throw new Error(
+      "Este documento foi alterado por outra sessão. Reabra o registro para atualizar os dados antes de salvar."
+    );
+  // An omitted map is not permission to drop historical workflow guards.
+  const source =
+    old?.workflow && !input.workflow
+      ? { ...input, workflow: old.workflow }
+      : input;
+  const next = normalizeStudioOrder(source, {
+    ...data,
+    // Never validate stage changes or CAD history against a stale client copy.
+    orders: [
+      ...(old ? [old] : []),
+      ...data.orders.filter(order => order.id !== input.id),
+    ],
+  });
+  // A millisecond clock collision must not let the next stale editor pass.
+  if (currentToken && next.updatedAt! <= currentToken)
+    next.updatedAt = new Date(
+      new Date(currentToken).getTime() + 1
+    ).toISOString();
+  if (old?.documentType === "Invoice" && old.clientSnapshot) {
+    next.clientName = old.clientName;
+    next.clientSnapshot = old.clientSnapshot;
+  }
+  return next;
+}
+
+/** Read the current order and material balances before validating and writing. */
 export async function saveOrderAtomic(
   database: Firestore,
   workspace: string,
   input: StudioOrder,
   data: StudioData
 ): Promise<StudioOrder> {
-  const next = normalizeStudioOrder(input, data);
+  let result: StudioOrder | undefined;
   await runTransaction(database, async transaction => {
-    const reference = recordRef(database, workspace, "orders", next.id);
+    const reference = recordRef(database, workspace, "orders", input.id);
     const existing = await transaction.get(reference);
     const old = existing.exists()
       ? ({ ...existing.data(), id: existing.id } as StudioOrder)
       : undefined;
+    const next = prepareOrderSave(input, old, data);
     const ids = [
       ...new Set([
         ...Object.keys(allocations(old)),
@@ -65,15 +109,11 @@ export async function saveOrderAtomic(
         recordRef(database, workspace, "materials", material.id),
         { availableGrams: material.availableGrams }
       );
-    const persisted =
-      old?.documentType === "Invoice" && old.clientSnapshot
-        ? {
-            ...next,
-            clientName: old.clientName,
-            clientSnapshot: old.clientSnapshot,
-          }
-        : next;
-    transaction.set(reference, safeRecord(persisted), { merge: true });
+    transaction.set(reference, safeRecord(next), { merge: true });
+    // set(..., merge:true) recursively merges maps, resurrecting omitted keys.
+    // update the field itself to replace the complete validated workflow map.
+    if (next.workflow)
+      transaction.update(reference, { workflow: safeRecord(next.workflow) });
     const eventId = makeId("event");
     transaction.set(recordRef(database, workspace, "calendar", eventId), {
       id: eventId,
@@ -82,8 +122,10 @@ export async function saveOrderAtomic(
       detail: `${next.documentType} · ${next.clientName}`,
       date: new Date().toISOString(),
     });
+    result = next;
   });
-  return next;
+  if (!result) throw new Error("Não foi possível salvar o documento.");
+  return result;
 }
 /** Retry-safe conversion. Both invoice creation and source link are committed together. */
 export async function convertEstimateAtomic(
@@ -102,6 +144,22 @@ export async function convertEstimateAtomic(
     const saved = { ...source.data(), id: source.id } as StudioOrder;
     if (saved.documentType === "Invoice")
       throw new Error("O documento já é uma invoice.");
+    if (
+      saved.workflow &&
+      ![
+        "approved",
+        "scheduled",
+        "production",
+        "quality",
+        "delivered",
+        "aftercare",
+      ].includes(saved.workflow.stage)
+    )
+      throw new Error(
+        "Aprove o orçamento pelo pipeline antes de converter em invoice."
+      );
+    if (saved.lines.some(line => line.pricePending))
+      throw new Error("Precifique os serviços antes de converter em invoice.");
     if (saved.invoiceId) {
       const existing = await transaction.get(
         recordRef(database, workspace, "orders", saved.invoiceId)
@@ -122,7 +180,10 @@ export async function convertEstimateAtomic(
         invoiceId: undefined,
         createdAt: new Date().toISOString(),
       },
-      data
+      {
+        ...data,
+        orders: [saved, ...data.orders.filter(order => order.id !== saved.id)],
+      }
     );
     const ids = Object.keys(allocations(invoice));
     const snapshots = await Promise.all(

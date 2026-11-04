@@ -30,6 +30,9 @@ import {
   saveRevisionAtomic,
 } from "./client/src/gestor/repository";
 import { demoData, normalizeStudioOrder } from "./client/src/gestor/domain";
+import { createWorkflow } from "./client/src/gestor/jobWorkflow";
+import { findService } from "./client/src/gestor/serviceCatalog";
+import type { StudioData, StudioOrder } from "./client/src/gestor/types";
 import type { Firestore } from "firebase/firestore";
 
 const PROJECT_ID = "demo-reverso-qa";
@@ -169,6 +172,59 @@ async function reserveMaterialAtomically(
     order,
     data
   );
+}
+
+function repositoryFixture(
+  id: string,
+  codes = ["P3D-04"],
+  packageCode?: string
+) {
+  const data = demoData();
+  const base = data.orders[0];
+  const order: StudioOrder = normalizeStudioOrder(
+    {
+      ...base,
+      id,
+      documentType: "Orçamento",
+      startDate: "2026-11-04",
+      workflow: {
+        ...createWorkflow(codes, packageCode),
+        quotedAmount: codes.length * 100,
+      },
+      lines: codes.map(code => ({
+        ...base.lines[0],
+        id: `line-${code}`,
+        serviceCode: code,
+        label: findService(code)!.name,
+        unitPrice: 100,
+        pricePending: false,
+      })),
+    },
+    { ...data, orders: [] }
+  );
+  order.updatedAt = "2026-11-04T12:00:00.000Z";
+  data.orders = [order];
+  return { data, order };
+}
+
+async function seedRepositoryOrder(data: StudioData, order: StudioOrder) {
+  await testEnv.withSecurityRulesDisabled(async context => {
+    const database = context.firestore();
+    await database
+      .doc(`${WORKSPACE_PATH}/clients/${order.clientId}`)
+      .set(data.clients[0]);
+    await database
+      .doc(`${WORKSPACE_PATH}/vehicles/${order.vehicleId}`)
+      .set(data.vehicles[0]);
+    await database.doc(`${WORKSPACE_PATH}/orders/${order.id}`).set(
+      JSON.parse(
+        JSON.stringify({
+          ...order,
+          historicalMetadata: { source: "preserve-me" },
+        })
+      )
+    );
+  });
 }
 
 describe.sequential("Firebase emulator security boundaries", () => {
@@ -528,6 +584,11 @@ describe.sequential("Firebase emulator security boundaries", () => {
     const estimate = normalizeStudioOrder(
       {
         ...data.orders[0],
+        lines: data.orders[0].lines.map(line => ({
+          ...line,
+          unitPrice: 25,
+          pricePending: false,
+        })),
         id: "estimate-source",
         documentType: "Estimativa",
         clientSnapshot: undefined,
@@ -566,8 +627,18 @@ describe.sequential("Firebase emulator security boundaries", () => {
   it("moves revision pointers atomically using the actual repository", async () => {
     const data = demoData();
     data.parts = [
-      { id: "part-a", name: "A", invoiceIds: [] },
-      { id: "part-b", name: "B", invoiceIds: [] },
+      {
+        id: "part-a",
+        name: "A",
+        invoiceIds: [],
+        createdAt: "2026-11-04T12:00:00.000Z",
+      },
+      {
+        id: "part-b",
+        name: "B",
+        invoiceIds: [],
+        createdAt: "2026-11-04T12:00:00.000Z",
+      },
     ];
     await testEnv.withSecurityRulesDisabled(async context => {
       for (const part of data.parts)
@@ -585,6 +656,7 @@ describe.sequential("Firebase emulator security boundaries", () => {
       notes: "",
       invoiceIds: [],
       attachments: [],
+      createdAt: "2026-11-04T12:00:00.000Z",
     };
     await saveRevisionAtomic(db, WORKSPACE_ID, revision, data);
     await saveRevisionAtomic(
@@ -602,5 +674,220 @@ describe.sequential("Firebase emulator security boundaries", () => {
       (await owner.doc(`${WORKSPACE_PATH}/parts/part-b`).get()).data()
         ?.currentRevisionId
     ).toBe(revision.id);
+  });
+
+  it("accepts only one concurrent editor and preserves the winning CAD and payment arrays", async () => {
+    const { data, order } = repositoryFixture("race-order");
+    order.workflow!.cadVersions = ["v1"];
+    await seedRepositoryOrder(data, order);
+    const firstDb = (ownerContext().firestore() as any)._delegate as Firestore;
+    const secondDb = (ownerContext().firestore() as any)._delegate as Firestore;
+    const outcomes = await Promise.allSettled([
+      saveOrderAtomic(
+        firstDb,
+        WORKSPACE_ID,
+        {
+          ...order,
+          title: "Primeiro editor",
+          workflow: { ...order.workflow!, cadVersions: ["v1", "v2-first"] },
+          payments: [
+            {
+              id: "first-payment",
+              amount: 20,
+              method: "Cash",
+              date: "2026-11-04",
+            },
+          ],
+        },
+        data
+      ),
+      saveOrderAtomic(
+        secondDb,
+        WORKSPACE_ID,
+        {
+          ...order,
+          title: "Segundo editor",
+          workflow: { ...order.workflow!, cadVersions: ["v1", "v2-second"] },
+          payments: [
+            {
+              id: "second-payment",
+              amount: 30,
+              method: "Cash",
+              date: "2026-11-04",
+            },
+          ],
+        },
+        data
+      ),
+    ]);
+    const successes = outcomes.filter(
+      (result): result is PromiseFulfilledResult<StudioOrder> =>
+        result.status === "fulfilled"
+    );
+    const failures = outcomes.filter(
+      (result): result is PromiseRejectedResult => result.status === "rejected"
+    );
+    expect(successes).toHaveLength(1);
+    expect(failures).toHaveLength(1);
+    expect(failures[0].reason.message).toContain("alterado");
+    const winner = successes[0].value;
+    const owner = ownerContext().firestore();
+    const saved = (
+      await owner.doc(`${WORKSPACE_PATH}/orders/${order.id}`).get()
+    ).data()!;
+    expect(saved.title).toBe(winner.title);
+    expect(saved.workflow.cadVersions).toEqual(winner.workflow!.cadVersions);
+    expect(saved.payments).toEqual(winner.payments);
+    expect(saved.updatedAt).toBe(winner.updatedAt);
+    expect(
+      (await owner.collection(`${WORKSPACE_PATH}/calendar`).get()).docs
+    ).toHaveLength(1);
+    await expect(
+      saveOrderAtomic(
+        secondDb,
+        WORKSPACE_ID,
+        { ...order, title: "Editor ainda desatualizado" },
+        data
+      )
+    ).rejects.toThrow("alterado");
+  }, 30_000);
+
+  it("rejects truncating server CAD history even with a current token and stale local history", async () => {
+    const { data, order } = repositoryFixture("cad-order");
+    order.workflow!.cadVersions = ["v1"];
+    const actual = {
+      ...order,
+      workflow: { ...order.workflow!, cadVersions: ["v1", "v2"] },
+    };
+    await seedRepositoryOrder(data, actual);
+    const db = (ownerContext().firestore() as any)._delegate as Firestore;
+    await expect(
+      saveOrderAtomic(db, WORKSPACE_ID, order, data)
+    ).rejects.toThrow("append-only");
+    const owner = ownerContext().firestore();
+    const saved = (
+      await owner.doc(`${WORKSPACE_PATH}/orders/${order.id}`).get()
+    ).data()!;
+    expect(saved.workflow.cadVersions).toEqual(["v1", "v2"]);
+    expect(saved.updatedAt).toBe(order.updatedAt);
+    expect(
+      (await owner.collection(`${WORKSPACE_PATH}/calendar`).get()).docs
+    ).toHaveLength(0);
+  });
+
+  it("replaces the whole workflow map so cleared booleans, details, task metadata and package stay cleared", async () => {
+    const { data, order } = repositoryFixture(
+      "clear-workflow",
+      ["PDR-01", "PDR-02", "DET-01"],
+      "PCT-02"
+    );
+    order.workflow!.details = {
+      "PDR.paintIntact": true,
+      "PDR.panel": "Porta",
+      "DET.upsellApproved": true,
+    };
+    order.workflow!.tasks = {
+      "DET-01": { done: false, completedAt: "2026-11-04T12:00:00.000Z" },
+    };
+    order.workflow!.depositApplicable = true;
+    await seedRepositoryOrder(data, order);
+    const cleared = {
+      ...order.workflow!,
+      packageCode: undefined,
+      depositApplicable: false,
+      details: { "PDR.paintIntact": false },
+      tasks: { "DET-01": { done: false } },
+    };
+    const db = (ownerContext().firestore() as any)._delegate as Firestore;
+    const result = await saveOrderAtomic(
+      db,
+      WORKSPACE_ID,
+      { ...order, workflow: cleared },
+      data
+    );
+    const saved = (
+      await ownerContext()
+        .firestore()
+        .doc(`${WORKSPACE_PATH}/orders/${order.id}`)
+        .get()
+    ).data()!;
+    expect(saved.workflow).toEqual(result.workflow);
+    expect(saved.workflow.packageCode).toBeUndefined();
+    expect(saved.workflow.details).toEqual({ "PDR.paintIntact": false });
+    expect(saved.workflow.depositApplicable).toBe(false);
+    expect(saved.workflow.tasks).toEqual({ "DET-01": { done: false } });
+    expect(saved.historicalMetadata).toEqual({ source: "preserve-me" });
+  });
+
+  it("allows a tokenless legacy edit only once and rejects a new-ID collision with an existing versioned record", async () => {
+    const { data, order } = repositoryFixture("legacy-token");
+    order.updatedAt = undefined;
+    await seedRepositoryOrder(data, order);
+    const db = (ownerContext().firestore() as any)._delegate as Firestore;
+    const saved = await saveOrderAtomic(db, WORKSPACE_ID, order, data);
+    expect(saved.updatedAt).toBeTruthy();
+    await expect(
+      saveOrderAtomic(
+        db,
+        WORKSPACE_ID,
+        { ...order, title: "Tentativa de colisão" },
+        { ...data, orders: [] }
+      )
+    ).rejects.toThrow("alterado");
+    const readback = (
+      await ownerContext()
+        .firestore()
+        .doc(`${WORKSPACE_PATH}/orders/${order.id}`)
+        .get()
+    ).data()!;
+    expect(readback.updatedAt).toBe(saved.updatedAt);
+    expect(readback.title).toBe(order.title);
+  });
+
+  it("converts an approved official source using its actual server stage, not a stale local Lead", async () => {
+    const { data, order } = repositoryFixture("official-estimate", ["DET-01"]);
+    const actual = normalizeStudioOrder(
+      {
+        ...order,
+        workflow: {
+          ...order.workflow!,
+          stage: "approved",
+          problem: "Escopo avaliado",
+          estimatedDeadline: "2026-11-10",
+          beforePhotos: [
+            {
+              name: "before.jpg",
+              contentType: "image/jpeg",
+              storagePath: "test/before.jpg",
+            },
+          ],
+        },
+      },
+      {
+        ...data,
+        orders: [
+          { ...order, workflow: { ...order.workflow!, stage: "quote" } },
+        ],
+      }
+    );
+    await seedRepositoryOrder(data, actual);
+    const db = (ownerContext().firestore() as any)._delegate as Firestore;
+    const invoice = await convertEstimateAtomic(
+      db,
+      WORKSPACE_ID,
+      order.id,
+      data
+    );
+    expect(invoice.workflow!.stage).toBe("approved");
+    expect(invoice.sourceEstimateId).toBe(order.id);
+    expect(invoice.completed).toBe(false);
+    expect(
+      (
+        await ownerContext()
+          .firestore()
+          .doc(`${WORKSPACE_PATH}/orders/${invoice.id}`)
+          .get()
+      ).data()?.workflow.stage
+    ).toBe("approved");
   });
 });

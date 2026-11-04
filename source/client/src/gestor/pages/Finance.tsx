@@ -1,3 +1,4 @@
+import { jobChargeTotals } from "../jobCharges";
 import { DateInput } from "../components/ui";
 import { useMemo, useState } from "react";
 import {
@@ -15,6 +16,7 @@ import {
   toCents,
 } from "../../lib/finance";
 import { useGestor } from "../store";
+import { workflowPayment } from "../jobWorkflow";
 import {
   Badge,
   Button,
@@ -99,25 +101,15 @@ function invoiceDate(order: StudioOrder) {
 }
 
 function invoiceFinancials(order: StudioOrder): InvoiceFinancials {
-  const calculated = calculateOrderTotals(
-    order.lines ?? [],
-    order.taxRate ?? 0
-  );
-  const subtotalCents = storedCents(
-    order.subtotalCents,
-    order.subtotal,
-    calculated.subtotalCents
-  );
-  const taxCents = storedCents(order.taxCents, order.tax, calculated.taxCents);
-  const totalCents = storedCents(
-    order.totalCents,
-    order.total,
-    calculated.totalCents
-  );
-  const paidCents = (order.payments ?? []).reduce(
+  const { subtotalCents, taxCents, totalCents } = jobChargeTotals(order);
+  const ledgerPaid = (order.payments ?? []).reduce(
     (sum, payment) => sum + storedCents(payment.amountCents, payment.amount),
     0
   );
+
+  const paidCents = order.workflow
+    ? toCents(workflowPayment(order.workflow, order.payments ?? []).received)
+    : ledgerPaid;
 
   return {
     order,
@@ -165,7 +157,9 @@ function csvCell(value: string | number) {
 }
 
 function isInvoice(order: StudioOrder) {
-  return order.documentType === "Invoice";
+  return order.workflow
+    ? !order.invoiceId && order.workflow.quotedAmount !== null
+    : order.documentType === "Invoice";
 }
 
 function metric(title: string, value: string, detail: string) {
@@ -216,7 +210,10 @@ export default function FinancePage() {
   const filteredInvoices = useMemo(() => {
     return data.orders
       .filter(
-        order => isInvoice(order) && (order.currency ?? "USD") === currency
+        order =>
+          isInvoice(order) &&
+          (order.currency ?? "USD") === currency &&
+          !order.lines.some(line => line.pricePending)
       )
       .map(invoiceFinancials)
       .filter(invoice => dateIsInRange(invoice.date, dateFrom, dateTo))
@@ -226,6 +223,7 @@ export default function FinancePage() {
           invoice.order.title,
           invoice.order.clientName,
           invoice.order.documentType,
+          invoice.order.workflow?.serviceCodes.join(" "),
         ])
       )
       .sort((a, b) =>
@@ -251,6 +249,8 @@ export default function FinancePage() {
           expense.category,
           expense.vendor,
           expense.notes,
+          "",
+          "",
         ])
       )
       .sort((a, b) =>
@@ -264,7 +264,10 @@ export default function FinancePage() {
     const entries: PaymentEntry[] = [];
     data.orders
       .filter(
-        order => isInvoice(order) && (order.currency ?? "USD") === currency
+        order =>
+          isInvoice(order) &&
+          (order.currency ?? "USD") === currency &&
+          !order.lines.some(line => line.pricePending)
       )
       .forEach(invoice => {
         if (
@@ -364,12 +367,14 @@ export default function FinancePage() {
       `Recebido (${currency})`,
       `Em aberto (${currency})`,
       "Notas",
+      "Códigos de serviço",
+      "Pacote",
     ];
     const rows: Array<Array<string | number>> = [header];
 
     filteredInvoices.forEach(invoice => {
       rows.push([
-        "Invoice",
+        invoice.order.documentType,
         invoice.date,
         invoice.order.title || invoice.order.id,
         invoice.order.clientName,
@@ -380,6 +385,12 @@ export default function FinancePage() {
         amountText(invoice.paidCents),
         amountText(invoice.outstandingCents),
         invoice.order.notes || "",
+        invoice.order.workflow?.serviceCodes.join(" + ") ||
+          invoice.order.lines
+            .map(line => line.serviceCode)
+            .filter(Boolean)
+            .join(" + "),
+        invoice.order.workflow?.packageCode || "",
       ]);
     });
     paymentsInPeriod.forEach(payment => {
@@ -394,7 +405,9 @@ export default function FinancePage() {
         amountText(payment.amountCents),
         amountText(payment.amountCents),
         "",
-        `Pagamento de invoice ${payment.invoice.id}`,
+        `Pagamento de job ${payment.invoice.id}`,
+        payment.invoice.workflow?.serviceCodes.join(" + ") || "",
+        payment.invoice.workflow?.packageCode || "",
       ]);
     });
     filteredExpenses.forEach(expense => {
@@ -410,6 +423,8 @@ export default function FinancePage() {
         "",
         "",
         expense.notes,
+        "",
+        "",
       ]);
     });
 

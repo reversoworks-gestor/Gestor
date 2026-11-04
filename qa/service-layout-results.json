@@ -1,0 +1,266 @@
+[
+  {
+    "view": "overview",
+    "viewport": [
+      320,
+      900
+    ],
+    "overflow": false,
+    "heading": "Visão geral",
+    "error": false,
+    "pass": true
+  },
+  {
+    "view": "overview",
+    "viewport": [
+      440,
+      956
+    ],
+    "overflow": false,
+    "heading": "Visão geral",
+    "error": false,
+    "pass": true
+  },
+  {
+    "view": "overview",
+    "viewport": [
+      956,
+      440
+    ],
+    "overflow": false,
+    "heading": "Visão geral",
+    "error": false,
+    "pass": true
+  },
+  {
+    "view": "overview",
+    "viewport": [
+      1280,
+      900
+    ],
+    "overflow": false,
+    "heading": "Visão geral",
+    "error": false,
+    "pass": true
+  },
+  {
+    "view": "estimates",
+    "viewport": [
+      320,
+      900
+    ],
+    "overflow": false,
+    "heading": "Estimativas",
+    "error": false,
+    "pass": true
+  },
+  {
+    "view": "estimates",
+    "viewport": [
+      440,
+      956
+    ],
+    "overflow": false,
+    "heading": "Estimativas",
+    "error": false,
+    "pass": true
+  },
+  {
+    "view": "estimates",
+    "viewport": [
+      956,
+      440
+    ],
+    "overflow": false,
+    "heading": "Estimativas",
+    "error": false,
+    "pass": true
+  },
+  {
+    "view": "estimates",
+    "viewport": [
+      1280,
+      900
+    ],
+    "overflow": false,
+    "heading": "Estimativas",
+    "error": false,
+    "pass": true
+  },
+  {
+    "view": "production",
+    "viewport": [
+      320,
+      900
+    ],
+    "overflow": false,
+    "heading": "Produção",
+    "error": false,
+    "pass": true
+  },
+  {
+    "view": "production",
+    "viewport": [
+      440,
+      956
+    ],
+    "overflow": false,
+    "heading": "Produção",
+    "error": false,
+    "pass": true
+  },
+  {
+    "view": "production",
+    "viewport": [
+      956,
+      440
+    ],
+    "overflow": false,
+    "heading": "Produção",
+    "error": false,
+    "pass": true
+  },
+  {
+    "view": "production",
+    "viewport": [
+      1280,
+      900
+    ],
+    "overflow": false,
+    "heading": "Produção",
+    "error": false,
+    "pass": true
+  },
+  {
+    "view": "selector",
+    "viewport": [
+      320,
+      900
+    ],
+    "overflow": false,
+    "heading": "Visão geral",
+    "error": false,
+    "pass": true
+  },
+  {
+    "view": "selector",
+    "viewport": [
+      440,
+      956
+    ],
+    "overflow": false,
+    "heading": "Visão geral",
+    "error": false,
+    "pass": true
+  },
+  {
+    "view": "selector",
+    "viewport": [
+      956,
+      440
+    ],
+    "overflow": false,
+    "heading": "Visão geral",
+    "error": false,
+    "pass": true
+  },
+  {
+    "view": "selector",
+    "viewport": [
+      1280,
+      900
+    ],
+    "overflow": false,
+    "heading": "Visão geral",
+    "error": false,
+    "pass": true
+  },
+  {
+    "view": "settings",
+    "viewport": [
+      320,
+      900
+    ],
+    "overflow": false,
+    "heading": "Configurações do estúdio",
+    "error": false,
+    "pass": true
+  },
+  {
+    "view": "settings",
+    "viewport": [
+      440,
+      956
+    ],
+    "overflow": false,
+    "heading": "Configurações do estúdio",
+    "error": false,
+    "pass": true
+  },
+  {
+    "view": "settings",
+    "viewport": [
+      956,
+      440
+    ],
+    "overflow": false,
+    "heading": "Configurações do estúdio",
+    "error": false,
+    "pass": true
+  },
+  {
+    "view": "settings",
+    "viewport": [
+      1280,
+      900
+    ],
+    "overflow": false,
+    "heading": "Configurações do estúdio",
+    "error": false,
+    "pass": true
+  },
+  {
+    "view": "finance",
+    "viewport": [
+      320,
+      900
+    ],
+    "overflow": false,
+    "heading": "Visão financeira",
+    "error": false,
+    "pass": true
+  },
+  {
+    "view": "finance",
+    "viewport": [
+      440,
+      956
+    ],
+    "overflow": false,
+    "heading": "Visão financeira",
+    "error": false,
+    "pass": true
+  },
+  {
+    "view": "finance",
+    "viewport": [
+      956,
+      440
+    ],
+    "overflow": false,
+    "heading": "Visão financeira",
+    "error": false,
+    "pass": true
+  },
+  {
+    "view": "finance",
+    "viewport": [
+      1280,
+      900
+    ],
+    "overflow": false,
+    "heading": "Visão financeira",
+    "error": false,
+    "pass": true
+  }
+]

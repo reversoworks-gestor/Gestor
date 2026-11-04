@@ -34,3 +34,19 @@ A versão reconstruída e testada fica salva na branch de reconstrução e no ch
 
 - [x] Estimativas, invoices e pedidos devem abrir com documentos legados cujos timestamps estejam ausentes, numéricos ou no formato Firestore; ordenar sem chamar métodos de string em valores incompatíveis; manter valores e registros originais sem gravação automática.
 - [ ] Falhas inesperadas devem exibir uma mensagem curta em português e ações utilizáveis no iPhone, sem pilha técnica pública ou rolagem horizontal; publicar a correção no endereço existente após testes de regressão.
+
+## Serviços oficiais — cadastro de 04/11/2026
+
+- [x] Exatamente 4 categorias DET/PDR/FAR/P3D e 21 itens: DET-01–07, PDR-01–03, FAR-01–02, P3D-01–06 e PCT-01–03. Nome/descrição em inglês dos documentos; tipos Principal, Add-on, Principal B2B e Pacote; código único imutável; ativo sim; preço nulo/vazio em todos. Não cadastrar PPF, pintura completa, mecânica ou eletrônica. Documento/job/relatório referencia código.
+- [x] Pré-requisitos no mesmo job: DET-03 exige DET-01 ou DET-02; DET-04 exige DET-02; PDR-02/03 exigem PDR-01; FAR-02 exige FAR-01; P3D-03 exige P3D-01 ou P3D-02; P3D-06 exige P3D-01, P3D-02 ou P3D-05. DET-05/06/07 não têm pré-requisito. PCT-01 expande DET-02+04+05 e FAR-01+02; PCT-02 PDR-01+02 e DET-01; PCT-03 requer escolher P3D-01 ou P3D-02 e inclui P3D-03+06. Pacote não vira serviço executável independente.
+- [x] Pipeline único e ordenado: Lead → Avaliação → Orçamento enviado → Aprovado → Agendado → Em produção → Controle de qualidade → Entregue / Pago → Pós-venda. Nome, contato, veículo ano/modelo/cor e serviço para sair de Lead; fotos antes e problema para sair de Avaliação; valor orçado e prazo para orçamento; depósito valor/data quando aplicável; datas entrada e promessa antes da execução; material explicitamente lançado antes de Em produção; checklist e fotos depois antes da entrega; valor final/forma/data e saldo quitado para Entregue/Pago; avaliação solicitada sim/não no Pós-venda. Não pular portões pendentes.
+- [x] Todo job registra valor orçado, sinal valor/data, custo de material na compra, horas, final cobrado, saldo, forma e pagamento pendente/parcial/pago; cliente/contato/veículo/categoria/códigos e datas entrada/promessa/entrega; imagens antes/depois. Preço manual sem valores padrão.
+- [x] Checklists completos DET 10, PDR 8, FAR 8, P3D 10 conforme texto original. Etapas obrigatórias bloqueiam avanço e execução dependente. DET test spot para DET-02 e add-ons trim/engine/water antes da proteção; PDR viabilidade e pintura intacta; FAR dano externo/interno antes de orçar. Fotos antes/depois exigem anexo de imagem. Campos específicos de cada categoria presentes.
+- [x] P3D CAD por versão sem sobrescrever; fit test com data/responsável antes de impressão final; rejeição volta CAD e exige nova versão; material segundo função; pasta/projeto e arquivos scan/CAD finais vinculados. P3D-04 B2B só etapas 1–4 com entrega de arquivos; P3D-05 decisão reparar/recriar (recriar segue 3–10).
+- [x] Pacotes: PCT-01 FAR restauração → DET correção/trim → proteções FAR-02 e DET-04 por último; PCT-02 PDR sempre antes de DET; PCT-03 P3D completo com fit test. Sequência não invertível.
+- [x] Preservar login, dados antigos e publicação em /Gestor/; validar catálogo, pré-requisitos, transições, fotos e fit test, testes TypeScript/build e interface móvel; revisão independente antes de publicação. Nenhuma exclusão remota automática nesta atualização.
+
+## Retomada e implantação desta atualização
+
+- [x] Conferir os arquivos reenviados de serviços e pipelines sem criar itens ou preços adicionais, preservar os dados Firebase e retomar o trabalho interrompido.
+- [ ] Salvar a versão atualizada e confirmar a implantação no endereço GitHub Pages existente após a validação final.

@@ -50,6 +50,7 @@ import {
   saveOrderAtomic,
   convertEstimateAtomic,
   saveRevisionAtomic,
+  prepareOrderSave,
 } from "./repository";
 import {
   type CollectionKey,
@@ -374,27 +375,44 @@ export function GestorProvider({
   }
   async function saveOrder(input: StudioOrder) {
     ensureAuth();
-    const next = normalizeStudioOrder(input, dataRef.current);
-    const event = activity(
-      "order",
-      `Documento salvo · ${next.title}`,
-      `${next.documentType} · ${next.clientName}`
-    );
     if (demo)
       await localMutation(current => {
-        const old = current.orders.find(o => o.id === next.id);
+        const old = current.orders.find(o => o.id === input.id);
+        const next = prepareOrderSave(input, old, current);
+        const event = activity(
+          "order",
+          `Documento salvo · ${next.title}`,
+          `${next.documentType} · ${next.clientName}`
+        );
         for (const material of reserveMaterials(old, next, current.materials))
           patch(current, "materials", material);
-        patch(current, "orders", next);
+        // Match Firestore's preservation of unknown top-level metadata.
+        patch(current, "orders", { ...old, ...next });
         patch(current, "calendar", event);
       });
-    else await saveOrderAtomic(db, WORKSPACE_ID, next, dataRef.current);
+    else await saveOrderAtomic(db, WORKSPACE_ID, input, dataRef.current);
     notify("Documento salvo e estoque reconciliado.", "success");
   }
   async function convertEstimate(input: StudioOrder): Promise<StudioOrder> {
     ensureAuth();
     if (input.documentType === "Invoice")
       throw new Error("O documento já é uma invoice.");
+    if (
+      input.workflow &&
+      ![
+        "approved",
+        "scheduled",
+        "production",
+        "quality",
+        "delivered",
+        "aftercare",
+      ].includes(input.workflow.stage)
+    )
+      throw new Error(
+        "Aprove o orçamento pelo pipeline antes de converter em invoice."
+      );
+    if (input.lines.some(line => line.pricePending))
+      throw new Error("Precifique os serviços antes de converter em invoice.");
     const newId = makeId("invoice");
     let result: StudioOrder | undefined;
     if (demo)

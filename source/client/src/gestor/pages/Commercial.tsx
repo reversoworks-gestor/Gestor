@@ -1,12 +1,7 @@
+import { jobChargeTotals } from "../jobCharges";
 import { DateInput } from "../components/ui";
 import { useMemo, useRef, useState, type ChangeEvent } from "react";
-import type {
-  Attachment,
-  CatalogItem,
-  Client,
-  OrderLine,
-  Payment,
-} from "../../lib/models";
+import type { Attachment, Client, OrderLine, Payment } from "../../lib/models";
 import { stripDownloadUrlToken } from "../../lib/attachments";
 import {
   calculateOrderTotals,
@@ -26,6 +21,14 @@ import {
 } from "../components/ui";
 import { useGestor } from "../store";
 import { newestFirst } from "../recordDates";
+import {
+  officialServices,
+  findService,
+  serviceCategories,
+  validateServiceCodes,
+} from "../serviceCatalog";
+import { createWorkflow, pipeline } from "../jobWorkflow";
+import { addOfficialLines, pendingPricing } from "../serviceLines";
 import {
   makeId,
   money,
@@ -108,7 +111,8 @@ function initialDocument(
     clientId: "",
     clientName: "",
     vehicleId: "",
-    serviceType: "headlights",
+    workflow: createWorkflow([]),
+    serviceType: undefined,
     title: "",
     dueDate: "",
     startDate: today(),
@@ -132,52 +136,6 @@ function initialDocument(
     totalCents: 0,
     createdAt: timestamp,
     updatedAt: timestamp,
-  };
-}
-
-function newCustomServiceLine(serviceType: ServiceType): OrderLine {
-  return {
-    id: makeId("line"),
-    service: "custom",
-    kind: "service",
-    taxable: false,
-    label: serviceDefinition(serviceType)?.name ?? "Serviço personalizado",
-    quantity: 1,
-    unitPrice: 0,
-    unitPriceCents: 0,
-    unit: "horas",
-    description: "Preço a definir após avaliação.",
-  };
-}
-
-function newCustomLine(): OrderLine {
-  return {
-    id: makeId("line"),
-    service: "custom",
-    kind: "service",
-    taxable: false,
-    label: "Serviço personalizado",
-    quantity: 1,
-    unitPrice: 0,
-    unitPriceCents: 0,
-    unit: "horas",
-    description: "Preço a definir.",
-  };
-}
-
-function catalogLine(item: CatalogItem): OrderLine {
-  return {
-    id: makeId("line"),
-    service: "custom",
-    kind: item.kind,
-    taxable: item.kind === "item" ? item.taxable : false,
-    label: item.name,
-    quantity: 1,
-    unitPrice: item.unitPrice,
-    unitPriceCents: toCents(item.unitPrice),
-    unit: item.kind === "item" ? "unidades" : "horas",
-    description: item.description,
-    catalogItemId: item.id,
   };
 }
 
@@ -217,6 +175,8 @@ function includesQuery(order: StudioOrder, query: string) {
     order.documentType,
     order.status,
     serviceLabel(order.serviceType),
+    order.workflow?.serviceCodes.join(" "),
+    order.workflow?.packageCode,
   ]
     .join(" ")
     .normalize("NFKD")
@@ -239,6 +199,7 @@ export default function CommercialPage() {
     []
   );
   const [catalogItemId, setCatalogItemId] = useState("");
+  const [packageAlternative, setPackageAlternative] = useState("");
   const [validationError, setValidationError] = useState("");
   const fileInput = useRef<HTMLInputElement>(null);
   const { run, busy, error: actionError } = useAction();
@@ -330,7 +291,20 @@ export default function CommercialPage() {
   }
 
   function updateEditor(patch: Partial<StudioOrder>) {
-    setEditor(current => (current ? { ...current, ...patch } : current));
+    setEditor(current => {
+      if (!current) return current;
+      const next = { ...current, ...patch };
+      if (patch.lines && next.workflow) {
+        const codes = patch.lines
+          .map(line => line.serviceCode)
+          .filter((code): code is string => Boolean(code));
+        const packageCode = patch.lines.find(
+          line => line.packageCode
+        )?.packageCode;
+        next.workflow = { ...next.workflow, serviceCodes: codes, packageCode };
+      }
+      return next;
+    });
     setValidationError("");
   }
 
@@ -383,27 +357,47 @@ export default function CommercialPage() {
   }
 
   function addCatalogLine() {
-    const item = ctx.data.catalogItems.find(
-      entry => entry.id === catalogItemId
-    );
-    if (!item || !editor) return;
-    updateEditor({ lines: [...editor.lines, catalogLine(item)] });
-    setCatalogItemId("");
-  }
-
-  function addCustomService() {
-    if (!editor) return;
-    updateEditor({
-      lines: [
-        ...editor.lines,
-        newCustomServiceLine(editor.serviceType ?? "headlights"),
-      ],
-    });
-  }
-
-  function addCustomLine() {
-    if (!editor) return;
-    updateEditor({ lines: [...editor.lines, newCustomLine()] });
+    if (!editor || !catalogItemId) return;
+    try {
+      const lines = addOfficialLines(
+        editor.lines,
+        catalogItemId,
+        packageAlternative || undefined
+      );
+      const codes = lines
+        .map(line => line.serviceCode)
+        .filter((code): code is string => Boolean(code));
+      const selected = findService(codes[0]);
+      const serviceType: ServiceType | undefined = (
+        {
+          DET: "detailing",
+          PDR: "pdr",
+          FAR: "headlights",
+          P3D: "engineering",
+        } as const
+      )[selected?.category ?? "DET"];
+      const packageCode =
+        findService(catalogItemId)?.type === "Pacote"
+          ? catalogItemId
+          : editor.workflow?.packageCode;
+      updateEditor({
+        lines,
+        serviceType,
+        workflow: {
+          ...(editor.workflow ?? createWorkflow(codes, packageCode)),
+          serviceCodes: codes,
+          packageCode,
+        },
+      });
+      setCatalogItemId("");
+      setPackageAlternative("");
+    } catch (reason) {
+      setValidationError(
+        reason instanceof Error
+          ? reason.message
+          : "Não foi possível adicionar o serviço."
+      );
+    }
   }
 
   function addPayment() {
@@ -499,9 +493,21 @@ export default function CommercialPage() {
         return `O preço da linha “${line.label || "sem descrição"}” não pode ser negativo ou inválido.`;
       }
     }
+    if (draft.workflow) {
+      try {
+        validateServiceCodes(draft.workflow.serviceCodes);
+      } catch (reason) {
+        return reason instanceof Error ? reason.message : "Serviços inválidos.";
+      }
+      if (
+        pendingPricing(draft.lines) &&
+        !["lead", "evaluation"].includes(draft.workflow.stage)
+      )
+        return "Informe o preço de cada serviço antes de enviar o orçamento.";
+    }
     const draftTotals = calculateOrderTotals(draft.lines, taxRate);
     const paymentError = validatePayments(
-      draftTotals.totalCents,
+      jobChargeTotals({ ...draft, taxRate }).totalCents,
       draft.payments ?? []
     );
     return paymentError || "";
@@ -550,6 +556,16 @@ export default function CommercialPage() {
 
     return {
       ...draft,
+      workflow: draft.workflow
+        ? {
+            ...draft.workflow,
+            quotedAmount: pendingPricing(lines)
+              ? null
+              : centsToAmount(totals.totalCents),
+            estimatedDeadline:
+              draft.dueDate || draft.workflow.estimatedDeadline,
+          }
+        : undefined,
       documentType:
         draft.documentType === "Orçamento" ? "Estimativa" : draft.documentType,
       clientId: currentClient.id,
@@ -577,7 +593,7 @@ export default function CommercialPage() {
       taxRate,
       totalCents: totals.totalCents,
       total: centsToAmount(totals.totalCents),
-      updatedAt: new Date().toISOString(),
+      updatedAt: draft.updatedAt,
     } satisfies StudioOrder;
   }
 
@@ -790,16 +806,37 @@ export default function CommercialPage() {
                     <span>
                       Cliente: {documentClientName(order) || "Não informado"}
                     </span>
-                    <span>Serviço: {serviceLabel(order.serviceType)}</span>
+                    <span>
+                      Serviço:{" "}
+                      {order.workflow?.serviceCodes.length
+                        ? order.workflow.serviceCodes.join(" · ")
+                        : serviceLabel(order.serviceType)}
+                    </span>
+                    {order.workflow && (
+                      <span>
+                        Pipeline:{" "}
+                        {
+                          pipeline.find(
+                            stage => stage.id === order.workflow?.stage
+                          )?.name
+                        }
+                      </span>
+                    )}
                     <span>Emissão: {order.startDate || "Não informada"}</span>
                     <span>Entrega: {order.dueDate || "A definir"}</span>
                   </div>
                 </div>
                 <div className="row wrap">
                   <strong
-                    aria-label={`Total ${formatCents(totals.totalCents, order.currency ?? "USD")}`}
+                    aria-label={
+                      pendingPricing(order.lines)
+                        ? "Total a definir por avaliação"
+                        : `Total ${formatCents(totals.totalCents, order.currency ?? "USD")}`
+                    }
                   >
-                    {formatCents(totals.totalCents, order.currency ?? "USD")}
+                    {pendingPricing(order.lines)
+                      ? "Por avaliação"
+                      : formatCents(totals.totalCents, order.currency ?? "USD")}
                   </strong>
                   <Button
                     type="button"
@@ -819,6 +856,20 @@ export default function CommercialPage() {
                     <Button
                       type="button"
                       variant="primary"
+                      disabled={
+                        pendingPricing(order.lines) ||
+                        Boolean(
+                          order.workflow &&
+                            ![
+                              "approved",
+                              "scheduled",
+                              "production",
+                              "quality",
+                              "delivered",
+                              "aftercare",
+                            ].includes(order.workflow.stage)
+                        )
+                      }
                       onClick={() => convertEstimate(order)}
                     >
                       Converter em invoice
@@ -883,21 +934,37 @@ export default function CommercialPage() {
                 </select>
               </Field>
 
-              <Field label="Status">
-                <select
-                  value={editor.status}
-                  onChange={event =>
-                    updateEditor({
-                      status: event.target.value as StudioOrder["status"],
-                    })
-                  }
+              {editor.workflow ? (
+                <Field
+                  label="Status do job"
+                  help="Avance pelo pipeline em Produção; os portões operacionais são obrigatórios."
                 >
-                  <option value="Rascunho">Rascunho</option>
-                  <option value="Enviado">Enviado</option>
-                  <option value="Aprovado">Aprovado</option>
-                  <option value="Em produção">Em produção</option>
-                </select>
-              </Field>
+                  <input
+                    readOnly
+                    value={
+                      pipeline.find(
+                        stage => stage.id === editor.workflow?.stage
+                      )?.name ?? "Lead"
+                    }
+                  />
+                </Field>
+              ) : (
+                <Field label="Status legado">
+                  <select
+                    value={editor.status}
+                    onChange={event =>
+                      updateEditor({
+                        status: event.target.value as StudioOrder["status"],
+                      })
+                    }
+                  >
+                    <option value="Rascunho">Rascunho</option>
+                    <option value="Enviado">Enviado</option>
+                    <option value="Aprovado">Aprovado</option>
+                    <option value="Em produção">Em produção</option>
+                  </select>
+                </Field>
+              )}
 
               <Field
                 label="Cliente"
@@ -949,23 +1016,6 @@ export default function CommercialPage() {
                 </select>
               </Field>
 
-              <Field label="Serviço automotivo">
-                <select
-                  value={editor.serviceType ?? "headlights"}
-                  onChange={event =>
-                    updateEditor({
-                      serviceType: event.target.value as ServiceType,
-                    })
-                  }
-                >
-                  {(Object.keys(services) as ServiceType[]).map(service => (
-                    <option key={service} value={service}>
-                      {services[service].name}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-
               <Field
                 label="Título"
                 error={!editor.title.trim() ? "Obrigatório" : undefined}
@@ -982,7 +1032,10 @@ export default function CommercialPage() {
 
               <Field label="Data de emissão ou início">
                 <DateInput
-                  required
+                  required={
+                    !editor.workflow ||
+                    !["lead", "evaluation"].includes(editor.workflow.stage)
+                  }
                   value={editor.startDate}
                   onChange={event =>
                     updateEditor({ startDate: event.target.value })
@@ -1040,58 +1093,73 @@ export default function CommercialPage() {
                 <div>
                   <h3 id="document-lines-heading">Itens e serviços</h3>
                   <p className="muted">
-                    Serviços novos iniciam em zero e devem ser precificados
-                    explicitamente antes do envio.
+                    21 itens oficiais. Preços vazios, definidos manualmente por
+                    avaliação. Pacotes lançam serviços individuais.
                   </p>
-                </div>
-                <div className="row wrap">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={addCustomService}
-                  >
-                    Adicionar {serviceLabel(editor.serviceType)}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={addCustomLine}
-                  >
-                    Linha personalizada
-                  </Button>
                 </div>
               </div>
               <div className="card-body stack">
-                <div className="row wrap">
-                  <label className="field" htmlFor="catalog-item">
-                    <span>Catálogo</span>
+                <div className="form-grid">
+                  <Field label="Catálogo oficial" className="field-full">
                     <select
                       id="catalog-item"
                       value={catalogItemId}
-                      onChange={event => setCatalogItemId(event.target.value)}
+                      onChange={event => {
+                        setCatalogItemId(event.target.value);
+                        setPackageAlternative("");
+                      }}
                     >
-                      <option value="">Selecione um item ou serviço</option>
-                      {ctx.data.catalogItems
-                        .filter(
-                          item =>
-                            (item.currency ?? "USD") ===
-                            (editor?.currency ?? ctx.settings.currency)
+                      <option value="">Selecione um serviço ou pacote</option>
+                      {Object.entries(serviceCategories).map(
+                        ([category, name]) => (
+                          <optgroup key={category} label={name}>
+                            {officialServices
+                              .filter(item => item.category === category)
+                              .map(item => (
+                                <option key={item.code} value={item.code}>
+                                  {item.code} · {item.name} · {item.type}
+                                </option>
+                              ))}
+                          </optgroup>
                         )
-                        .map(item => (
-                          <option key={item.id} value={item.id}>
-                            {item.name} ·{" "}
-                            {formatCents(
-                              toCents(item.unitPrice),
-                              editor?.currency ?? ctx.settings.currency
-                            )}
-                          </option>
-                        ))}
+                      )}
+                      <optgroup label="Pacotes">
+                        {officialServices
+                          .filter(item => item.type === "Pacote")
+                          .map(item => (
+                            <option key={item.code} value={item.code}>
+                              {item.code} · {item.name}
+                            </option>
+                          ))}
+                      </optgroup>
                     </select>
-                  </label>
+                  </Field>
+                  {catalogItemId === "PCT-03" && (
+                    <Field
+                      label="Base do pacote The Missing Part"
+                      help="Escolha explicitamente a peça de reposição ou customizada."
+                    >
+                      <select
+                        value={packageAlternative}
+                        onChange={event =>
+                          setPackageAlternative(event.target.value)
+                        }
+                      >
+                        <option value="">Selecione a base</option>
+                        <option value="P3D-01">
+                          P3D-01 · OEM-Style Replacement
+                        </option>
+                        <option value="P3D-02">P3D-02 · Custom Part</option>
+                      </select>
+                    </Field>
+                  )}
                   <Button
                     type="button"
                     variant="secondary"
-                    disabled={!catalogItemId}
+                    disabled={
+                      !catalogItemId ||
+                      (catalogItemId === "PCT-03" && !packageAlternative)
+                    }
                     onClick={addCatalogLine}
                   >
                     Adicionar do catálogo
@@ -1100,19 +1168,24 @@ export default function CommercialPage() {
 
                 {editor.lines.length === 0 ? (
                   <p className="helper">
-                    Adicione um serviço automotivo, um item do catálogo ou uma
-                    linha personalizada.
+                    Escolha um serviço ou pacote do catálogo oficial. Não há
+                    preço padrão.
                   </p>
                 ) : (
                   <div className="document-lines">
                     {editor.lines.map((line, index) => (
                       <fieldset className="line-row" key={line.id}>
-                        <legend>Linha {index + 1}</legend>
+                        <legend>
+                          {line.serviceCode
+                            ? `${line.serviceCode}${line.packageCode ? ` · ${line.packageCode}` : ""}`
+                            : `Linha legada ${index + 1}`}
+                        </legend>
                         <div className="form-grid">
                           <Field label="Descrição">
                             <input
                               required
                               value={line.label}
+                              readOnly={Boolean(line.serviceCode)}
                               onChange={event =>
                                 updateLine(line.id, {
                                   label: event.target.value,
@@ -1123,6 +1196,7 @@ export default function CommercialPage() {
                           <Field label="Tipo">
                             <select
                               value={line.kind ?? "service"}
+                              disabled={Boolean(line.serviceCode)}
                               onChange={event => {
                                 const kind = event.target.value as
                                   | "item"
@@ -1163,18 +1237,24 @@ export default function CommercialPage() {
                             label={`Preço unitário (${editor?.currency ?? ctx.settings.currency})`}
                           >
                             <input
-                              required
+                              placeholder="Por avaliação"
                               type="number"
+                              inputMode="decimal"
                               min="0"
                               step="0.01"
                               value={
+                                !line.pricePending &&
                                 Number.isFinite(line.unitPrice)
                                   ? line.unitPrice
                                   : ""
                               }
                               onChange={event =>
                                 updateLine(line.id, {
-                                  unitPrice: valueAsNumber(event.target.value),
+                                  unitPrice:
+                                    event.target.value === ""
+                                      ? 0
+                                      : valueAsNumber(event.target.value),
+                                  pricePending: event.target.value === "",
                                 })
                               }
                             />
@@ -1208,10 +1288,12 @@ export default function CommercialPage() {
                         <div className="row wrap">
                           <span className="muted">
                             Total da linha:{" "}
-                            {formatCents(
-                              calculateOrderTotals([line], 0).subtotalCents,
-                              editor?.currency ?? ctx.settings.currency
-                            )}
+                            {line.pricePending
+                              ? "Por avaliação"
+                              : formatCents(
+                                  calculateOrderTotals([line], 0).subtotalCents,
+                                  editor?.currency ?? ctx.settings.currency
+                                )}
                           </span>
                           <Button
                             type="button"
@@ -1515,28 +1597,34 @@ export default function CommercialPage() {
               <div className="stat">
                 <span className="stat-label">Subtotal</span>
                 <strong className="stat-value">
-                  {formatCents(
-                    editorTotals.subtotalCents,
-                    editor?.currency ?? ctx.settings.currency
-                  )}
+                  {pendingPricing(editor.lines)
+                    ? "A definir"
+                    : formatCents(
+                        editorTotals.subtotalCents,
+                        editor?.currency ?? ctx.settings.currency
+                      )}
                 </strong>
               </div>
               <div className="stat">
                 <span className="stat-label">Taxa</span>
                 <strong className="stat-value">
-                  {formatCents(
-                    editorTotals.taxCents,
-                    editor?.currency ?? ctx.settings.currency
-                  )}
+                  {pendingPricing(editor.lines)
+                    ? "A definir"
+                    : formatCents(
+                        editorTotals.taxCents,
+                        editor?.currency ?? ctx.settings.currency
+                      )}
                 </strong>
               </div>
               <div className="stat">
                 <span className="stat-label">Total</span>
                 <strong className="stat-value">
-                  {formatCents(
-                    editorTotals.totalCents,
-                    editor?.currency ?? ctx.settings.currency
-                  )}
+                  {pendingPricing(editor.lines)
+                    ? "A definir"
+                    : formatCents(
+                        editorTotals.totalCents,
+                        editor?.currency ?? ctx.settings.currency
+                      )}
                 </strong>
               </div>
               <div className="stat">

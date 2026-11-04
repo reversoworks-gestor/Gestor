@@ -1,31 +1,30 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import type { CatalogItem } from "../../lib/models";
 import { addWorkspaceEmail } from "../../lib/firebase";
 import {
   Badge,
   Button,
-  ConfirmButton,
   EmptyState,
   Field,
-  FormModal,
   PageHeading,
 } from "../components/ui";
+import {
+  findService,
+  officialServices,
+  serviceCategories,
+  type OfficialService,
+  type ServiceCategory,
+} from "../serviceCatalog";
 import { useGestor } from "../store";
-import { makeId, money, type Settings } from "../types";
+import { type Settings } from "../types";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-function blankCatalogItem(currency: Settings["currency"] = "USD"): CatalogItem {
-  return {
-    id: makeId("catalog"),
-    name: "",
-    description: "",
-    unitPrice: 0,
-    currency,
-    taxable: false,
-    kind: "service",
-  };
-}
+const categories = Object.keys(serviceCategories) as ServiceCategory[];
+const serviceTypes: OfficialService["type"][] = [
+  "Principal",
+  "Add-on",
+  "Principal B2B",
+  "Pacote",
+];
 
 function errorMessage(error: unknown, fallback: string) {
   return error instanceof Error && error.message ? error.message : fallback;
@@ -39,13 +38,33 @@ function validEmail(value: string) {
   return emailPattern.test(value);
 }
 
+function serviceReference(code: string) {
+  const service = findService(code);
+  return service ? `${code} — ${service.name}` : code;
+}
+
+function serviceCategoryNames(service: OfficialService) {
+  if (service.category) return serviceCategories[service.category];
+  const codes = [...service.components, ...(service.alternatives ?? [])];
+  const involved = categories.filter(category =>
+    codes.some(code => findService(code)?.category === category)
+  );
+  return `Conforme composição: ${involved.map(category => serviceCategories[category]).join(" · ")}`;
+}
+
 export default function SettingsPage() {
   const ctx = useGestor();
-  const { data, mode, owner, settings } = ctx;
+  const { mode, owner, settings } = ctx;
   const [settingsDraft, setSettingsDraft] = useState<Settings>(settings);
   const [settingsError, setSettingsError] = useState("");
   const [savingSettings, setSavingSettings] = useState(false);
-  const [catalogDraft, setCatalogDraft] = useState<CatalogItem | null>(null);
+  const [catalogSearch, setCatalogSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<ServiceCategory | "">(
+    ""
+  );
+  const [typeFilter, setTypeFilter] = useState<OfficialService["type"] | "">(
+    ""
+  );
   const [teamEmail, setTeamEmail] = useState("");
   const [teamError, setTeamError] = useState("");
   const [authorizingTeam, setAuthorizingTeam] = useState(false);
@@ -54,13 +73,36 @@ export default function SettingsPage() {
     setSettingsDraft(settings);
   }, [settings]);
 
-  const catalogItems = useMemo(
-    () =>
-      [...data.catalogItems].sort((first, second) =>
-        first.name.localeCompare(second.name, "pt-BR")
-      ),
-    [data.catalogItems]
-  );
+  const catalogItems = useMemo(() => {
+    const query = catalogSearch.trim().toLocaleLowerCase();
+    return officialServices.filter(service => {
+      const matchesCategory =
+        !categoryFilter ||
+        service.category === categoryFilter ||
+        (service.type === "Pacote" &&
+          [...service.components, ...(service.alternatives ?? [])].some(
+            code => findService(code)?.category === categoryFilter
+          ));
+      const text = [
+        service.code,
+        service.name,
+        service.description,
+        serviceCategoryNames(service),
+        service.type,
+        ...service.prerequisites,
+        ...service.components,
+        ...(service.alternatives ?? []),
+      ]
+        .join(" ")
+        .toLocaleLowerCase();
+      return (
+        matchesCategory &&
+        (!typeFilter || service.type === typeFilter) &&
+        (!query || text.includes(query))
+      );
+    });
+  }, [catalogSearch, categoryFilter, typeFilter]);
+
   const canAuthorizeTeam =
     owner && (mode === "firebase" || mode === "emulator");
 
@@ -68,14 +110,9 @@ export default function SettingsPage() {
     setSettingsDraft(current => ({ ...current, ...patch }));
   }
 
-  function updateCatalog(patch: Partial<CatalogItem>) {
-    setCatalogDraft(current => (current ? { ...current, ...patch } : current));
-  }
-
   async function saveStudioSettings(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSettingsError("");
-
     const studioName = settingsDraft.studioName.trim();
     const taxRate = Number(settingsDraft.taxRate);
     const email = normalizeEmail(settingsDraft.email);
@@ -121,60 +158,9 @@ export default function SettingsPage() {
     }
   }
 
-  async function saveCatalogItem() {
-    if (!catalogDraft) return;
-
-    const name = catalogDraft.name.trim();
-    const description = catalogDraft.description.trim();
-    const unitPrice = Number(catalogDraft.unitPrice);
-
-    if (!name) throw new Error("Informe o nome do item do catálogo.");
-    if (!description)
-      throw new Error("Informe a descrição do item do catálogo.");
-    if (!Number.isFinite(unitPrice) || unitPrice < 0) {
-      throw new Error("O preço unitário deve ser um número não negativo.");
-    }
-
-    const saved: CatalogItem = {
-      ...catalogDraft,
-      name,
-      description,
-      unitPrice,
-    };
-
-    try {
-      await ctx.save("catalogItems", saved);
-      setCatalogDraft(null);
-      ctx.notify("Item do catálogo salvo.", "success");
-    } catch (error) {
-      const message = errorMessage(
-        error,
-        "Não foi possível salvar o item do catálogo."
-      );
-      ctx.notify(message, "error");
-      throw error;
-    }
-  }
-
-  async function removeCatalogItem(item: CatalogItem) {
-    try {
-      await ctx.remove("catalogItems", item.id);
-      if (catalogDraft?.id === item.id) setCatalogDraft(null);
-      ctx.notify("Item removido do catálogo.", "success");
-    } catch (error) {
-      const message = errorMessage(
-        error,
-        "Não foi possível remover o item do catálogo."
-      );
-      ctx.notify(message, "error");
-      throw new Error(message);
-    }
-  }
-
   async function authorizeTeamMember(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setTeamError("");
-
     if (mode !== "firebase" && mode !== "emulator") {
       setTeamError(
         "A autorização de equipe só está disponível em um workspace Firebase ou no emulador."
@@ -187,7 +173,6 @@ export default function SettingsPage() {
       );
       return;
     }
-
     const email = normalizeEmail(teamEmail);
     if (!validEmail(email)) {
       setTeamError(
@@ -218,7 +203,7 @@ export default function SettingsPage() {
       <PageHeading
         eyebrow="Ajustes"
         title="Configurações do estúdio"
-        description="Defina a identidade do workspace, mantenha o catálogo operacional e controle o acesso da equipe."
+        description="Defina a identidade do workspace, consulte o catálogo oficial e controle o acesso da equipe."
       />
 
       <section className="card" aria-labelledby="studio-settings-heading">
@@ -252,7 +237,6 @@ export default function SettingsPage() {
                   autoComplete="organization"
                 />
               </Field>
-
               <Field
                 label="Moeda"
                 help="A moeda define apenas a apresentação dos valores. O Gestor não converte valores automaticamente."
@@ -272,7 +256,6 @@ export default function SettingsPage() {
                   <option value="BRL">BRL — real brasileiro</option>
                 </select>
               </Field>
-
               <Field
                 label="Taxa padrão (decimal)"
                 help="A taxa é armazenada como fração decimal: 0,1 representa 10%. Ela será aplicada somente onde o item estiver marcado como tributável."
@@ -308,7 +291,6 @@ export default function SettingsPage() {
                   required
                 />
               </Field>
-
               <Field
                 label="Telefone"
                 help="Opcional; usado como contato público nos documentos."
@@ -325,7 +307,6 @@ export default function SettingsPage() {
                   autoComplete="tel"
                 />
               </Field>
-
               <Field
                 label="E-mail público"
                 help="Opcional; aparece como contato nos documentos quando preenchido."
@@ -349,7 +330,6 @@ export default function SettingsPage() {
                   autoComplete="email"
                 />
               </Field>
-
               <Field label="Endereço" className="field-full">
                 <textarea
                   id="studio-address"
@@ -363,7 +343,6 @@ export default function SettingsPage() {
                   autoComplete="street-address"
                 />
               </Field>
-
               <Field
                 label="Rodapé público"
                 className="field-full"
@@ -381,13 +360,11 @@ export default function SettingsPage() {
                 />
               </Field>
             </div>
-
             {settingsError && (
               <p className="error-message" role="alert">
                 {settingsError}
               </p>
             )}
-
             <div className="row wrap">
               <Button
                 type="submit"
@@ -404,95 +381,168 @@ export default function SettingsPage() {
       <section className="card" aria-labelledby="catalog-heading">
         <div className="card-head split">
           <div>
-            <p className="eyebrow">Catálogo</p>
-            <h2 id="catalog-heading">Itens e serviços</h2>
+            <p className="eyebrow">Catálogo oficial · 04/11/2026</p>
+            <h2 id="catalog-heading">Serviços por avaliação</h2>
             <p className="muted">
-              Itens do catálogo podem ser editados ou removidos. Um item
-              removido não é recriado nesta tela.
+              4 categorias · 18 serviços · 3 pacotes · 21 itens oficiais.
             </p>
           </div>
-          <Button
-            type="button"
-            variant="primary"
-            onClick={() =>
-              setCatalogDraft(blankCatalogItem(ctx.settings.currency))
-            }
-          >
-            Novo item
-          </Button>
+          <Badge tone="neutral">Somente leitura</Badge>
         </div>
-        <div className="card-body">
-          {catalogItems.length === 0 ? (
+        <div className="card-body stack">
+          <p className="helper">
+            Todos os preços permanecem nulos: “por avaliação” significa que o
+            valor e o prazo são definidos manualmente no orçamento, após avaliar
+            o veículo, o problema e o escopo. Não há tabela fixa, valor sugerido
+            ou preço zero. Códigos, nomes e descrições são oficiais e não podem
+            ser alterados nesta tela.
+          </p>
+          <div className="form-grid">
+            <Field label="Pesquisar catálogo" className="field-full">
+              <input
+                id="catalog-search"
+                data-testid="catalog-search"
+                type="search"
+                value={catalogSearch}
+                onChange={event => setCatalogSearch(event.target.value)}
+                placeholder="Código, nome, descrição ou composição"
+              />
+            </Field>
+            <Field
+              label="Categoria"
+              help="Pacotes aparecem nas categorias dos serviços que compõem; não são uma quinta categoria."
+            >
+              <select
+                id="catalog-category"
+                data-testid="catalog-category"
+                value={categoryFilter}
+                onChange={event =>
+                  setCategoryFilter(event.target.value as ServiceCategory | "")
+                }
+              >
+                <option value="">Todas as 4 categorias</option>
+                {categories.map(category => (
+                  <option key={category} value={category}>
+                    {category} — {serviceCategories[category]}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Tipo">
+              <select
+                id="catalog-type"
+                data-testid="catalog-type"
+                value={typeFilter}
+                onChange={event =>
+                  setTypeFilter(
+                    event.target.value as OfficialService["type"] | ""
+                  )
+                }
+              >
+                <option value="">Todos os tipos</option>
+                {serviceTypes.map(type => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+          <p className="muted" role="status" aria-live="polite">
+            {catalogItems.length} de {officialServices.length} itens oficiais
+          </p>
+          {catalogItems.length ? (
+            <div className="grid grid-2" data-testid="catalog-items">
+              {catalogItems.map(service => (
+                <article
+                  key={service.code}
+                  className="card card-body stack"
+                  data-testid={`catalog-item-${service.code}`}
+                  aria-labelledby={`service-${service.code}`}
+                  style={{ minWidth: 0, overflowWrap: "anywhere" }}
+                >
+                  <div className="row wrap">
+                    <span className="mono">{service.code}</span>
+                    <Badge tone="neutral">{service.type}</Badge>
+                    <Badge tone="success">
+                      {service.active ? "Ativo" : "Inativo"}
+                    </Badge>
+                  </div>
+                  <h3 id={`service-${service.code}`}>{service.name}</h3>
+                  <p className="muted">{service.description}</p>
+                  <p className="helper">
+                    <strong>Categoria:</strong> {serviceCategoryNames(service)}
+                  </p>
+                  <p>
+                    <strong>Preço:</strong> Por avaliação{" "}
+                    <span className="muted">— não definido</span>
+                  </p>
+                  {service.type !== "Pacote" && (
+                    <p className="helper">
+                      <strong>Pré-requisito:</strong>{" "}
+                      {service.prerequisites.length
+                        ? `${service.prerequisites.map(serviceReference).join(" OU ")}. Pelo menos um deve integrar o mesmo job antes deste add-on.`
+                        : "Nenhum."}
+                    </p>
+                  )}
+                  {service.type === "Pacote" && (
+                    <div className="stack">
+                      {Boolean(service.alternatives?.length) && (
+                        <p className="helper">
+                          <strong>Escolha obrigatória:</strong>{" "}
+                          {service.alternatives
+                            ?.map(serviceReference)
+                            .join(" OU ")}{" "}
+                          — escolher uma alternativa, não ambas.
+                        </p>
+                      )}
+                      <p className="helper">
+                        <strong>
+                          Composição
+                          {service.alternatives?.length ? " adicional" : ""}:
+                        </strong>{" "}
+                        {service.components.map(serviceReference).join(" + ")}
+                      </p>
+                      <p className="helper">
+                        Nome comercial: o orçamento lança os códigos
+                        individuais, não o pacote como serviço executável
+                        separado.
+                      </p>
+                      <p className="helper">
+                        <strong>Execução:</strong>{" "}
+                        {service.code === "PCT-01"
+                          ? "FAR → DET (correção e trim) → proteções FAR-02 e DET-04 por último."
+                          : service.code === "PCT-02"
+                            ? "PDR sempre primeiro; DET depois. Nunca inverter."
+                            : "Processo P3D completo; fit test aprovado antes da impressão final."}
+                      </p>
+                    </div>
+                  )}
+                </article>
+              ))}
+            </div>
+          ) : (
             <EmptyState
-              title="Nenhum item no catálogo"
-              description="Cadastre serviços e itens para reutilizá-los em estimativas e invoices."
+              title="Nenhum serviço encontrado"
+              description="Ajuste a pesquisa, categoria ou tipo. O catálogo oficial não permite criar itens livres."
               action={
                 <Button
-                  type="button"
-                  variant="primary"
-                  onClick={() =>
-                    setCatalogDraft(blankCatalogItem(ctx.settings.currency))
-                  }
+                  onClick={() => {
+                    setCatalogSearch("");
+                    setCategoryFilter("");
+                    setTypeFilter("");
+                  }}
                 >
-                  Cadastrar item
+                  Limpar filtros
                 </Button>
               }
             />
-          ) : (
-            <div className="table-wrap">
-              <table className="data-table" data-testid="catalog-items-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Item</th>
-                    <th scope="col">Tipo</th>
-                    <th scope="col">Preço unitário</th>
-                    <th scope="col">Tributação</th>
-                    <th scope="col">Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {catalogItems.map(item => (
-                    <tr key={item.id} data-testid={`catalog-item-${item.id}`}>
-                      <td>
-                        <strong>{item.name}</strong>
-                        <p className="muted">{item.description}</p>
-                      </td>
-                      <td>
-                        <Badge tone="neutral">
-                          {item.kind === "service" ? "Serviço" : "Item"}
-                        </Badge>
-                      </td>
-                      <td>{money(item.unitPrice, item.currency ?? "USD")}</td>
-                      <td>
-                        {item.taxable ? (
-                          <Badge tone="warning">Tributável</Badge>
-                        ) : (
-                          <span className="muted">Não tributável</span>
-                        )}
-                      </td>
-                      <td>
-                        <div className="row wrap">
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            onClick={() => setCatalogDraft({ ...item })}
-                          >
-                            Editar
-                          </Button>
-                          <ConfirmButton
-                            label="Remover"
-                            variant="danger"
-                            confirmation={`Remover “${item.name}” do catálogo? Esta ação não pode ser desfeita.`}
-                            onConfirm={() => removeCatalogItem(item)}
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
           )}
+          <p className="helper">
+            PPF, pintura completa, mecânica e eletrônica automotiva não integram
+            o catálogo. Registros históricos são preservados; esta consulta não
+            altera nem exclui dados antigos.
+          </p>
         </div>
       </section>
 
@@ -553,113 +603,6 @@ export default function SettingsPage() {
           )}
         </div>
       </section>
-
-      {catalogDraft && (
-        <FormModal
-          title={
-            data.catalogItems.some(item => item.id === catalogDraft.id)
-              ? "Editar item do catálogo"
-              : "Novo item do catálogo"
-          }
-          onClose={() => setCatalogDraft(null)}
-          onSubmit={saveCatalogItem}
-          submitLabel="Salvar item"
-        >
-          <div className="form-grid">
-            <Field label="Nome" className="field-full">
-              <input
-                id="catalog-name"
-                data-testid="catalog-name"
-                name="catalogName"
-                value={catalogDraft.name}
-                onChange={event => updateCatalog({ name: event.target.value })}
-                required
-                autoFocus
-              />
-            </Field>
-
-            <Field label="Descrição" className="field-full">
-              <textarea
-                id="catalog-description"
-                data-testid="catalog-description"
-                name="catalogDescription"
-                rows={3}
-                value={catalogDraft.description}
-                onChange={event =>
-                  updateCatalog({ description: event.target.value })
-                }
-                required
-              />
-            </Field>
-
-            <Field label="Tipo">
-              <select
-                id="catalog-kind"
-                data-testid="catalog-kind"
-                name="catalogKind"
-                value={catalogDraft.kind}
-                onChange={event =>
-                  updateCatalog({
-                    kind: event.target.value as CatalogItem["kind"],
-                  })
-                }
-              >
-                <option value="service">Serviço</option>
-                <option value="item">Item</option>
-              </select>
-            </Field>
-
-            <Field
-              label="Preço unitário"
-              help={`Moeda deste item: ${catalogDraft.currency ?? "USD"}. A troca da moeda do estúdio não converte o valor deste item.`}
-            >
-              <input
-                id="catalog-unit-price"
-                data-testid="catalog-unit-price"
-                name="catalogUnitPrice"
-                type="number"
-                min="0"
-                step="0.01"
-                inputMode="decimal"
-                value={
-                  Number.isFinite(Number(catalogDraft.unitPrice))
-                    ? String(catalogDraft.unitPrice)
-                    : ""
-                }
-                onChange={event =>
-                  updateCatalog({
-                    unitPrice:
-                      event.target.value === ""
-                        ? Number.NaN
-                        : Number(event.target.value),
-                  })
-                }
-                required
-              />
-            </Field>
-
-            <Field
-              label="Tributação"
-              className="field-full"
-              help="Marque quando este item deve receber a taxa padrão nos documentos."
-            >
-              <span className="row">
-                <input
-                  id="catalog-taxable"
-                  data-testid="catalog-taxable"
-                  name="catalogTaxable"
-                  type="checkbox"
-                  checked={catalogDraft.taxable}
-                  onChange={event =>
-                    updateCatalog({ taxable: event.target.checked })
-                  }
-                />
-                Item tributável
-              </span>
-            </Field>
-          </div>
-        </FormModal>
-      )}
     </div>
   );
 }

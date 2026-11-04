@@ -1,7 +1,15 @@
 import { useMemo, useState } from "react";
 import MaterialSelector from "../../components/MaterialSelector";
-import type { Attachment, OrderLine } from "../../lib/models";
+import type { Attachment } from "../../lib/models";
 import { stripDownloadUrlToken } from "../../lib/attachments";
+import {
+  findService,
+  officialServices,
+  serviceCategories,
+  type ServiceCategory,
+} from "../serviceCatalog";
+import { addOfficialLines } from "../serviceLines";
+import { createWorkflow } from "../jobWorkflow";
 import {
   Button,
   ConfirmButton,
@@ -16,9 +24,7 @@ import { useGestor } from "../store";
 import {
   dateLabel,
   makeId,
-  money,
   services,
-  today,
   vehicleLabel,
   type Assessment,
   type ServiceType,
@@ -30,6 +36,7 @@ type AssessmentDraft = Pick<
   Assessment,
   | "id"
   | "serviceType"
+  | "serviceCode"
   | "vehicleId"
   | "clientId"
   | "title"
@@ -48,12 +55,44 @@ type EditorState = {
 
 type UnknownRecord = Record<string, unknown>;
 
-const serviceTypes = Object.keys(services) as ServiceType[];
+const categoryServiceTypes: Record<ServiceCategory, ServiceType> = {
+  DET: "detailing",
+  PDR: "pdr",
+  FAR: "headlights",
+  P3D: "engineering",
+};
+const categories = Object.keys(serviceCategories) as ServiceCategory[];
+const categoryRestrictions: Record<ServiceCategory, string> = {
+  DET: "Avaliar pintura e danos pré-existentes. Correção exige test spot; coating somente sobre pintura corrigida. Add-ons de trim, engine bay e water spots precedem a proteção. Registrar produto, data e cura.",
+  PDR: "Registrar tamanho, profundidade, acesso e pintura intacta. Pintura quebrada exige decisão de viabilidade: touch-up PDR-02 ou o caso não é PDR puro. Orçamento por painel/amassado, com foto sob luz de PDR.",
+  FAR: "Dano externo pode ser restaurado. Dano interno ou trinca não é resolvido por restauração externa; alinhar expectativa antes de orçar. Registrar fotos dos dois faróis com mesma distância e luz.",
+  P3D: "Registrar função, calor, vibração, sol e carga da peça; material escolhido pela função. Protótipo e fit test aprovado bloqueiam a impressão final. P3D-04 entrega somente arquivos scan/CAD; P3D-05 exige decidir reparar ou recriar.",
+};
+
+function categoryForType(
+  serviceType: ServiceType
+): ServiceCategory | undefined {
+  return categories.find(
+    category => categoryServiceTypes[category] === serviceType
+  );
+}
+
+function assessmentServiceLabel(assessment: Assessment): string {
+  const service = assessment.serviceCode
+    ? findService(assessment.serviceCode)
+    : undefined;
+  if (service) return `${service.code} — ${service.name}`;
+  const category = categoryForType(assessment.serviceType);
+  return category
+    ? serviceCategories[category]
+    : `${services[assessment.serviceType]?.name ?? "Serviço"} (legado)`;
+}
 
 function blankDraft(): AssessmentDraft {
   return {
     id: makeId("assessment"),
-    serviceType: "headlights",
+    serviceType: "detailing",
+    serviceCode: "",
     vehicleId: "",
     clientId: "",
     title: "",
@@ -127,6 +166,12 @@ export default function TriagePage() {
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [selectedPhotos, setSelectedPhotos] = useState<File[]>([]);
   const [materialVehicleId, setMaterialVehicleId] = useState("");
+  const selectedService = editor?.draft.serviceCode
+    ? findService(editor.draft.serviceCode)
+    : undefined;
+  const selectedCategory = editor
+    ? categoryForType(editor.draft.serviceType)
+    : undefined;
 
   const materialVehicle = useMemo(
     () => linkedVehicle(materialVehicleId, data.vehicles),
@@ -148,7 +193,7 @@ export default function TriagePage() {
           assessment.objective,
           assessment.limitations,
           assessment.verdict,
-          services[assessment.serviceType]?.name ?? "Triagem técnica legada",
+          assessmentServiceLabel(assessment),
           vehicleLabel(vehicle),
           client?.name ?? "",
         ]
@@ -175,6 +220,7 @@ export default function TriagePage() {
       draft: {
         id: assessment.id,
         serviceType: assessment.serviceType,
+        serviceCode: assessment.serviceCode ?? "",
         vehicleId: assessment.vehicleId,
         clientId: assessment.clientId,
         title: assessment.title,
@@ -218,6 +264,26 @@ export default function TriagePage() {
   const saveAssessment = async () => {
     if (!editor) return;
     const { draft, existingPhotos, isNew } = editor;
+    const original = data.triages.find(item => item.id === draft.id);
+    const keepsLegacy =
+      !isNew &&
+      !draft.serviceCode &&
+      !original?.serviceCode &&
+      original?.serviceType === draft.serviceType;
+    const officialService = draft.serviceCode
+      ? findService(draft.serviceCode)
+      : undefined;
+    if (
+      !keepsLegacy &&
+      (!officialService ||
+        officialService.type === "Pacote" ||
+        !officialService.category ||
+        categoryServiceTypes[officialService.category] !== draft.serviceType)
+    ) {
+      throw new Error(
+        "Selecione uma das quatro categorias e um código oficial compatível antes de salvar."
+      );
+    }
     const client = data.clients.find(item => item.id === draft.clientId);
     const vehicle = linkedVehicle(draft.vehicleId, data.vehicles);
 
@@ -242,8 +308,10 @@ export default function TriagePage() {
         uploaded.push(safeAttachment(attachment));
       }
 
+      const { serviceCode, ...fields } = draft;
       const assessment: Assessment = {
-        ...draft,
+        ...fields,
+        ...(serviceCode ? { serviceCode } : {}),
         title: draft.title.trim(),
         condition: draft.condition.trim(),
         objective: draft.objective.trim(),
@@ -301,24 +369,33 @@ export default function TriagePage() {
       return;
     }
 
-    const line: OrderLine = {
-      id: makeId("line"),
-      service: "custom",
-      kind: "service",
-      taxable: false,
-      unit: "unidades",
-      label: `${services[assessment.serviceType]?.name ?? "Triagem técnica legada"} — avaliação`,
-      quantity: 1,
-      unitPrice: 0,
-      unitPriceCents: 0,
-      description: [
-        assessment.title,
-        `Veredito: ${assessment.verdict}`,
-        assessment.safetyCritical
-          ? "Item marcado como crítico: requer inspeção/validação antes de execução."
-          : "Escopo sujeito à inspeção e validação técnica.",
-      ].join(" · "),
-    };
+    const service = assessment.serviceCode
+      ? findService(assessment.serviceCode)
+      : undefined;
+    if (
+      !service ||
+      service.type === "Pacote" ||
+      !service.category ||
+      categoryServiceTypes[service.category] !== assessment.serviceType
+    ) {
+      notify(
+        "Abra a avaliação e selecione um código oficial antes de criar a estimativa. O registro histórico permanece preservado.",
+        "error"
+      );
+      return;
+    }
+    if (service.prerequisites.length) {
+      notify(
+        `Este add-on exige ${service.prerequisites.join(" ou ")} no mesmo job. Crie a estimativa no Comercial escolhendo o serviço principal e este add-on; nenhum serviço é incluído automaticamente.`,
+        "error"
+      );
+      return;
+    }
+    const lines = addOfficialLines([], service.code);
+    const workflow = createWorkflow([service.code]);
+    workflow.problem = assessment.condition;
+    // Initial evidence does not automatically approve a pipeline stage.
+    workflow.beforePhotos = assessment.photos.map(safeAttachment);
     const timestamp = new Date().toISOString();
     const order: StudioOrder = {
       id: makeId("estimate"),
@@ -336,14 +413,15 @@ export default function TriagePage() {
         company: client.company,
         address: client.address,
       },
-      title: `${services[assessment.serviceType]?.name ?? "Triagem técnica legada"} · ${vehicle.make} ${vehicle.model}`,
-      dueDate: today(),
-      startDate: today(),
+      title: `${service.name} · ${vehicle.make} ${vehicle.model}`,
+      dueDate: "",
+      startDate: "",
       materialId: "",
       materialName: "",
       materialGrams: 0,
       notes: [
         `Origem: avaliação ${assessment.id}.`,
+        `Serviço oficial: ${service.code} — ${service.name}. Preço e prazo por avaliação, ainda não definidos.`,
         `Condição: ${assessment.condition}`,
         `Objetivo: ${assessment.objective}`,
         `Limites: ${assessment.limitations}`,
@@ -351,7 +429,7 @@ export default function TriagePage() {
           ? "Item marcado como crítico. Este documento não substitui inspeção, teste, montagem ou validação técnica."
           : "Documento comercial baseado em orientação inicial; a execução depende de inspeção e escopo aprovado.",
       ].join("\n"),
-      lines: [line],
+      lines,
       total: 0,
       totalCents: 0,
       taxRate: settings.taxRate,
@@ -360,6 +438,7 @@ export default function TriagePage() {
       vehicleId: vehicle.id,
       serviceType: assessment.serviceType,
       journeyStage: "evaluate",
+      workflow,
       scope: assessment.objective,
       constraints: assessment.limitations,
       inspectionNotes: assessment.safetyCritical
@@ -468,28 +547,27 @@ export default function TriagePage() {
     );
     const score = numberFrom(payload.score, numberFrom(primary.score));
     const confidence = numberFrom(payload.confidence);
-    const line: OrderLine = {
-      id: makeId("line"),
-      service: "custom",
-      kind: "service",
-      taxable: false,
-      unit: "unidades",
-      label: "Triagem técnica de material",
-      quantity: 1,
-      unitPrice: 0,
-      unitPriceCents: 0,
-      description: `${project} · ${recommendation} · score ${score}/100 · confiança ${confidence}% · análise ${analysisId}`,
-      triageAnalysisId: analysisId,
-      triageRecommendation: recommendation,
-      triageScore: score,
-      triageConfidence: confidence,
-    };
+    const analysisSummary = `${project} · ${recommendation} · score ${score}/100 · confiança ${confidence}% · análise ${analysisId}`;
+    const relatedLine = document.lines.find(line =>
+      line.serviceCode?.startsWith("P3D-")
+    );
     const nextOrder: StudioOrder = {
       ...document,
-      lines: [...document.lines, line],
+      // Technical guidance is evidence, not an extra billable catalog service.
+      lines: document.lines.map(line =>
+        line.id === relatedLine?.id
+          ? {
+              ...line,
+              triageAnalysisId: analysisId,
+              triageRecommendation: recommendation,
+              triageScore: score,
+              triageConfidence: confidence,
+            }
+          : line
+      ),
       notes: [
         document.notes,
-        `Triagem técnica de material vinculada: ${recommendation} · ${project}.`,
+        `Triagem técnica de material vinculada (sem novo serviço ou preço): ${analysisSummary}.`,
         "A recomendação exige validação da aplicação e da peça física antes de qualquer uso crítico.",
       ]
         .filter(Boolean)
@@ -522,10 +600,7 @@ export default function TriagePage() {
     }
     reportWindow.opener = null;
     const rows = [
-      [
-        "Serviço",
-        services[assessment.serviceType]?.name ?? "Triagem técnica legada",
-      ],
+      ["Serviço", assessmentServiceLabel(assessment)],
       ["Cliente", client?.name || "Não vinculado"],
       ["Veículo", vehicleLabel(vehicle)],
       ["Veredito", assessment.verdict],
@@ -571,10 +646,11 @@ export default function TriagePage() {
       <div className="grid grid-3">
         <article className="card">
           <p className="eyebrow">Método</p>
-          <strong>Avaliar → Definir → Desenvolver</strong>
+          <strong>Avaliar antes de orçar</strong>
           <p className="muted">
-            Transforme apenas avaliações registradas em documento comercial;
-            preços começam em {money(0, settings.currency)}.
+            Preço por avaliação: valor e prazo são definidos manualmente após
+            inspecionar o problema e confirmar o escopo. Sem tabela fixa ou
+            preço zero. Uma avaliação não aprova automaticamente o job.
           </p>
         </article>
         <article className="card">
@@ -618,101 +694,84 @@ export default function TriagePage() {
         </div>
 
         {triages.length ? (
-          <div className="table-wrap">
-            <table className="data-table" data-testid="triage-history">
-              <thead>
-                <tr>
-                  <th scope="col">Avaliação</th>
-                  <th scope="col">Cliente / veículo</th>
-                  <th scope="col">Veredito</th>
-                  <th scope="col">Evidências</th>
-                  <th scope="col">
-                    <span className="sr-only">Ações</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {triages.map(assessment => {
-                  const client = data.clients.find(
-                    item => item.id === assessment.clientId
-                  );
-                  const vehicle = linkedVehicle(
-                    assessment.vehicleId,
-                    data.vehicles
-                  );
-                  return (
-                    <tr key={assessment.id}>
-                      <td>
-                        <strong>{assessment.title}</strong>
-                        <div className="muted">
-                          {services[assessment.serviceType]?.name ??
-                            "Triagem técnica legada"}{" "}
-                          · {dateLabel(assessment.createdAt)}
-                        </div>
-                        {assessment.safetyCritical && (
-                          <div>
-                            <Badge tone="warning">
-                              Item crítico — inspeção exigida
-                            </Badge>
-                          </div>
-                        )}
-                      </td>
-                      <td>
-                        <strong>
-                          {client?.name || "Cliente não vinculado"}
-                        </strong>
-                        <div className="muted">{vehicleLabel(vehicle)}</div>
-                      </td>
-                      <td>
-                        <Badge tone={verdictTone(assessment.verdict)}>
-                          {assessment.verdict}
-                        </Badge>
-                      </td>
-                      <td>{assessment.photos.length} foto(s)</td>
-                      <td>
-                        <div className="row wrap">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={() => openAssessment(assessment)}
-                            aria-label={`Editar avaliação ${assessment.title}`}
-                          >
-                            Editar
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={() => printAssessment(assessment)}
-                            aria-label={`Imprimir relatório de ${assessment.title}`}
-                          >
-                            Relatório
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            disabled={busy}
-                            onClick={() => void convertToOrder(assessment)}
-                          >
-                            Criar documento
-                          </Button>
-                          <ConfirmButton
-                            label="Remover"
-                            variant="danger"
-                            confirmation={`Remover a avaliação “${assessment.title}”? Esta ação não pode ser desfeita.`}
-                            onConfirm={() =>
-                              run(
-                                () => deleteAssessment(assessment),
-                                "Avaliação removida."
-                              )
-                            }
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="grid grid-2" data-testid="triage-history">
+            {triages.map(assessment => {
+              const client = data.clients.find(
+                item => item.id === assessment.clientId
+              );
+              const vehicle = linkedVehicle(
+                assessment.vehicleId,
+                data.vehicles
+              );
+              return (
+                <article
+                  key={assessment.id}
+                  className="card card-body stack"
+                  style={{ overflowWrap: "anywhere" }}
+                >
+                  <div className="row wrap">
+                    <Badge tone={verdictTone(assessment.verdict)}>
+                      {assessment.verdict}
+                    </Badge>
+                    {assessment.safetyCritical && (
+                      <Badge tone="warning">
+                        Item crítico — inspeção exigida
+                      </Badge>
+                    )}
+                    {!assessment.serviceCode && (
+                      <Badge tone="neutral">Sem código oficial vinculado</Badge>
+                    )}
+                  </div>
+                  <h3>{assessment.title}</h3>
+                  <p className="muted">{assessmentServiceLabel(assessment)}</p>
+                  <div>
+                    <strong>{client?.name || "Cliente não vinculado"}</strong>
+                    <p className="muted">{vehicleLabel(vehicle)}</p>
+                  </div>
+                  <p className="helper">
+                    {dateLabel(assessment.createdAt)} ·{" "}
+                    {assessment.photos.length} foto(s)
+                  </p>
+                  <div className="row wrap">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => openAssessment(assessment)}
+                      aria-label={`Editar avaliação ${assessment.title}`}
+                    >
+                      Editar
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => printAssessment(assessment)}
+                      aria-label={`Imprimir relatório de ${assessment.title}`}
+                    >
+                      Relatório
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      disabled={busy}
+                      onClick={() => void convertToOrder(assessment)}
+                    >
+                      Criar documento
+                    </Button>
+                    <ConfirmButton
+                      label="Remover"
+                      variant="danger"
+                      confirmation={`Remover a avaliação “${assessment.title}”? Esta ação não pode ser desfeita.`}
+                      onConfirm={() =>
+                        run(
+                          () => deleteAssessment(assessment),
+                          "Avaliação removida."
+                        )
+                      }
+                    />
+                  </div>
+                </article>
+              );
+            })}
           </div>
         ) : (
           <EmptyState
@@ -761,7 +820,8 @@ export default function TriagePage() {
         <p className="muted">
           O seletor recebe estoque, impressoras e documentos atuais. Sua
           recomendação é orientação baseada nos dados informados, não aprovação
-          automática para aplicação crítica.
+          automática para aplicação crítica. Vincular a análise adiciona
+          evidência técnica às notas do documento, sem novo serviço ou preço.
         </p>
         <Field
           label="Vincular a um veículo (opcional)"
@@ -814,30 +874,144 @@ export default function TriagePage() {
               concluídos nesta tentativa são removidos.
             </p>
             <div className="form-grid">
-              <Field label="Serviço" className="field-full">
+              <Field label="Categoria oficial" className="field-full">
                 <div
                   className="grid grid-2"
                   role="group"
-                  aria-label="Tipo de serviço"
+                  aria-label="Categoria do serviço"
                 >
-                  {serviceTypes.map(serviceType => (
+                  {categories.map(category => (
                     <Button
-                      key={serviceType}
+                      key={category}
                       type="button"
                       variant={
-                        editor.draft.serviceType === serviceType
+                        editor.draft.serviceType ===
+                        categoryServiceTypes[category]
                           ? "primary"
                           : "secondary"
                       }
-                      aria-pressed={editor.draft.serviceType === serviceType}
-                      onClick={() => updateDraft("serviceType", serviceType)}
-                      data-testid={`triage-service-${serviceType}`}
+                      aria-pressed={
+                        editor.draft.serviceType ===
+                        categoryServiceTypes[category]
+                      }
+                      onClick={() => {
+                        if (
+                          editor.draft.serviceType ===
+                          categoryServiceTypes[category]
+                        )
+                          return;
+                        setEditor(current =>
+                          current
+                            ? {
+                                ...current,
+                                draft: {
+                                  ...current.draft,
+                                  serviceType: categoryServiceTypes[category],
+                                  serviceCode: "",
+                                },
+                              }
+                            : current
+                        );
+                      }}
+                      data-testid={`triage-service-${categoryServiceTypes[category]}`}
+                      style={{
+                        whiteSpace: "normal",
+                        textAlign: "left",
+                        justifyContent: "flex-start",
+                      }}
                     >
-                      {services[serviceType].name}
+                      {category} — {serviceCategories[category]}
                     </Button>
                   ))}
                 </div>
               </Field>
+              {!editor.isNew && !editor.draft.serviceCode && (
+                <p className="helper field-full" role="note">
+                  Avaliação histórica:{" "}
+                  {assessmentServiceLabel(
+                    data.triages.find(item => item.id === editor.draft.id) ?? {
+                      ...editor.draft,
+                      photos: [],
+                      createdAt: "",
+                    }
+                  )}
+                  . O registro original será preservado. Selecione um serviço
+                  oficial para criar uma nova estimativa; não há novos serviços
+                  livres.
+                </p>
+              )}
+              <Field
+                label="Serviço específico (código oficial)"
+                className="field-full"
+                help="Selecione o serviço desejado para avaliação. Add-ons dependem do serviço base no mesmo job; o vínculo não implica contratação ou preço definido. Pacotes são compostos no Comercial."
+              >
+                <select
+                  id="triage-service-code"
+                  data-testid="triage-service-code"
+                  value={editor.draft.serviceCode ?? ""}
+                  required={
+                    editor.isNew ||
+                    Boolean(
+                      data.triages.find(item => item.id === editor.draft.id)
+                        ?.serviceCode
+                    ) ||
+                    data.triages.find(item => item.id === editor.draft.id)
+                      ?.serviceType !== editor.draft.serviceType
+                  }
+                  disabled={!selectedCategory}
+                  onChange={event =>
+                    updateDraft("serviceCode", event.target.value)
+                  }
+                >
+                  <option value="">
+                    {selectedCategory
+                      ? "Selecione o código oficial"
+                      : "Escolha uma categoria oficial"}
+                  </option>
+                  {officialServices
+                    .filter(
+                      service =>
+                        service.category === selectedCategory &&
+                        service.type !== "Pacote"
+                    )
+                    .map(service => (
+                      <option key={service.code} value={service.code}>
+                        {service.code} — {service.name} ({service.type})
+                      </option>
+                    ))}
+                </select>
+              </Field>
+              {selectedService && (
+                <div
+                  className="card card-body stack field-full"
+                  data-testid="triage-service-description"
+                >
+                  <div className="row wrap">
+                    <span className="mono">{selectedService.code}</span>
+                    <Badge>{selectedService.type}</Badge>
+                    <Badge tone="neutral">Por avaliação</Badge>
+                  </div>
+                  <strong>{selectedService.name}</strong>
+                  <p className="muted">{selectedService.description}</p>
+                  <p className="helper">
+                    <strong>Pré-requisito:</strong>{" "}
+                    {selectedService.prerequisites.length
+                      ? `${selectedService.prerequisites.map(code => `${code} — ${findService(code)?.name ?? code}`).join(" OU ")} no mesmo job, antes do add-on. Componha serviço principal e add-on no Comercial.`
+                      : "Nenhum."}
+                  </p>
+                </div>
+              )}
+              {selectedCategory && (
+                <p className="helper field-full">
+                  <strong>Restrições e avaliação:</strong>{" "}
+                  {categoryRestrictions[selectedCategory]}
+                </p>
+              )}
+              <p className="helper field-full">
+                Fora do catálogo: PPF, pintura completa, mecânica e eletrônica
+                automotiva (dashcam, CarPlay, painel digital). Não são opções
+                para novas avaliações.
+              </p>
               <Field label="Cliente">
                 <select
                   required
@@ -916,7 +1090,11 @@ export default function TriagePage() {
               <Field
                 label="Limites e condicionantes"
                 className="field-full"
-                help={services[editor.draft.serviceType].limit}
+                help={
+                  selectedCategory
+                    ? categoryRestrictions[selectedCategory]
+                    : "Registro legado: preserve os limites técnicos existentes ou selecione uma categoria oficial para atualizar o escopo."
+                }
               >
                 <textarea
                   required

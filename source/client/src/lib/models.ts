@@ -123,6 +123,9 @@ export type MaintenanceEntry = {
 };
 
 export type OrderLine = {
+  serviceCode?: string;
+  packageCode?: string;
+  pricePending?: boolean;
   id: string;
   service:
     | "scan"

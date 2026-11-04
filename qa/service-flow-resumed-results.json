@@ -1,0 +1,11 @@
+{
+  "mode": "demo",
+  "completedPipeline": "aftercare",
+  "paymentReceived": "USD120.00",
+  "sameJobAfterInterruption": true,
+  "badge": "Pós-venda",
+  "ledger": "5 de nov. de 2026 · CartãoUS$ 120,00",
+  "alerts": [],
+  "overflow": false,
+  "pass": true
+}

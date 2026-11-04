@@ -1,0 +1,50 @@
+[
+  {
+    "case": "Cadastro oficial com preço manual",
+    "status": "PASS"
+  },
+  {
+    "case": "Salto bloqueado",
+    "status": "PASS"
+  },
+  {
+    "case": "Pipeline · evaluation",
+    "status": "PASS"
+  },
+  {
+    "case": "Pipeline · quote",
+    "status": "PASS"
+  },
+  {
+    "case": "Pipeline · approved",
+    "status": "PASS"
+  },
+  {
+    "case": "Pipeline · scheduled",
+    "status": "PASS"
+  },
+  {
+    "case": "Pipeline · production",
+    "status": "PASS"
+  },
+  {
+    "case": "Pipeline · quality",
+    "status": "PASS"
+  },
+  {
+    "case": "Quitação e saldo calculados sem duplicar recebimentos",
+    "status": "PASS"
+  },
+  {
+    "case": "Pipeline · delivered",
+    "status": "PASS"
+  },
+  {
+    "case": "Pipeline · aftercare",
+    "status": "PASS"
+  },
+  {
+    "case": "Ficha móvel sem overflow",
+    "status": "PASS"
+  }
+]
