@@ -1,0 +1,11 @@
+{
+  "url": "https://reversoworks-gestor.github.io/Gestor/?preview=1&ui=iphone-safe-area-20261106",
+  "scrollY": 700,
+  "top": 0,
+  "height": 132,
+  "menuTop": 74.5,
+  "position": "fixed",
+  "framePadding": "132px",
+  "physicalIPhoneTest": false,
+  "pass": true
+}
