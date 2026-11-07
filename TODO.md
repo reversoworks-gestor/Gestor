@@ -50,3 +50,9 @@ A versão reconstruída e testada fica salva na branch de reconstrução e no ch
 
 - [x] Conferir os arquivos reenviados de serviços e pipelines sem criar itens ou preços adicionais, preservar os dados Firebase e retomar o trabalho interrompido.
 - [x] Salvar a versão atualizada e confirmar a implantação no endereço GitHub Pages existente após a validação final.
+
+## Cabeçalho no iPhone — referência de 06/11/2026
+
+- [x] Manter o cabeçalho e seus controles visíveis abaixo dos ícones de sistema e da Dynamic Island, como na segunda captura, sem depender de puxar a página para baixo; preservar proporção, paleta e conteúdos atuais.
+- [x] Reservar a altura real do cabeçalho para não encobrir conteúdo; acompanhar rolagem, giro do aparelho e quebra de texto; menu, busca e perfil continuam utilizáveis; desktop não muda de proporção.
+- [ ] Validar em navegação demonstrativa, áreas seguras emuladas e regressões existentes; publicar no endereço GitHub Pages autorizado sem tocar no Firebase; não declarar teste físico no iPhone.

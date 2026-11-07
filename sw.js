@@ -1,11 +1,11 @@
-const CACHE = "reverso-gestor-automotive-v1";
+const CACHE = "reverso-gestor-automotive-v2";
 const STATIC_DESTINATIONS = new Set(["document", "script", "style", "font", "image", "manifest"]);
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", event => {
   event.waitUntil((async () => {
-    // Retire only the known cache of this previous Gestor, not other sites on the origin.
+    // Retire only known static Gestor caches, never records or other sites.
     const names = await caches.keys();
-    await Promise.all(names.filter(name => name === "reverso-works-v8").map(name => caches.delete(name)));
+    await Promise.all(names.filter(name => name === "reverso-works-v8" || name === "reverso-gestor-automotive-v1").map(name => caches.delete(name)));
     await self.clients.claim();
   })());
 });

@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   Boxes,
   CalendarDays,
@@ -97,7 +103,34 @@ export default function Shell({
   );
   const sidebar = useRef<HTMLElement>(null),
     frame = useRef<HTMLDivElement>(null),
+    topbar = useRef<HTMLElement>(null),
     menu = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const header = topbar.current;
+    if (!header) return;
+    const root = document.documentElement;
+    const previousHeight = root.style.getPropertyValue("--rw-topbar-height");
+    const measure = () => {
+      root.style.setProperty(
+        "--rw-topbar-height",
+        `${Math.ceil(header.getBoundingClientRect().height)}px`
+      );
+    };
+    measure();
+    const observer =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(measure);
+    observer?.observe(header, { box: "border-box" });
+    window.addEventListener("resize", measure);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", measure);
+      if (previousHeight)
+        root.style.setProperty("--rw-topbar-height", previousHeight);
+      else root.style.removeProperty("--rw-topbar-height");
+    };
+  }, []);
   useEffect(() => {
     const query = matchMedia("(min-width:900px) and (min-height:600px)");
     const change = () => {
@@ -306,7 +339,7 @@ export default function Shell({
         />
       )}
       <div className="gestor-frame" ref={frame}>
-        <header className="gestor-topbar">
+        <header className="gestor-topbar" ref={topbar}>
           <div className="topbar-context">
             <button
               type="button"

@@ -63,3 +63,15 @@ O roteiro reproduzível `qa/check_service_flows.py` concluiu as nove etapas, val
 ## Implantação dos serviços e pipelines — confirmada
 
 A atualização foi publicada em https://reversoworks-gestor.github.io/Gestor/. O build GitHub Pages `540832d` concluiu com status `built`; o marcador público confirma 21 itens e nove etapas, com sourceCommit `363d123`. A implantação alterou frontend/código, não dados nem regras do Firebase.
+
+## Cabeçalho e área segura no iPhone — 06/11/2026
+
+O cabeçalho móvel passa a ser fixo na janela, com a área segura nativa acima dos controles. A altura externa é medida por ResizeObserver (border-box) e reservada no frame, acompanhando giro do aparelho, mudanças de inset e quebra de texto. A rolagem de foco respeita essa altura. O desktop mantém o cabeçalho sticky e não recebe o espaçador móvel; a paleta e os tamanhos dos controles não foram alterados.
+
+O código anterior já declarava viewport-fit=cover e padding seguro. Não foi confirmado defeito de regra ausente: a mudança elimina a dependência de sticky/rolagem do documento no modo instalado. As capturas do usuário constituem a evidência física do problema; a correção foi verificada em Chromium com insets nativos emulados, não em Safari físico.
+
+As 24 combinações de quatro páginas (Visão geral, Estimativas, Produção, Ajustes) e seis viewports (320×844, 390×844, 440×956, 956×440, 768×1024, 1440×900) mantiveram o cabeçalho visível antes/depois de rolar, controles de pelo menos 44 px e ausência de overflow global. Em 440×956 com inset superior emulado de 62 px, o cabeçalho mediu 132 px e a reserva de conteúdo acompanhou essa medida. TypeScript, build /Gestor/ e 232/232 regressões existentes aprovados.
+
+Menu → Ajustes, busca com retorno por Escape e abertura/fechamento do perfil também aprovados com inset superior de 62 px. O item Ajustes foi trazido para a área visível do drawer antes do clique; a rodada inicial do runner não fazia essa rolagem e não comprovou a navegação. A revalidação foi restrita a essa interação. Evidência reproduzível: `qa/check_iphone_header.mjs` e `qa/iphone-header-results.json` (25 resultados aprovados).
+
+Somente o cache estático conhecido do Gestor foi versionado, com registro do service worker sem cache HTTP. Não há reload automático que possa interromper um formulário; uma navegação/reabertura online continua necessária para substituir JS/CSS já carregados no aparelho. Nenhum registro, arquivo de cliente, autenticação ou regra Firebase foi alterado.
