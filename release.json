@@ -1,8 +1,8 @@
 {
   "edition": "official-services-2026-11-04",
-  "sourceCommit": "86afedd6444da0511da46b12ee2fa2a7030d1870",
+  "sourceCommit": "cf81d17cd42a48315fb659542d41d3fd108e5c81",
   "catalogItems": 21,
   "pipelineStages": 9,
-  "uiRevision": "checkin-mensagens-impostos-2026-11-18",
-  "builtAt": "2026-11-18T22:12:49.317158+00:00"
+  "uiRevision": "cliente-autocomplete-item-branco-2026-11-18",
+  "builtAt": "2026-11-18T22:41:42.067851+00:00"
 }
