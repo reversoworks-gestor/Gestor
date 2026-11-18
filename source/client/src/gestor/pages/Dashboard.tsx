@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import {
   ArrowRight,
+  ChevronRight,
   CalendarDays,
   CheckCircle2,
   ClipboardCheck,
@@ -144,6 +145,12 @@ export default function DashboardPage() {
   }, [data, settings.currency]);
 
   const nextEvent = dashboard.upcomingEvents[0];
+  const estimateCount = data.orders.filter(
+    order => order.documentType !== "Invoice"
+  ).length;
+  const invoiceCount = data.orders.filter(
+    order => order.documentType === "Invoice"
+  ).length;
   const newClient = () => {
     try {
       sessionStorage.setItem("rw-open-new-client", "1");
@@ -160,16 +167,6 @@ export default function DashboardPage() {
       <PageHeading
         eyebrow="Operação em andamento"
         title="Reverso Works"
-        action={
-          <div className="row wrap page-actions">
-            <Button variant="secondary" onClick={() => navigate("estimates")}>
-              <FileText size={17} /> Estimativa
-            </Button>
-            <Button variant="primary" onClick={() => navigate("invoices")}>
-              <Receipt size={17} /> Invoice
-            </Button>
-          </div>
-        }
       />
 
       {loading && (
@@ -178,84 +175,111 @@ export default function DashboardPage() {
         </p>
       )}
 
-      <section className="metric-grid" aria-label="Indicadores operacionais">
-        <article className="stat stat-card">
+      <section className="metric-grid kpi-grid" aria-label="Indicadores operacionais">
+        <article className="stat stat-card kpi-estimates">
+          <div className="kpi-art" aria-hidden="true">
+            <svg viewBox="0 0 120 90" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 62c0-10 4-18 10-24l8-16c2-4 6-6 10-6h40c4 0 8 2 10 6l8 16c6 6 10 14 10 24v10c0 3-2 5-5 5h-8c-3 0-5-2-5-5v-3H30v3c0 3-2 5-5 5h-8c-3 0-5-2-5-5z" />
+              <path d="M30 38h60M32 56l12 4h32l12-4" />
+              <circle cx="32" cy="52" r="4" /><circle cx="88" cy="52" r="4" />
+            </svg>
+          </div>
           <header className="stat-head">
             <span className="stat-icon">
-              <Wrench size={19} aria-hidden="true" />
+              <FileText size={19} aria-hidden="true" />
             </span>
-            <p className="stat-label">Em jornada</p>
+            <p className="stat-label">Estimativas</p>
           </header>
-          <p className="stat-value">{dashboard.inJourney.length}</p>
-          <p className="helper">Do Lead à qualidade · inclui estimativas</p>
+          <p className="stat-value">{estimateCount}</p>
+          <p className="helper">{dashboard.inJourney.length} em jornada · {dashboard.inspectionQueue.length} aguardando avaliação</p>
           <div className="stat-actions">
-            <button type="button" onClick={() => navigate("production")}>
-              <ClipboardCheck size={15} aria-hidden="true" /> Ver jobs
+            <button type="button" onClick={() => navigate("estimates")}>
+              <span><FileText size={15} aria-hidden="true" /> Estimativas</span>
+              <ChevronRight size={16} aria-hidden="true" />
             </button>
-            <button type="button" onClick={newClient}>
-              <UserPlus size={15} aria-hidden="true" /> Novo cliente
+            <button type="button" onClick={() => navigate("triage")}>
+              <span><Plus size={15} aria-hidden="true" /> Avaliação</span>
+              <ChevronRight size={16} aria-hidden="true" />
             </button>
           </div>
         </article>
-        <article className="stat stat-card">
+        <article className="stat stat-card kpi-invoices">
+          <div className="kpi-art" aria-hidden="true">
+            <svg viewBox="0 0 120 90" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M34 8h40l16 16v58H34z" /><path d="M74 8v16h16" />
+              <path d="M44 38h36M44 50h36M44 62h22" /><path d="M72 66l4 4 8-9" />
+            </svg>
+          </div>
           <header className="stat-head">
             <span className="stat-icon">
-              <SearchCheck size={19} aria-hidden="true" />
+              <Receipt size={19} aria-hidden="true" />
             </span>
-            <p className="stat-label">Aguardando avaliação</p>
+            <p className="stat-label">Invoices</p>
           </header>
-          <p className="stat-value">{dashboard.inspectionQueue.length}</p>
-          <p className="helper">Pendentes ou requerem inspeção</p>
+          <p className="stat-value">{invoiceCount}</p>
+          <p className="helper">Documentos de cobrança emitidos</p>
           <div className="stat-actions">
-            <button type="button" onClick={() => navigate("triage")}>
-              <Plus size={15} aria-hidden="true" /> Nova avaliação
+            <button type="button" onClick={() => navigate("invoices")}>
+              <span><Receipt size={15} aria-hidden="true" /> Ver invoices</span>
+              <ChevronRight size={16} aria-hidden="true" />
             </button>
             <button type="button" onClick={openSearch}>
-              <Search size={15} aria-hidden="true" /> Buscar cliente
+              <span><Search size={15} aria-hidden="true" /> Buscar cliente</span>
+              <ChevronRight size={16} aria-hidden="true" />
             </button>
           </div>
         </article>
-        <article className="stat stat-card">
+        <article className="stat stat-card kpi-volume">
+          <div className="kpi-art" aria-hidden="true">
+            <svg viewBox="0 0 120 90" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M16 80h92" /><path d="M28 80V58M50 80V46M72 80V34M94 80V20" strokeWidth="8" />
+              <path d="M24 44l24-14 18 6 36-22" /><path d="M92 14h10v10" />
+            </svg>
+          </div>
           <header className="stat-head">
             <span className="stat-icon">
               <Gauge size={19} aria-hidden="true" />
             </span>
             <p className="stat-label">Volume aprovado</p>
           </header>
-          <p className="stat-value stat-value-money">
-            {dashboard.hasApprovedPricing
+          <p className="stat-value stat-value-money">{dashboard.hasApprovedPricing
               ? money(dashboard.approvedValue, settings.currency)
-              : "Não definido"}
-          </p>
+              : "Não definido"}</p>
           <p className="helper">Valores explícitos · aprovados até qualidade</p>
           <div className="stat-actions">
-            <button type="button" onClick={() => navigate("estimates")}>
-              <FileText size={15} aria-hidden="true" /> Estimativas
+            <button type="button" onClick={() => navigate("production")}>
+              <span><ClipboardCheck size={15} aria-hidden="true" /> Ver jobs</span>
+              <ChevronRight size={16} aria-hidden="true" />
             </button>
-            <button type="button" onClick={() => navigate("invoices")}>
-              <Receipt size={15} aria-hidden="true" /> Invoices
+            <button type="button" onClick={newClient}>
+              <span><UserPlus size={15} aria-hidden="true" /> Novo cliente</span>
+              <ChevronRight size={16} aria-hidden="true" />
             </button>
           </div>
         </article>
-        <article className="stat stat-card">
+        <article className="stat stat-card kpi-event">
+          <div className="kpi-art" aria-hidden="true">
+            <svg viewBox="0 0 120 90" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="24" y="16" width="72" height="64" rx="6" /><path d="M24 36h72M42 8v14M78 8v14" />
+              <path d="M38 50h6M57 50h6M76 50h6M38 64h6M57 64h6" strokeWidth="4" />
+            </svg>
+          </div>
           <header className="stat-head">
             <span className="stat-icon">
               <CalendarDays size={19} aria-hidden="true" />
             </span>
             <p className="stat-label">Próximo evento</p>
           </header>
-          <p className="stat-value stat-value-date">
-            {nextEvent ? dateLabel(nextEvent.date) : "—"}
-          </p>
-          <p className="helper">
-            {nextEvent ? nextEvent.title : "Nenhum evento futuro registrado"}
-          </p>
+          <p className="stat-value stat-value-date">{nextEvent ? dateLabel(nextEvent.date) : "—"}</p>
+          <p className="helper">{nextEvent ? nextEvent.title : "Nenhum evento futuro registrado"}</p>
           <div className="stat-actions">
             <button type="button" onClick={() => navigate("calendar")}>
-              <CalendarDays size={15} aria-hidden="true" /> Agenda
+              <span><CalendarDays size={15} aria-hidden="true" /> Agenda</span>
+              <ChevronRight size={16} aria-hidden="true" />
             </button>
             <button type="button" onClick={() => navigate("messages")}>
-              <MessageSquare size={15} aria-hidden="true" /> Mensagens
+              <span><MessageSquare size={15} aria-hidden="true" /> Mensagens</span>
+              <ChevronRight size={16} aria-hidden="true" />
             </button>
           </div>
         </article>
