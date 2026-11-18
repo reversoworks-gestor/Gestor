@@ -31,6 +31,7 @@ export const collectionKeys: CollectionKey[] = [
   "parts",
   "partRevisions",
   "expenses",
+  "taxEntries",
   "calendar",
   "triages",
   "catalogItems",
@@ -200,6 +201,32 @@ export function normalizeRecord<K extends CollectionKey>(
       value.currency = value.currency ?? "USD";
       if (!["USD", "BRL"].includes(value.currency))
         throw new Error("Moeda inválida.");
+      break;
+    case "taxEntries":
+      if (!["estimated", "mileage", "profile"].includes(value.kind))
+        throw new Error("Tipo de registro tributário inválido.");
+      if (value.kind === "profile") {
+        value.date = value.date || "2000-01-01";
+        requireDate(value.date, "Data");
+        if (value.mileageRate !== undefined)
+          requireNumber(value.mileageRate, "Taxa por milha", 0, 10);
+        if (value.homeOfficeSqft !== undefined)
+          requireNumber(value.homeOfficeSqft, "Área do home office", 0, 100000);
+        break;
+      }
+      requireDate(value.date, "Data");
+      if (value.kind === "estimated") {
+        if (!["Federal", "Califórnia"].includes(value.agency))
+          throw new Error("Órgão inválido.");
+        if (![1, 2, 3, 4].includes(value.quarter))
+          throw new Error("Trimestre inválido.");
+        requireNumber(value.amount, "Valor pago", 0.01, 100000000);
+        value.amountCents = toCents(value.amount);
+        value.amount = centsToAmount(value.amountCents);
+      } else {
+        requireNumber(value.miles, "Milhas", 0.1, 100000);
+        value.miles = Math.round(value.miles * 10) / 10;
+      }
       break;
     case "calendar":
       requireText(value.title, "Título do evento");

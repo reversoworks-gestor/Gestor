@@ -13,10 +13,12 @@ import {
   ClipboardList,
   Component,
   FileText,
+  Calculator,
   Landmark,
   LayoutDashboard,
   LogOut,
   Menu,
+  MessageCircle,
   MoreHorizontal,
   Printer,
   ReceiptText,
@@ -40,6 +42,7 @@ const navigation = [
       { view: "vehicles", label: "Veículos", icon: CarFront },
       { view: "triage", label: "Avaliações", icon: ClipboardList },
       { view: "calendar", label: "Agenda", icon: CalendarDays },
+      { view: "messages", label: "Mensagens", icon: MessageCircle },
     ],
   },
   {
@@ -64,6 +67,7 @@ const navigation = [
     items: [
       { view: "finance", label: "Financeiro", icon: Landmark },
       { view: "expenses", label: "Despesas", icon: WalletCards },
+      { view: "taxes", label: "Impostos e deduções", icon: Calculator },
     ],
   },
   {

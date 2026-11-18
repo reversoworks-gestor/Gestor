@@ -100,7 +100,7 @@ export const officialServices: OfficialService[] = [
   service(
     "PDR-01",
     "Paintless Dent Removal",
-    "Dents removed with no paint and no filler; original paint preserved. Orçado por painel/amassado.",
+    "Dents removed with no paint and no filler; original paint preserved. Priced per panel and dent.",
     "PDR",
     "Principal"
   ),

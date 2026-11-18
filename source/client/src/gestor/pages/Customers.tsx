@@ -3,6 +3,7 @@ import {
   ArrowRight,
   Building2,
   CarFront,
+  FileDown,
   Mail,
   MapPin,
   Pencil,
@@ -555,6 +556,26 @@ export default function CustomersPage() {
           onCreate={openVehicleCreate}
           onEdit={vehicle => setVehicleDraft({ ...vehicle })}
           onSelectOwner={selectClient}
+          onCheckin={async vehicle => {
+            const owner = (ctx.data.clients as Client[]).find(
+              c => c.id === vehicle.clientId
+            );
+            try {
+              const { downloadCheckinPdf } = await import(
+                "../../lib/checkinPdf"
+              );
+              await downloadCheckinPdf({
+                studio: ctx.settings,
+                customerName: owner ? clientName(owner) : "",
+                customerPhone: owner?.phone,
+                customerEmail: owner?.email,
+                vehicle,
+                date: new Date().toLocaleDateString("en-US"),
+              });
+            } catch {
+              ctx.notify("Não foi possível gerar a ficha de check-in.", "error");
+            }
+          }}
         />
       ) : (
         <ClientList
@@ -731,6 +752,7 @@ function VehicleList({
   onCreate,
   onEdit,
   onSelectOwner,
+  onCheckin,
 }: {
   vehicles: Vehicle[];
   clients: Client[];
@@ -738,6 +760,7 @@ function VehicleList({
   onCreate: () => void;
   onEdit: (vehicle: Vehicle) => void;
   onSelectOwner: (clientId: string) => void;
+  onCheckin: (vehicle: Vehicle) => void;
 }) {
   const clientsById = new Map(clients.map(client => [client.id, client]));
 
@@ -820,6 +843,13 @@ function VehicleList({
                     aria-label={`Editar ${vehicle.make} ${vehicle.model}`}
                   >
                     <Pencil size={16} aria-hidden="true" /> Editar
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => onCheckin(vehicle)}
+                    aria-label={`Ficha de check-in ${vehicle.make} ${vehicle.model}`}
+                  >
+                    <FileDown size={16} aria-hidden="true" /> Check-in
                   </Button>
                 </td>
               </tr>

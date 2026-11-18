@@ -24,7 +24,7 @@ export type JourneyStage =
   | "develop"
   | "execute"
   | "check";
-export type StudioView = ViewId | "vehicles";
+export type StudioView = ViewId | "vehicles" | "messages" | "taxes";
 export const services: Record<
   ServiceType,
   { name: string; verb: string; limit: string }
@@ -96,6 +96,21 @@ export type Assessment = {
   updatedAt?: string;
 };
 export type StudioExpense = Expense & { currency?: "USD" | "BRL" };
+/** Registro tributário simples: impostos estimados pagos, quilometragem e o perfil de deduções. */
+export type TaxEntry = {
+  id: string;
+  kind: "estimated" | "mileage" | "profile";
+  date: string;
+  agency?: "Federal" | "Califórnia";
+  quarter?: 1 | 2 | 3 | 4;
+  amount?: number;
+  amountCents?: number;
+  miles?: number;
+  purpose?: string;
+  mileageRate?: number;
+  homeOfficeSqft?: number;
+  updatedAt?: string;
+};
 export type StudioOrder = Order & {
   workflow?: JobWorkflow;
   currency?: "USD" | "BRL";
@@ -130,6 +145,7 @@ export type EntityMap = {
   parts: Part;
   partRevisions: PartRevision;
   expenses: StudioExpense;
+  taxEntries: TaxEntry;
   calendar: CalendarEvent;
   triages: Assessment;
   catalogItems: CatalogItem;

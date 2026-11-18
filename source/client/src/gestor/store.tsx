@@ -90,6 +90,8 @@ const views: StudioView[] = [
   "parts",
   "finance",
   "expenses",
+  "taxes",
+  "messages",
   "more",
   "settings",
 ];

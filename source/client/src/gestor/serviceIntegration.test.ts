@@ -64,8 +64,8 @@ describe("integração oficial de catálogo e workflow", () => {
       pending: false,
     });
     const pdf = invoicePdfLines(result).join("\n");
-    expect(pdf).toContain("Ajuste explícito");
-    expect(pdf).toContain("120,00");
+    expect(pdf).toContain("Explicit adjustment");
+    expect(pdf).toContain("$120.00");
     expect(pdf).toContain("FAR-01");
   });
   it("herda workflow aprovado ao converter estimativa sem salto artificial de Lead", () => {

@@ -22,88 +22,103 @@ type PublicDocument = Order & {
   serviceType?: string;
 };
 const amount = (value: number, currency: string) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency }).format(value);
+  new Intl.NumberFormat("en-US", { style: "currency", currency }).format(value);
+const usDate = (value?: string) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(value ?? "");
+  return m ? `${m[2]}/${m[3]}/${m[1]}` : (value ?? "");
+};
+const stageNameEn: Record<string, string> = {
+  lead: "Lead",
+  evaluation: "Evaluation",
+  quote: "Estimate sent",
+  approved: "Approved",
+  scheduled: "Scheduled",
+  production: "In progress",
+  quality: "Quality check",
+  delivered: "Delivered / Paid",
+  aftercare: "Aftercare",
+};
 /** Deliberately excludes privateNote and internal inspection annotations. No line truncation. */
 export function invoicePdfLines(order: PublicDocument, studio?: PublicStudio) {
   const currency = order.currency ?? "USD";
   const charges = jobChargeTotals(order);
   const pending = charges.pending;
-  const type = order.documentType === "Invoice" ? "INVOICE" : "ESTIMATIVA";
+  const type = order.documentType === "Invoice" ? "INVOICE" : "ESTIMATE";
   return [
     `${type} · ${order.id}`,
-    ...(studio?.studioName ? [`Estúdio: ${studio.studioName}`] : []),
-    ...(studio?.address ? [`Endereço: ${studio.address}`] : []),
+    ...(studio?.studioName ? [`Studio: ${studio.studioName}`] : []),
+    ...(studio?.address ? [`Address: ${studio.address}`] : []),
     ...([studio?.phone, studio?.email].filter(Boolean).length
       ? [
-          `Contato do estúdio: ${[studio?.phone, studio?.email].filter(Boolean).join(" · ")}`,
+          `Studio contact: ${[studio?.phone, studio?.email].filter(Boolean).join(" · ")}`,
         ]
       : []),
-    `Cliente: ${order.clientSnapshot?.name || order.clientName}`,
+    `Customer: ${order.clientSnapshot?.name || order.clientName}`,
     ...(order.clientSnapshot?.company
-      ? [`Empresa: ${order.clientSnapshot.company}`]
+      ? [`Company: ${order.clientSnapshot.company}`]
       : []),
     ...(order.clientSnapshot?.email
-      ? [`Contato: ${order.clientSnapshot.email}`]
+      ? [`Contact: ${order.clientSnapshot.email}`]
       : []),
-    `Emissão: ${order.startDate || order.createdAt.slice(0, 10)} · Entrega: ${order.dueDate || "A definir"}`,
-    `Estado: ${order.workflow ? pipeline.find(stage => stage.id === order.workflow?.stage)?.name : order.status} · Moeda: ${currency}`,
+    `Issued: ${usDate(order.startDate || order.createdAt.slice(0, 10))} · Due: ${order.dueDate ? usDate(order.dueDate) : "To be defined"}`,
+    `Status: ${order.workflow ? (stageNameEn[order.workflow.stage] ?? order.workflow.stage) : order.status} · Currency: ${currency}`,
     ...(order.workflow?.packageCode
-      ? [`Pacote: ${order.workflow.packageCode} (serviços individuais abaixo)`]
+      ? [`Package: ${order.workflow.packageCode} (individual services below)`]
       : []),
     "",
-    "ITENS E SERVIÇOS",
+    "ITEMS AND SERVICES",
     ...order.lines.flatMap((line, index) => [
       `${index + 1}. ${line.serviceCode ? line.serviceCode + " · " : ""}${line.label}`,
-      line.description || "Escopo descrito abaixo.",
+      line.description || "Scope described below.",
       line.pricePending
-        ? "Preço: por avaliação — ainda não orçado."
-        : `${line.quantity} ${line.unit ?? "unidades"} × ${amount(centsToAmount(line.unitPriceCents ?? toCents(line.unitPrice)), currency)}`,
+        ? "Price: by evaluation, not yet quoted."
+        : `${line.quantity} ${line.unit ?? "units"} × ${amount(centsToAmount(line.unitPriceCents ?? toCents(line.unitPrice)), currency)}`,
     ]),
     "",
     pending
-      ? "Subtotal: a definir por avaliação"
+      ? "Subtotal: to be defined by evaluation"
       : `Subtotal: ${amount(centsToAmount(charges.subtotalCents), currency)}`,
     pending
-      ? "Impostos: a definir"
-      : `Impostos: ${amount(centsToAmount(charges.taxCents), currency)}`,
+      ? "Taxes: to be defined"
+      : `Taxes: ${amount(centsToAmount(charges.taxCents), currency)}`,
     ...(order.workflow && charges.adjustmentCents
       ? [
-          `Ajuste explícito sobre a cotação: ${amount(centsToAmount(charges.adjustmentCents), currency)} — incluído no total cobrado.`,
+          `Explicit adjustment to the quote: ${amount(centsToAmount(charges.adjustmentCents), currency)}, included in the total charged.`,
         ]
       : []),
     pending
-      ? "Total: a definir por avaliação"
+      ? "Total: to be defined by evaluation"
       : `Total: ${amount(centsToAmount(charges.totalCents), currency)}`,
     "",
     ...(order.workflow
       ? [
-          "FINANCEIRO DO JOB",
-          `Valor orçado: ${order.workflow.quotedAmount === null ? "A definir por avaliação" : amount(order.workflow.quotedAmount, currency)}`,
-          `Valor final cobrado: ${order.workflow.finalAmount === null ? "Ainda não definido" : amount(order.workflow.finalAmount, currency)}`,
-          `Saldo: ${workflowPayment(order.workflow, order.payments ?? []).balance === null ? "A definir" : amount(workflowPayment(order.workflow, order.payments ?? []).balance!, currency)}`,
+          "JOB FINANCIALS",
+          `Quoted amount: ${order.workflow.quotedAmount === null ? "To be defined by evaluation" : amount(order.workflow.quotedAmount, currency)}`,
+          `Final amount charged: ${order.workflow.finalAmount === null ? "Not yet defined" : amount(order.workflow.finalAmount, currency)}`,
+          `Balance: ${workflowPayment(order.workflow, order.payments ?? []).balance === null ? "To be defined" : amount(workflowPayment(order.workflow, order.payments ?? []).balance!, currency)}`,
           "",
         ]
       : []),
-    "PAGAMENTOS",
+    "PAYMENTS",
     ...(order.payments?.length
       ? order.payments.map(
           p =>
-            `${p.date} · ${p.method} · ${amount(centsToAmount(p.amountCents ?? toCents(p.amount)), currency)}`
+            `${usDate(p.date)} · ${p.method} · ${amount(centsToAmount(p.amountCents ?? toCents(p.amount)), currency)}`
         )
-      : ["Nenhum pagamento registrado."]),
-    ...(order.scope ? ["", "ESCOPO", order.scope] : []),
+      : ["No payments recorded."]),
+    ...(order.scope ? ["", "SCOPE", order.scope] : []),
     ...(order.constraints
-      ? ["", "PREMISSAS E LIMITES", order.constraints]
+      ? ["", "ASSUMPTIONS AND LIMITS", order.constraints]
       : []),
     "",
-    "NOTA PÚBLICA",
-    order.publicNote || "Sem observações públicas.",
+    "NOTE",
+    order.publicNote || "No additional notes.",
     "",
     studio?.publicFooter || "Restore. Refine. Recreate.",
-    "A execução depende da avaliação, do escopo aprovado e das verificações de entrega. Este documento não substitui validação de componentes críticos.",
+    "Execution depends on the evaluation, the approved scope and the delivery checks. This document does not replace validation of critical components.",
   ];
 }
-function wrapText(text: string, font: PDFFont, size: number, width: number) {
+export function wrapText(text: string, font: PDFFont, size: number, width: number) {
   const result: string[] = [];
   for (const paragraph of text.replace(/\r/g, "").split("\n")) {
     let current = "";
@@ -238,7 +253,7 @@ export async function downloadInvoicePdf(
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
-  anchor.download = `${sanitizeFileName(order.clientName)}-${order.documentType === "Invoice" ? "invoice" : "estimativa"}-${sanitizeFileName(order.id)}.pdf`;
+  anchor.download = `${sanitizeFileName(order.clientName)}-${order.documentType === "Invoice" ? "invoice" : "estimate"}-${sanitizeFileName(order.id)}.pdf`;
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();

@@ -24,6 +24,8 @@ const Parts = lazy(() => import("./gestor/pages/Parts"));
 const Calendar = lazy(() => import("./gestor/pages/Calendar"));
 const Finance = lazy(() => import("./gestor/pages/Finance"));
 const Settings = lazy(() => import("./gestor/pages/Settings"));
+const Messages = lazy(() => import("./gestor/pages/Messages"));
+const Taxes = lazy(() => import("./gestor/pages/Taxes"));
 function Opening() {
   return (
     <div className="opening-state" role="status">
@@ -81,6 +83,12 @@ function Pages() {
     case "expenses":
       page = <Finance />;
       break;
+    case "messages":
+      page = <Messages />;
+      break;
+    case "taxes":
+      page = <Taxes />;
+      break;
     case "settings":
       page = <Settings />;
       break;
@@ -106,6 +114,8 @@ function Pages() {
               ["parts", "Peças e revisões"],
               ["finance", "Financeiro"],
               ["expenses", "Despesas"],
+              ["taxes", "Impostos e deduções"],
+              ["messages", "Mensagens"],
               ["settings", "Ajustes"],
             ].map(([id, label]) => (
               <Button
