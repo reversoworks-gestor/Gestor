@@ -1,8 +1,8 @@
 {
   "edition": "official-services-2026-11-04",
-  "sourceCommit": "0e8d50952cdc60a14ce34e817c4bf5f494a2afd0",
+  "sourceCommit": "86afedd6444da0511da46b12ee2fa2a7030d1870",
   "catalogItems": 21,
   "pipelineStages": 9,
-  "uiRevision": "iphone-safe-area-2026-11-06",
-  "builtAt": "2026-11-07T00:15:57.026378+00:00"
+  "uiRevision": "checkin-mensagens-impostos-2026-11-18",
+  "builtAt": "2026-11-18T22:12:49.317158+00:00"
 }
