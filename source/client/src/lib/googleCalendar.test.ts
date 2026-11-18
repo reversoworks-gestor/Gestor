@@ -31,8 +31,24 @@ describe("Google Agenda", () => {
     expect(ics).toContain("UID:e1@reversoworks.com");
     expect(ics).toContain("DTSTART:20261120T183000Z");
     expect(ics).toContain("DTSTART;VALUE=DATE:20261121");
-    expect(ics).toContain("SUMMARY:Avaliação\\, farol\; Mustang");
+    expect(ics).toContain("SUMMARY:Avaliação\\, farol\\; Mustang");
     expect(ics).toContain("DESCRIPTION:Linha 1\\nLinha 2");
     expect(ics.endsWith("END:VCALENDAR\r\n")).toBe(true);
+  });
+});
+
+describe("duração e dia inteiro", () => {
+  it("usa durationMinutes no fim do evento", () => {
+    const url = new URL(
+      googleCalendarUrl({
+        id: "e3",
+        title: "x",
+        detail: "",
+        type: "calendar",
+        date: "2026-11-20T18:30:00.000Z",
+        durationMinutes: 90,
+      })!
+    );
+    expect(url.searchParams.get("dates")).toBe("20261120T183000Z/20261120T200000Z");
   });
 });

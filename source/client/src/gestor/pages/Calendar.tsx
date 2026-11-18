@@ -1,5 +1,6 @@
 import { DateInput } from "../components/ui";
 import { useMemo, useState } from "react";
+import { TimeGrid, dayKey } from "../components/TimeGrid";
 import {
   CalendarDays,
   CalendarPlus,
@@ -24,12 +25,15 @@ import {
   PageHeading,
 } from "../components/ui";
 
-type CalendarView = "month" | "list";
+type CalendarView = "day" | "week" | "month" | "list";
 type EventType = CalendarEvent["type"];
 type CategoryFilter = EventType | "all";
 type LocalDateTime = { date: string; time: string };
 type EventDraft = LocalDateTime &
-  Pick<CalendarEvent, "id" | "title" | "detail" | "type">;
+  Pick<CalendarEvent, "id" | "title" | "detail" | "type"> & {
+    duration: number;
+    allDay: boolean;
+  };
 type Editor = { draft: EventDraft; isNew: boolean };
 
 const eventTypes: Array<{
@@ -178,7 +182,18 @@ function formatEventDateTime(event: CalendarEvent) {
 }
 
 function makeDraft(event: CalendarEvent): EventDraft {
-  return { ...event, ...eventLocalDateTime(event.date) };
+  const local = eventLocalDateTime(event.date);
+  const legacyAllDay = datePattern.test(event.date);
+  return {
+    id: event.id,
+    title: event.title,
+    detail: event.detail,
+    type: event.type,
+    date: local.date,
+    time: local.time || "09:00",
+    duration: event.durationMinutes ?? 60,
+    allDay: Boolean(event.allDay) || legacyAllDay,
+  };
 }
 
 function makeNewDraft(seedDate: Date = new Date()): EventDraft {
@@ -193,19 +208,30 @@ function makeNewDraft(seedDate: Date = new Date()): EventDraft {
     type: "calendar",
     date: localDateKey(next),
     time: `${pad(next.getHours())}:${pad(next.getMinutes())}`,
+    duration: 60,
+    allDay: false,
   };
 }
 
 function toCalendarEvent(draft: EventDraft): CalendarEvent {
   const title = draft.title.trim();
   if (!title) throw new Error("Informe um título para o evento.");
-  return {
+  const event: CalendarEvent = {
     id: draft.id,
     title,
     detail: draft.detail.trim(),
     type: draft.type,
-    date: localDateTimeToIso(draft),
+    date: localDateTimeToIso({
+      date: draft.date,
+      time: draft.allDay ? "00:00" : draft.time,
+    }),
   };
+  if (draft.allDay) {
+    event.allDay = true;
+  } else {
+    event.durationMinutes = draft.duration;
+  }
+  return event;
 }
 
 function toCalendarEventSafe(draft: EventDraft): CalendarEvent | null {
@@ -380,11 +406,11 @@ export default function CalendarPage() {
     search,
     setSearch,
   } = useGestor();
-  const [view, setView] = useState<CalendarView>("month");
-  const [category, setCategory] = useState<CategoryFilter>("all");
-  const [visibleMonth, setVisibleMonth] = useState(() =>
-    startOfMonth(new Date())
+  const [view, setView] = useState<CalendarView>(() =>
+    typeof window !== "undefined" && window.innerWidth < 700 ? "day" : "week"
   );
+  const [category, setCategory] = useState<CategoryFilter>("all");
+  const [cursor, setCursor] = useState(() => new Date());
   const [editor, setEditor] = useState<Editor | null>(null);
 
   const filteredEvents = useMemo(() => {
@@ -396,6 +422,20 @@ export default function CalendarPage() {
       )
       .sort((left, right) => eventTimestamp(left) - eventTimestamp(right));
   }, [category, data.calendar, search]);
+
+  const weekDays = useMemo(() => {
+    const start = new Date(
+      cursor.getFullYear(),
+      cursor.getMonth(),
+      cursor.getDate() - cursor.getDay()
+    );
+    return Array.from(
+      { length: 7 },
+      (_, i) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + i)
+    );
+  }, [cursor]);
+  const visibleMonth = useMemo(() => startOfMonth(cursor), [cursor]);
+  const gridDays = view === "day" ? [new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate())] : weekDays;
 
   const monthEvents = useMemo(() => {
     return filteredEvents.filter(event => {
@@ -415,6 +455,42 @@ export default function CalendarPage() {
     });
     return grouped;
   }, [monthEvents]);
+
+  const { timedByDay, allDayByDay } = useMemo(() => {
+    const timed = new Map<string, CalendarEvent[]>();
+    const allDay = new Map<string, CalendarEvent[]>();
+    filteredEvents.forEach(event => {
+      const key = eventDayKey(event);
+      if (!key) return;
+      const target = event.allDay || datePattern.test(event.date) ? allDay : timed;
+      target.set(key, [...(target.get(key) ?? []), event]);
+    });
+    return { timedByDay: timed, allDayByDay: allDay };
+  }, [filteredEvents]);
+
+  const listEvents = useMemo(() => {
+    if (view !== "list") return [];
+    return monthEvents;
+  }, [monthEvents, view]);
+
+  function step(direction: -1 | 1) {
+    setCursor(current => {
+      if (view === "day")
+        return new Date(current.getFullYear(), current.getMonth(), current.getDate() + direction);
+      if (view === "week")
+        return new Date(current.getFullYear(), current.getMonth(), current.getDate() + 7 * direction);
+      return new Date(current.getFullYear(), current.getMonth() + direction, 1);
+    });
+  }
+
+  const periodTitle =
+    view === "day"
+      ? new Intl.DateTimeFormat("pt-BR", { dateStyle: "full" }).format(cursor)
+      : view === "week"
+        ? weekDays[0].getMonth() === weekDays[6].getMonth()
+          ? monthFormatter.format(weekDays[0])
+          : `${new Intl.DateTimeFormat("pt-BR", { month: "short" }).format(weekDays[0])} – ${monthFormatter.format(weekDays[6])}`
+        : monthFormatter.format(visibleMonth);
 
   function openNewEvent(date?: Date) {
     setEditor({ draft: makeNewDraft(date), isNew: true });
@@ -447,15 +523,12 @@ export default function CalendarPage() {
     setEditor(null);
   }
 
-  const monthTitle = monthFormatter.format(visibleMonth);
-  const currentMonthEvents = monthEvents.length;
 
   return (
     <main className="stack">
       <PageHeading
         eyebrow="Planejamento operacional"
         title="Calendário"
-        description="Compromissos cadastrados para a operação. Registros de serviço não são incluídos automaticamente como eventos."
         action={
           <div className="row wrap page-actions">
             <Button
@@ -486,101 +559,62 @@ export default function CalendarPage() {
         </div>
       )}
 
-      <section className="card" aria-label="Controles do calendário">
-        <div className="card-body stack">
-          <div className="toolbar wrap">
-            <Field label="Buscar eventos" className="calendar-search-field">
-              <span className="calendar-search-input">
-                <Search size={18} aria-hidden="true" />
-                <input
-                  value={search}
-                  onChange={event => setSearch(event.target.value)}
-                  placeholder="Título, detalhe ou categoria"
-                />
-              </span>
-            </Field>
-            <Field label="Categoria">
-              <select
-                value={category}
-                onChange={event =>
-                  setCategory(event.target.value as CategoryFilter)
-                }
-              >
-                <option value="all">Todas as categorias</option>
-                {eventTypes.map(type => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <div
-              className="tabs"
-              role="tablist"
-              aria-label="Visualização do calendário"
+      <section className="gcal-toolbar" aria-label="Controles do calendário">
+        <div className="gcal-nav">
+          <Button variant="secondary" onClick={() => setCursor(new Date())}>
+            Hoje
+          </Button>
+          <Button variant="ghost" aria-label="Período anterior" onClick={() => step(-1)}>
+            <ChevronLeft size={20} />
+          </Button>
+          <Button variant="ghost" aria-label="Próximo período" onClick={() => step(1)}>
+            <ChevronRight size={20} />
+          </Button>
+          <h2 className="gcal-title">{periodTitle}</h2>
+        </div>
+        <div className="gcal-views" role="tablist" aria-label="Visualização do calendário">
+          {(
+            [
+              ["day", "Dia"],
+              ["week", "Semana"],
+              ["month", "Mês"],
+              ["list", "Lista"],
+            ] as const
+          ).map(([value, label]) => (
+            <button
+              type="button"
+              key={value}
+              role="tab"
+              aria-selected={view === value}
+              className={view === value ? "is-active" : ""}
+              onClick={() => setView(value)}
             >
-              <Button
-                variant={view === "month" ? "primary" : "secondary"}
-                role="tab"
-                aria-selected={view === "month"}
-                onClick={() => setView("month")}
-              >
-                <CalendarDays size={18} /> Mês
-              </Button>
-              <Button
-                variant={view === "list" ? "primary" : "secondary"}
-                role="tab"
-                aria-selected={view === "list"}
-                onClick={() => setView("list")}
-              >
-                <List size={18} /> Lista
-              </Button>
-            </div>
-          </div>
-
-          <div className="split calendar-period-header">
-            <div>
-              <p className="eyebrow">Período selecionado</p>
-              <h2>{monthTitle}</h2>
-              <p className="muted">
-                {currentMonthEvents === 1
-                  ? "1 evento encontrado"
-                  : `${currentMonthEvents} eventos encontrados`}
-              </p>
-            </div>
-            <div className="row wrap">
-              <Button
-                variant="secondary"
-                aria-label="Mês anterior"
-                onClick={() =>
-                  setVisibleMonth(
-                    current =>
-                      new Date(current.getFullYear(), current.getMonth() - 1, 1)
-                  )
-                }
-              >
-                <ChevronLeft size={18} /> Anterior
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() => setVisibleMonth(startOfMonth(new Date()))}
-              >
-                Hoje
-              </Button>
-              <Button
-                variant="secondary"
-                aria-label="Próximo mês"
-                onClick={() =>
-                  setVisibleMonth(
-                    current =>
-                      new Date(current.getFullYear(), current.getMonth() + 1, 1)
-                  )
-                }
-              >
-                Próximo <ChevronRight size={18} />
-              </Button>
-            </div>
-          </div>
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="gcal-filters">
+          <span className="calendar-search-input">
+            <Search size={18} aria-hidden="true" />
+            <input
+              aria-label="Buscar eventos"
+              value={search}
+              onChange={event => setSearch(event.target.value)}
+              placeholder="Buscar eventos"
+            />
+          </span>
+          <select
+            aria-label="Categoria"
+            value={category}
+            onChange={event => setCategory(event.target.value as CategoryFilter)}
+          >
+            <option value="all">Todas as categorias</option>
+            {eventTypes.map(type => (
+              <option key={type.value} value={type.value}>
+                {type.label}
+              </option>
+            ))}
+          </select>
         </div>
       </section>
 
@@ -591,6 +625,16 @@ export default function CalendarPage() {
               Carregando calendário…
             </p>
           </div>
+        </section>
+      ) : view === "day" || view === "week" ? (
+        <section className="card gcal-card">
+          <TimeGrid
+            days={gridDays}
+            timedByDay={timedByDay}
+            allDayByDay={allDayByDay}
+            onSlot={date => openNewEvent(date)}
+            onSelect={openExistingEvent}
+          />
         </section>
       ) : view === "month" ? (
         <section className="card">
@@ -603,8 +647,7 @@ export default function CalendarPage() {
             />
             {!monthEvents.length && (
               <p className="muted helper">
-                Nenhum evento corresponde aos filtros neste mês. Selecione um
-                dia acima para adicionar um compromisso.
+                Nenhum evento corresponde aos filtros neste mês.
               </p>
             )}
           </div>
@@ -613,13 +656,22 @@ export default function CalendarPage() {
         <section className="card">
           <div className="card-body">
             <EventList
-              events={monthEvents}
+              events={listEvents}
               onSelect={openExistingEvent}
               onCreate={() => openNewEvent()}
             />
           </div>
         </section>
       )}
+
+      <button
+        type="button"
+        className="gcal-fab"
+        aria-label="Criar evento"
+        onClick={() => openNewEvent()}
+      >
+        <Plus size={22} /> <span>Criar</span>
+      </button>
 
       {editor && (
         <FormModal
@@ -652,7 +704,7 @@ export default function CalendarPage() {
                 ))}
               </select>
             </Field>
-            <Field label="Data local" help="Ano entre 1900 e 2100.">
+            <Field label="Data" help="Ano entre 1900 e 2100.">
               <DateInput
                 value={editor.draft.date}
                 min="1900-01-01"
@@ -661,15 +713,45 @@ export default function CalendarPage() {
                 required
               />
             </Field>
-            <Field label="Hora local">
-              <input
-                type="time"
-                value={editor.draft.time}
-                step="60"
-                onChange={event => updateDraft({ time: event.target.value })}
-                required
-              />
+            <Field label="Dia inteiro">
+              <label className="row">
+                <input
+                  type="checkbox"
+                  checked={editor.draft.allDay}
+                  onChange={event => updateDraft({ allDay: event.target.checked })}
+                />
+                Evento de dia inteiro
+              </label>
             </Field>
+            {!editor.draft.allDay && (
+              <>
+                <Field label="Hora de início">
+                  <input
+                    type="time"
+                    value={editor.draft.time}
+                    step="60"
+                    onChange={event => updateDraft({ time: event.target.value })}
+                    required
+                  />
+                </Field>
+                <Field label="Duração">
+                  <select
+                    value={editor.draft.duration}
+                    onChange={event =>
+                      updateDraft({ duration: Number(event.target.value) })
+                    }
+                  >
+                    {[15, 30, 45, 60, 90, 120, 180, 240, 480].map(minutes => (
+                      <option key={minutes} value={minutes}>
+                        {minutes < 60
+                          ? `${minutes} min`
+                          : `${minutes / 60}${minutes % 60 ? "" : ""} h`.replace(".", ",")}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              </>
+            )}
             <Field label="Detalhes" className="field-full">
               <textarea
                 value={editor.draft.detail}

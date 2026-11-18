@@ -30,7 +30,18 @@ export function eventRange(event: CalendarEvent):
   }
   const start = new Date(event.date);
   if (!Number.isFinite(start.getTime())) return null;
-  const end = new Date(start.getTime() + DEFAULT_EVENT_MINUTES * 60_000);
+  if (event.allDay) {
+    const key = `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}`;
+    const days = Math.max(1, Math.ceil((event.durationMinutes ?? 1440) / 1440));
+    return {
+      allDay: true,
+      start: dayStamp(key),
+      end: dayStamp(key, days),
+    };
+  }
+  const end = new Date(
+    start.getTime() + (event.durationMinutes ?? DEFAULT_EVENT_MINUTES) * 60_000
+  );
   return { allDay: false, start: utcStamp(start), end: utcStamp(end) };
 }
 
@@ -51,7 +62,7 @@ function escapeText(value: string) {
   return value
     .replace(/\\/g, "\\\\")
     .replace(/\r?\n/g, "\\n")
-    .replace(/;/g, "\;")
+    .replace(/;/g, "\\;")
     .replace(/,/g, "\\,");
 }
 

@@ -246,6 +246,15 @@ export function normalizeRecord<K extends CollectionKey>(
           throw new Error("Informe data e hora válidas entre 1900 e 2100.");
         value.date = date.toISOString();
       }
+      if (value.durationMinutes !== undefined) {
+        if (
+          !Number.isFinite(value.durationMinutes) ||
+          value.durationMinutes < 5 ||
+          value.durationMinutes > 1440 * 14
+        )
+          throw new Error("Duração do evento inválida.");
+        value.durationMinutes = Math.round(value.durationMinutes);
+      }
       break;
     case "triages":
       if (value.serviceType) {

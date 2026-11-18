@@ -94,6 +94,10 @@ export type CalendarEvent = {
   detail: string;
   date: string;
   type: "order" | "triage" | "inventory" | "maintenance" | "calendar";
+  /** Length in minutes; omitted means the default (60). */
+  durationMinutes?: number;
+  /** All-day event: `date` is the local midnight of that day. */
+  allDay?: boolean;
 };
 
 export type Printer = {
