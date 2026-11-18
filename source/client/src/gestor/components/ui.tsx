@@ -186,11 +186,13 @@ export function Modal({
   onClose,
   children,
   footer,
+  size,
 }: {
   title: string;
   onClose: () => void;
   children: ReactNode;
   footer?: ReactNode;
+  size?: "large";
 }) {
   const titleId = useId();
   const panel = useRef<HTMLDivElement>(null);
@@ -288,7 +290,7 @@ export function Modal({
       }}
     >
       <div
-        className="modal-panel"
+        className={size === "large" ? "modal-panel modal-large" : "modal-panel"}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -471,12 +473,14 @@ export function FormModal({
   onSubmit,
   children,
   submitLabel = "Salvar",
+  size,
 }: {
   title: string;
   onClose: () => void;
   onSubmit: () => Promise<void>;
   children: ReactNode;
   submitLabel?: string;
+  size?: "large";
 }) {
   const context = useOptionalGestor();
   const readOnly = Boolean(
@@ -506,6 +510,7 @@ export function FormModal({
   }
   return (
     <Modal
+      size={size}
       title={title}
       onClose={() => {
         if (!busy) onClose();

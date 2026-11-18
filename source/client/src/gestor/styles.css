@@ -2148,3 +2148,58 @@ ol.calendar-grid {
 .kpi-grid .stat-card > * {
   align-self: stretch;
 }
+
+/* Large popup: about 85% of the screen */
+.modal-panel.modal-large {
+  width: min(100%, 960px);
+  height: 85dvh;
+  max-height: 85dvh;
+}
+
+/* Autocomplete text field */
+.combo {
+  position: relative;
+}
+.combo-list {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  right: 0;
+  left: 0;
+  display: grid;
+  max-height: 240px;
+  margin: 0;
+  padding: 4px;
+  overflow-y: auto;
+  list-style: none;
+  background: var(--rw-surface);
+  border: 1px solid var(--rw-line-strong);
+  border-radius: 8px;
+  box-shadow: var(--rw-shadow);
+}
+.combo-list button {
+  display: grid;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+  color: var(--rw-white);
+  font: inherit;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.combo-list button small {
+  color: var(--rw-dim);
+}
+.combo-list button[aria-selected="true"],
+.combo-list button:hover {
+  background: rgba(198, 165, 95, 0.16);
+}
+.combo-ghost {
+  display: block;
+  margin-top: 4px;
+  color: var(--rw-gold-bright);
+  font-size: 0.82rem;
+}

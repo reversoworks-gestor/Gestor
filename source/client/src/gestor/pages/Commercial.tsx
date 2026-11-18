@@ -1,6 +1,21 @@
 import { jobChargeTotals } from "../jobCharges";
-import { DateInput } from "../components/ui";
-import { useMemo, useRef, useState, type ChangeEvent } from "react";
+import { DateInput, Modal, Button as UiButton } from "../components/ui";
+import {
+  AutoCompleteField,
+  type AutoCompleteOption,
+} from "../components/AutoCompleteField";
+import {
+  ClientForm,
+  VehicleForm,
+  newClient,
+  newVehicle,
+  normalizeClient,
+  normalizeVehicle,
+  splitName,
+  type ClientDraft,
+  type VehicleDraft,
+} from "../components/ClientVehicleForms";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import type { Attachment, Client, OrderLine, Payment } from "../../lib/models";
 import { stripDownloadUrlToken } from "../../lib/attachments";
 import {
@@ -231,6 +246,72 @@ export default function CommercialPage() {
   const availableVehicles = editor
     ? ctx.data.vehicles.filter(vehicle => vehicle.clientId === editor.clientId)
     : [];
+
+  const [vehicleText, setVehicleText] = useState("");
+  const [ask, setAsk] = useState<{ kind: "client" | "vehicle"; text: string } | null>(null);
+  const [clientDraft, setClientDraft] = useState<ClientDraft | null>(null);
+  const [vehicleDraft, setVehicleDraft] = useState<VehicleDraft | null>(null);
+  const vehicleLabel = (vehicle: { make: string; model: string; year: number; plate?: string }) =>
+    `${vehicle.make} ${vehicle.model}${vehicle.year ? ` · ${vehicle.year}` : ""}${vehicle.plate ? ` · ${vehicle.plate}` : ""}`;
+  const linkedVehicle = editor
+    ? ctx.data.vehicles.find(vehicle => vehicle.id === editor.vehicleId)
+    : undefined;
+  const linkedVehicleId = linkedVehicle?.id ?? "";
+  useEffect(() => {
+    if (linkedVehicle) setVehicleText(vehicleLabel(linkedVehicle));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [linkedVehicleId, editor?.id]);
+  useEffect(() => {
+    if (!editor?.vehicleId) setVehicleText(current => (editor?.clientId ? current : ""));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editor?.id]);
+  const clientOptions: AutoCompleteOption[] = ctx.data.clients.map(client => ({
+    id: client.id,
+    label: client.name,
+    detail: [client.company, client.phone].filter(Boolean).join(" · ") || undefined,
+  }));
+  const vehicleOptions: AutoCompleteOption[] = availableVehicles.map(vehicle => ({
+    id: vehicle.id,
+    label: vehicleLabel(vehicle),
+  }));
+  function parseVehicleText(text: string) {
+    const tokens = text.trim().split(/\s+/).filter(Boolean);
+    const yearToken = tokens.find(token => /^(19|20)\d{2}$/.test(token));
+    const rest = tokens.filter(token => token !== yearToken);
+    return {
+      make: rest[0] ?? "",
+      model: rest.slice(1).join(" "),
+      year: yearToken ? Number(yearToken) : 0,
+    };
+  }
+  function startNewClient(text: string) {
+    const draft = newClient();
+    const split = splitName({ ...draft, name: text } as Client);
+    setClientDraft({ ...draft, name: text, firstName: split.firstName, lastName: split.lastName });
+    setAsk(null);
+  }
+  function startNewVehicle(text: string) {
+    if (!editor?.clientId) return;
+    setVehicleDraft({ ...newVehicle(editor.clientId), ...parseVehicleText(text) });
+    setAsk(null);
+  }
+  async function saveNewClient() {
+    if (!clientDraft) return;
+    const saved = normalizeClient(clientDraft);
+    await ctx.save("clients", saved);
+    updateEditor({ clientId: saved.id, clientName: saved.name, vehicleId: "" });
+    setVehicleText("");
+    setClientDraft(null);
+  }
+  async function saveNewVehicle() {
+    if (!vehicleDraft || !editor) return;
+    const ids = new Set([...ctx.data.clients.map(client => client.id), editor.clientId]);
+    const saved = normalizeVehicle(vehicleDraft, ids);
+    await ctx.save("vehicles", saved);
+    updateEditor({ vehicleId: saved.id });
+    setVehicleText(vehicleLabel(saved));
+    setVehicleDraft(null);
+  }
   const originalOrder = editor
     ? ctx.data.orders.find(order => order.id === editor.id)
     : undefined;
@@ -966,54 +1047,49 @@ export default function CommercialPage() {
                 </Field>
               )}
 
-              <Field
-                label="Cliente"
-                error={
-                  !ctx.data.clients.length
-                    ? "Cadastre um cliente antes de criar o documento."
-                    : undefined
-                }
-              >
-                <select
+              <Field label="Cliente">
+                <AutoCompleteField
                   required
-                  value={editor.clientId}
-                  disabled={existingInvoice || !ctx.data.clients.length}
-                  onChange={event => changeClient(event.target.value)}
-                >
-                  <option value="">Selecione o cliente</option>
-                  {ctx.data.clients.map(client => (
-                    <option key={client.id} value={client.id}>
-                      {client.name}
-                      {client.company ? ` · ${client.company}` : ""}
-                    </option>
-                  ))}
-                </select>
+                  disabled={existingInvoice}
+                  value={editor.clientName}
+                  selectedId={editor.clientId}
+                  options={clientOptions}
+                  placeholder="Digite o nome do cliente"
+                  onTextChange={text =>
+                    updateEditor({
+                      clientName: text,
+                      ...(editor.clientId && text !== currentClient?.name
+                        ? { clientId: "", vehicleId: "" }
+                        : {}),
+                    })
+                  }
+                  onSelect={option => changeClient(option.id)}
+                  onUnmatched={text => setAsk({ kind: "client", text })}
+                />
               </Field>
 
-              <Field
-                label="Veículo"
-                error={
-                  editor.clientId && !availableVehicles.length
-                    ? "Não há veículo cadastrado para este cliente."
-                    : undefined
-                }
-              >
-                <select
+              <Field label="Veículo">
+                <AutoCompleteField
                   required
-                  value={editor.vehicleId || ""}
-                  disabled={!editor.clientId || !availableVehicles.length}
-                  onChange={event =>
-                    updateEditor({ vehicleId: event.target.value })
+                  disabled={!editor.clientId}
+                  value={vehicleText}
+                  selectedId={editor.vehicleId || ""}
+                  options={vehicleOptions}
+                  placeholder={
+                    editor.clientId
+                      ? "Digite marca, modelo ou placa"
+                      : "Escolha o cliente primeiro"
                   }
-                >
-                  <option value="">Selecione o veículo</option>
-                  {availableVehicles.map(vehicle => (
-                    <option key={vehicle.id} value={vehicle.id}>
-                      {vehicle.make} {vehicle.model} · {vehicle.year}
-                      {vehicle.plate ? ` · ${vehicle.plate}` : ""}
-                    </option>
-                  ))}
-                </select>
+                  onTextChange={text => {
+                    setVehicleText(text);
+                    if (editor.vehicleId) updateEditor({ vehicleId: "" });
+                  }}
+                  onSelect={option => {
+                    updateEditor({ vehicleId: option.id });
+                    setVehicleText(option.label);
+                  }}
+                  onUnmatched={text => setAsk({ kind: "vehicle", text })}
+                />
               </Field>
 
               <Field
@@ -1634,6 +1710,69 @@ export default function CommercialPage() {
           </div>
         </FormModal>
       ) : null}
+
+      {ask && (
+        <Modal
+          title={ask.kind === "client" ? "Cliente não encontrado" : "Veículo não encontrado"}
+          onClose={() => {
+            setAsk(null);
+            if (ask.kind === "vehicle") setVehicleText("");
+          }}
+          footer={
+            <>
+              <UiButton
+                onClick={() => {
+                  setAsk(null);
+                  if (ask.kind === "vehicle") setVehicleText("");
+                }}
+              >
+                Não
+              </UiButton>
+              <UiButton
+                variant="primary"
+                onClick={() =>
+                  ask.kind === "client"
+                    ? startNewClient(ask.text)
+                    : startNewVehicle(ask.text)
+                }
+              >
+                Sim, adicionar
+              </UiButton>
+            </>
+          }
+        >
+          <p>
+            {ask.kind === "client"
+              ? `“${ask.text}” não está nos seus clientes. Deseja adicionar como novo cliente?`
+              : `“${ask.text}” não está cadastrado para ${currentClient?.name ?? "este cliente"}${
+                  ctx.data.vehicles.some(vehicle => vehicleLabel(vehicle).toLowerCase().includes(ask.text.toLowerCase()) && vehicle.clientId !== editor?.clientId)
+                    ? " (existe um veículo parecido ligado a outro cliente)"
+                    : ""
+                }. Deseja adicionar como novo veículo deste cliente?`}
+          </p>
+        </Modal>
+      )}
+      {clientDraft && (
+        <ClientForm
+          large
+          draft={clientDraft}
+          linkedVehicleCount={0}
+          onChange={setClientDraft}
+          onClose={() => setClientDraft(null)}
+          onSave={saveNewClient}
+        />
+      )}
+      {vehicleDraft && (
+        <VehicleForm
+          large
+          draft={vehicleDraft}
+          clients={ctx.data.clients}
+          maxYear={new Date().getFullYear() + 1}
+          onChange={setVehicleDraft}
+          onClose={() => setVehicleDraft(null)}
+          onSave={saveNewVehicle}
+        />
+      )}
     </section>
   );
 }
