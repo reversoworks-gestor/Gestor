@@ -529,25 +529,6 @@ export default function CalendarPage() {
       <PageHeading
         eyebrow="Planejamento operacional"
         title="Calendário"
-        action={
-          <div className="row wrap page-actions">
-            <Button
-              variant="secondary"
-              disabled={!filteredEvents.length}
-              onClick={() => {
-                downloadIcs(filteredEvents);
-                notify(
-                  `${filteredEvents.length} evento(s) exportado(s). Abra o arquivo .ics para adicionar ao Google Agenda ou ao calendário do iPhone.`
-                );
-              }}
-            >
-              <Download size={18} /> Exportar .ics
-            </Button>
-            <Button variant="primary" onClick={() => openNewEvent()}>
-              <Plus size={18} /> Novo evento
-            </Button>
-          </div>
-        }
       />
 
       {error && (
