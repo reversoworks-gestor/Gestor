@@ -20,7 +20,7 @@ const usd = (cents: number) =>
     cents / 100
   );
 const dateText = (value: string) =>
-  new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" }).format(
+  new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }).format(
     new Date(`${value}T12:00:00`)
   );
 const PROFILE_ID = "tax-profile";
@@ -105,7 +105,7 @@ export default function Taxes() {
   }
 
   return (
-    <>
+    <div className="stack">
       <PageHeading
         eyebrow="Financeiro"
         title="Impostos e deduções"
@@ -126,14 +126,16 @@ export default function Taxes() {
       />
 
       <section className="card" aria-label="Impostos estimados">
+        <div className="card-body stack">
         <h2>Impostos estimados pagos</h2>
-        <table>
+        <div className="table-wrap">
+        <table className="data-table">
           <thead>
             <tr>
               <th scope="col">Trimestre</th>
-              <th scope="col">Vencimento federal usual</th>
-              <th scope="col">Federal pago</th>
-              <th scope="col">Califórnia pago</th>
+              <th scope="col">Vencimento</th>
+              <th scope="col">Federal</th>
+              <th scope="col">Califórnia</th>
             </tr>
           </thead>
           <tbody>
@@ -147,6 +149,7 @@ export default function Taxes() {
             ))}
           </tbody>
         </table>
+        </div>
         <p className="muted">
           As datas federais mudam quando caem em fim de semana ou feriado. A
           Califórnia usa um calendário de parcelas próprio: pergunte ao contador
@@ -186,9 +189,11 @@ export default function Taxes() {
             ))}
           </ul>
         )}
+      </div>
       </section>
 
       <section className="card" aria-label="Quilometragem">
+        <div className="card-body stack">
         <h2>Quilometragem do negócio</h2>
         <div className="form-grid">
           <Field label="Data">
@@ -228,9 +233,11 @@ export default function Taxes() {
             ))}
           </ul>
         )}
+      </div>
       </section>
 
       <section className="card" aria-label="Parâmetros e home office">
+        <div className="card-body stack">
         <h2>Parâmetros e home office</h2>
         <div className="form-grid">
           <Field label="Taxa por milha (US$, do IRS no ano)">
@@ -250,7 +257,8 @@ export default function Taxes() {
           regular e exclusivo da área para o negócio. Confirme com o contador se a
           sua oficina em casa se encaixa.
         </p>
+      </div>
       </section>
-    </>
+    </div>
   );
 }

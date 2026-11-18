@@ -61,13 +61,14 @@ export default function Messages() {
   );
 
   return (
-    <>
+    <div className="stack">
       <PageHeading
         eyebrow="Atendimento"
         title="Mensagens"
         description="Modelos em inglês para os clientes. Campos entre [colchetes] ficam à vista até você preencher."
       />
       <section className="card" aria-label="Montar mensagem">
+        <div className="card-body stack">
         <div className="form-grid">
           <Field label="Modelo">
             <select
@@ -126,8 +127,10 @@ export default function Messages() {
           {input("reviewLink", "Link de avaliação do Google", "https://...")}
           {input("care", "Cuidados / observação")}
         </div>
+      </div>
       </section>
       <section className="card" aria-label="Mensagem pronta">
+        <div className="card-body stack">
         <Field label="Mensagem pronta (você pode editar antes de copiar)">
           <textarea
             rows={9}
@@ -149,7 +152,8 @@ export default function Messages() {
             </span>
           )}
         </div>
+      </div>
       </section>
-    </>
+    </div>
   );
 }
