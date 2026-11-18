@@ -889,7 +889,12 @@ function stateIssues(
   };
   if (level < 0) return ["Etapa do pipeline inválida."];
   try {
-    validateServiceCodes(workflow.serviceCodes);
+    // Documents made only of free-form items (no official service) have no checklist.
+    if (
+      workflow.serviceCodes.length ||
+      !order.lines.some(line => !line.serviceCode)
+    )
+      validateServiceCodes(workflow.serviceCodes);
     if (workflow.packageCode)
       validatePackage(workflow.serviceCodes, workflow.packageCode);
   } catch (error) {

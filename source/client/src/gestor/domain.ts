@@ -306,6 +306,12 @@ export function normalizeStudioOrder(
       if (issues.length) throw new Error(issues.join(" "));
     }
     for (const line of source.lines) {
+      // Free-form lines (no serviceCode) are allowed; coded lines must stay official.
+      if (!line.serviceCode) {
+        if (!line.label.trim())
+          throw new Error("Dê um nome ao item em branco antes de salvar.");
+        continue;
+      }
       const official = findService(line.serviceCode ?? "");
       if (!official || official.type === "Pacote")
         throw new Error(

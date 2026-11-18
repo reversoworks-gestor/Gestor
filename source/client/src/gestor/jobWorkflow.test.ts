@@ -218,10 +218,18 @@ function paidOrder(workflow: JobWorkflow) {
 }
 
 describe("portões na etapa correta", () => {
-  it("tolera workflow vazio transitório mas proíbe salvá-lo sem serviço", () => {
+  it("tolera workflow vazio transitório mas proíbe salvá-lo sem serviço nem item livre", () => {
     const workflow = createWorkflow([]);
     expect(workflow.serviceCodes).toEqual([]);
-    expect(() => validateWorkflowSave(orderFor(workflow))).toThrow("Selecione");
+    const order = orderFor(workflow);
+    // Sem nenhuma linha livre, o workflow vazio continua inválido.
+    const coded = {
+      ...order,
+      lines: order.lines.map(line => ({ ...line, serviceCode: "FAR-01" })),
+    };
+    expect(() => validateWorkflowSave(coded)).toThrow("Selecione");
+    // Com item livre (sem serviceCode) o documento pode ser salvo.
+    expect(() => validateWorkflowSave(order)).not.toThrow();
   });
   it.each(["DET-02", "PDR-01", "FAR-01", "P3D-01", "P3D-04", "P3D-05"])(
     "não exige tarefas de produção ao mover %s de Lead para Avaliação",

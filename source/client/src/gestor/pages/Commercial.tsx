@@ -437,6 +437,24 @@ export default function CommercialPage() {
     });
   }
 
+  function addBlankLine() {
+    if (!editor) return;
+    const blank: OrderLine = {
+      id: makeId("line"),
+      service: "custom",
+      kind: "service",
+      taxable: false,
+      label: "",
+      description: "",
+      quantity: 1,
+      unit: "unidades",
+      unitPrice: 0,
+      unitPriceCents: 0,
+      pricePending: true,
+    };
+    updateEditor({ lines: [...editor.lines, blank] });
+  }
+
   function addCatalogLine() {
     if (!editor || !catalogItemId) return;
     try {
@@ -576,7 +594,9 @@ export default function CommercialPage() {
     }
     if (draft.workflow) {
       try {
-        validateServiceCodes(draft.workflow.serviceCodes);
+        // A document may hold only free-form items; official codes are validated when present.
+        if (draft.workflow.serviceCodes.length)
+          validateServiceCodes(draft.workflow.serviceCodes);
       } catch (reason) {
         return reason instanceof Error ? reason.message : "Serviços inválidos.";
       }
@@ -1231,12 +1251,19 @@ export default function CommercialPage() {
                   >
                     Adicionar do catálogo
                   </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={addBlankLine}
+                  >
+                    Item em branco
+                  </Button>
                 </div>
 
                 {editor.lines.length === 0 ? (
                   <p className="helper">
-                    Escolha um serviço do catálogo oficial. Não há
-                    preço padrão.
+                    Escolha um serviço do catálogo oficial ou crie um item em
+                    branco. Não há preço padrão.
                   </p>
                 ) : (
                   <div className="document-lines">
@@ -1245,7 +1272,7 @@ export default function CommercialPage() {
                         <legend>
                           {line.serviceCode
                             ? `${line.serviceCode}${line.packageCode ? ` · ${line.packageCode}` : ""}`
-                            : `Linha legada ${index + 1}`}
+                            : `Item ${index + 1} · em branco`}
                         </legend>
                         <div className="form-grid">
                           <Field label="Descrição">
