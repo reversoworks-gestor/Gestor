@@ -1,8 +1,8 @@
 {
   "edition": "official-services-2026-11-04",
-  "sourceCommit": "f01c19737bc40ee19d5d9f5ec75a505be764ec44",
+  "sourceCommit": "c16e33194899df715b2c25c5ef7d46cce20518b6",
   "catalogItems": 21,
   "pipelineStages": 9,
-  "uiRevision": "agenda-dia-semana-2026-11-18",
-  "builtAt": "2026-11-18T23:24:11.584795+00:00"
+  "uiRevision": "agenda-sem-botoes-2026-11-18",
+  "builtAt": "2026-11-18T23:49:28.454977+00:00"
 }
