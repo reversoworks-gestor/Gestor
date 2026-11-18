@@ -2,13 +2,16 @@ import { DateInput } from "../components/ui";
 import { useMemo, useState } from "react";
 import {
   CalendarDays,
+  CalendarPlus,
   ChevronLeft,
   ChevronRight,
+  Download,
   List,
   Plus,
   Search,
 } from "lucide-react";
 import type { CalendarEvent } from "../../lib/models";
+import { downloadIcs, googleCalendarUrl } from "../../lib/googleCalendar";
 import { useGestor } from "../store";
 import { makeId } from "../types";
 import {
@@ -203,6 +206,14 @@ function toCalendarEvent(draft: EventDraft): CalendarEvent {
     type: draft.type,
     date: localDateTimeToIso(draft),
   };
+}
+
+function toCalendarEventSafe(draft: EventDraft): CalendarEvent | null {
+  try {
+    return toCalendarEvent(draft);
+  } catch {
+    return null;
+  }
 }
 
 function eventMatchesSearch(event: CalendarEvent, term: string) {
@@ -446,9 +457,23 @@ export default function CalendarPage() {
         title="Calendário"
         description="Compromissos cadastrados para a operação. Registros de serviço não são incluídos automaticamente como eventos."
         action={
-          <Button variant="primary" onClick={() => openNewEvent()}>
-            <Plus size={18} /> Novo evento
-          </Button>
+          <div className="row wrap page-actions">
+            <Button
+              variant="secondary"
+              disabled={!filteredEvents.length}
+              onClick={() => {
+                downloadIcs(filteredEvents);
+                notify(
+                  `${filteredEvents.length} evento(s) exportado(s). Abra o arquivo .ics para adicionar ao Google Agenda ou ao calendário do iPhone.`
+                );
+              }}
+            >
+              <Download size={18} /> Exportar .ics
+            </Button>
+            <Button variant="primary" onClick={() => openNewEvent()}>
+              <Plus size={18} /> Novo evento
+            </Button>
+          </div>
         }
       />
 
@@ -654,6 +679,16 @@ export default function CalendarPage() {
               />
             </Field>
           </div>
+          {!editor.isNew && googleCalendarUrl(toCalendarEventSafe(editor.draft) ?? ({} as CalendarEvent)) && (
+            <a
+              className="btn btn-secondary"
+              href={googleCalendarUrl(toCalendarEventSafe(editor.draft)!)!}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <CalendarPlus size={18} /> Adicionar ao Google Agenda
+            </a>
+          )}
           {!editor.isNew && (
             <div className="row">
               <ConfirmButton
