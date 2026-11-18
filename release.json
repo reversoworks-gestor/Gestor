@@ -1,8 +1,8 @@
 {
   "edition": "official-services-2026-11-04",
-  "sourceCommit": "cf81d17cd42a48315fb659542d41d3fd108e5c81",
+  "sourceCommit": "deb8e597e5f04d65db8e26bfe5642e7e7e5f7d41",
   "catalogItems": 21,
   "pipelineStages": 9,
-  "uiRevision": "cliente-autocomplete-item-branco-2026-11-18",
-  "builtAt": "2026-11-18T22:41:42.067851+00:00"
+  "uiRevision": "agenda-estilo-google-2026-11-18",
+  "builtAt": "2026-11-18T23:22:26.098834+00:00"
 }
