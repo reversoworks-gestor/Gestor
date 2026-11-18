@@ -144,8 +144,7 @@ export default function DashboardPage() {
     <div className="dashboard-page stack process-dashboard">
       <PageHeading
         eyebrow="Operação em andamento"
-        title="Visão geral"
-        description="Acompanhe a jornada de atendimento, a agenda e os pontos que pedem decisão da equipe."
+        title="Reverso Works"
         action={
           <div className="row wrap page-actions">
             <Button variant="secondary" onClick={() => navigate("calendar")}>
