@@ -2137,3 +2137,14 @@ ol.calendar-grid {
   font-size: 0.8rem;
   white-space: nowrap;
 }
+.kpi-grid .stat.stat-card {
+  display: flex;
+  flex-direction: column;
+}
+.kpi-grid .stat-card .stat-actions {
+  margin-top: auto;
+  padding-top: 10px;
+}
+.kpi-grid .stat-card > * {
+  align-self: stretch;
+}
