@@ -8,7 +8,10 @@ import {
   FileText,
   Gauge,
   PackageSearch,
+  MessageSquare,
   Receipt,
+  Search,
+  UserPlus,
   Plus,
   SearchCheck,
   ShieldAlert,
@@ -141,6 +144,16 @@ export default function DashboardPage() {
   }, [data, settings.currency]);
 
   const nextEvent = dashboard.upcomingEvents[0];
+  const newClient = () => {
+    try {
+      sessionStorage.setItem("rw-open-new-client", "1");
+    } catch {}
+    navigate("clients");
+  };
+  const openSearch = () =>
+    document
+      .querySelector<HTMLButtonElement>(".compact-search-toggle")
+      ?.click();
 
   return (
     <div className="dashboard-page stack process-dashboard">
@@ -166,54 +179,84 @@ export default function DashboardPage() {
       )}
 
       <section className="metric-grid" aria-label="Indicadores operacionais">
-        <article className="stat">
-          <div className="stat-icon">
-            <Wrench size={19} aria-hidden="true" />
-          </div>
-          <div>
+        <article className="stat stat-card">
+          <header className="stat-head">
+            <span className="stat-icon">
+              <Wrench size={19} aria-hidden="true" />
+            </span>
             <p className="stat-label">Em jornada</p>
-            <p className="stat-value">{dashboard.inJourney.length}</p>
-            <p className="helper">Do Lead à qualidade · inclui estimativas</p>
+          </header>
+          <p className="stat-value">{dashboard.inJourney.length}</p>
+          <p className="helper">Do Lead à qualidade · inclui estimativas</p>
+          <div className="stat-actions">
+            <button type="button" onClick={() => navigate("production")}>
+              <ClipboardCheck size={15} aria-hidden="true" /> Ver jobs
+            </button>
+            <button type="button" onClick={newClient}>
+              <UserPlus size={15} aria-hidden="true" /> Novo cliente
+            </button>
           </div>
         </article>
-        <article className="stat">
-          <div className="stat-icon">
-            <SearchCheck size={19} aria-hidden="true" />
-          </div>
-          <div>
+        <article className="stat stat-card">
+          <header className="stat-head">
+            <span className="stat-icon">
+              <SearchCheck size={19} aria-hidden="true" />
+            </span>
             <p className="stat-label">Aguardando avaliação</p>
-            <p className="stat-value">{dashboard.inspectionQueue.length}</p>
-            <p className="helper">Pendentes ou requerem inspeção</p>
+          </header>
+          <p className="stat-value">{dashboard.inspectionQueue.length}</p>
+          <p className="helper">Pendentes ou requerem inspeção</p>
+          <div className="stat-actions">
+            <button type="button" onClick={() => navigate("triage")}>
+              <Plus size={15} aria-hidden="true" /> Nova avaliação
+            </button>
+            <button type="button" onClick={openSearch}>
+              <Search size={15} aria-hidden="true" /> Buscar cliente
+            </button>
           </div>
         </article>
-        <article className="stat">
-          <div className="stat-icon">
-            <Gauge size={19} aria-hidden="true" />
-          </div>
-          <div>
+        <article className="stat stat-card">
+          <header className="stat-head">
+            <span className="stat-icon">
+              <Gauge size={19} aria-hidden="true" />
+            </span>
             <p className="stat-label">Volume aprovado</p>
-            <p className="stat-value stat-value-money">
-              {dashboard.hasApprovedPricing
-                ? money(dashboard.approvedValue, settings.currency)
-                : "Não definido"}
-            </p>
-            <p className="helper">
-              Valores explícitos · aprovados até qualidade
-            </p>
+          </header>
+          <p className="stat-value stat-value-money">
+            {dashboard.hasApprovedPricing
+              ? money(dashboard.approvedValue, settings.currency)
+              : "Não definido"}
+          </p>
+          <p className="helper">Valores explícitos · aprovados até qualidade</p>
+          <div className="stat-actions">
+            <button type="button" onClick={() => navigate("estimates")}>
+              <FileText size={15} aria-hidden="true" /> Estimativas
+            </button>
+            <button type="button" onClick={() => navigate("invoices")}>
+              <Receipt size={15} aria-hidden="true" /> Invoices
+            </button>
           </div>
         </article>
-        <article className="stat">
-          <div className="stat-icon">
-            <CalendarDays size={19} aria-hidden="true" />
-          </div>
-          <div>
+        <article className="stat stat-card">
+          <header className="stat-head">
+            <span className="stat-icon">
+              <CalendarDays size={19} aria-hidden="true" />
+            </span>
             <p className="stat-label">Próximo evento</p>
-            <p className="stat-value stat-value-date">
-              {nextEvent ? dateLabel(nextEvent.date) : "—"}
-            </p>
-            <p className="helper">
-              {nextEvent ? nextEvent.title : "Nenhum evento futuro registrado"}
-            </p>
+          </header>
+          <p className="stat-value stat-value-date">
+            {nextEvent ? dateLabel(nextEvent.date) : "—"}
+          </p>
+          <p className="helper">
+            {nextEvent ? nextEvent.title : "Nenhum evento futuro registrado"}
+          </p>
+          <div className="stat-actions">
+            <button type="button" onClick={() => navigate("calendar")}>
+              <CalendarDays size={15} aria-hidden="true" /> Agenda
+            </button>
+            <button type="button" onClick={() => navigate("messages")}>
+              <MessageSquare size={15} aria-hidden="true" /> Mensagens
+            </button>
           </div>
         </article>
       </section>

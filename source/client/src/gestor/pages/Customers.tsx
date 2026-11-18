@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   Building2,
@@ -181,6 +181,15 @@ export default function CustomersPage() {
   const [vehicleDraft, setVehicleDraft] = useState<VehicleDraft | null>(null);
   const [vehicleOwnerFilter, setVehicleOwnerFilter] = useState("");
   const isVehicleView = ctx.view === "vehicles";
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem("rw-open-new-client")) {
+        sessionStorage.removeItem("rw-open-new-client");
+        setClientDraft(newClient());
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const clientIds = useMemo(
     () =>
       new Set<string>((ctx.data.clients as Client[]).map(client => client.id)),
