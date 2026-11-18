@@ -577,8 +577,6 @@ export default function CalendarPage() {
             [
               ["day", "Dia"],
               ["week", "Semana"],
-              ["month", "Mês"],
-              ["list", "Lista"],
             ] as const
           ).map(([value, label]) => (
             <button
