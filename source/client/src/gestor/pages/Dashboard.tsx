@@ -5,8 +5,10 @@ import {
   CheckCircle2,
   ClipboardCheck,
   FilePlus2,
+  FileText,
   Gauge,
   PackageSearch,
+  Receipt,
   Plus,
   SearchCheck,
   ShieldAlert,
@@ -147,11 +149,11 @@ export default function DashboardPage() {
         title="Reverso Works"
         action={
           <div className="row wrap page-actions">
-            <Button variant="secondary" onClick={() => navigate("calendar")}>
-              <CalendarDays size={17} /> Abrir agenda
+            <Button variant="secondary" onClick={() => navigate("estimates")}>
+              <FileText size={17} /> Estimativa
             </Button>
-            <Button variant="primary" onClick={() => navigate("triage")}>
-              <Plus size={17} /> Nova avaliação
+            <Button variant="primary" onClick={() => navigate("invoices")}>
+              <Receipt size={17} /> Invoice
             </Button>
           </div>
         }
