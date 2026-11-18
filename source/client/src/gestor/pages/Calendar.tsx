@@ -1,5 +1,5 @@
 import { DateInput } from "../components/ui";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { TimeGrid, dayKey } from "../components/TimeGrid";
 import {
   CalendarDays,
@@ -473,6 +473,22 @@ export default function CalendarPage() {
     return monthEvents;
   }, [monthEvents, view]);
 
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  function onTouchStart(event: React.TouchEvent) {
+    const touch = event.touches[0];
+    touchStart.current = { x: touch.clientX, y: touch.clientY };
+  }
+  function onTouchEnd(event: React.TouchEvent) {
+    const start = touchStart.current;
+    touchStart.current = null;
+    if (!start) return;
+    const touch = event.changedTouches[0];
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    step(dx < 0 ? 1 : -1);
+  }
+
   function step(direction: -1 | 1) {
     setCursor(current => {
       if (view === "day")
@@ -606,7 +622,11 @@ export default function CalendarPage() {
           </div>
         </section>
       ) : view === "day" || view === "week" ? (
-        <section className="card gcal-card">
+        <section
+          className="card gcal-card"
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+        >
           <TimeGrid
             days={gridDays}
             timedByDay={timedByDay}
