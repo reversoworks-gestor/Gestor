@@ -1094,7 +1094,7 @@ export default function CommercialPage() {
                   <h3 id="document-lines-heading">Itens e serviços</h3>
                   <p className="muted">
                     21 itens oficiais. Preços vazios, definidos manualmente por
-                    avaliação. Pacotes lançam serviços individuais.
+                    avaliação. Serviços são vendidos separadamente.
                   </p>
                 </div>
               </div>
@@ -1109,7 +1109,7 @@ export default function CommercialPage() {
                         setPackageAlternative("");
                       }}
                     >
-                      <option value="">Selecione um serviço ou pacote</option>
+                      <option value="">Selecione um serviço</option>
                       {Object.entries(serviceCategories).map(
                         ([category, name]) => (
                           <optgroup key={category} label={name}>
@@ -1123,15 +1123,6 @@ export default function CommercialPage() {
                           </optgroup>
                         )
                       )}
-                      <optgroup label="Pacotes">
-                        {officialServices
-                          .filter(item => item.type === "Pacote")
-                          .map(item => (
-                            <option key={item.code} value={item.code}>
-                              {item.code} · {item.name}
-                            </option>
-                          ))}
-                      </optgroup>
                     </select>
                   </Field>
                   {catalogItemId === "PCT-03" && (
@@ -1168,7 +1159,7 @@ export default function CommercialPage() {
 
                 {editor.lines.length === 0 ? (
                   <p className="helper">
-                    Escolha um serviço ou pacote do catálogo oficial. Não há
+                    Escolha um serviço do catálogo oficial. Não há
                     preço padrão.
                   </p>
                 ) : (

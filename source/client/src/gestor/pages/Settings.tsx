@@ -76,13 +76,10 @@ export default function SettingsPage() {
   const catalogItems = useMemo(() => {
     const query = catalogSearch.trim().toLocaleLowerCase();
     return officialServices.filter(service => {
+      if (service.type === "Pacote") return false;
       const matchesCategory =
         !categoryFilter ||
-        service.category === categoryFilter ||
-        (service.type === "Pacote" &&
-          [...service.components, ...(service.alternatives ?? [])].some(
-            code => findService(code)?.category === categoryFilter
-          ));
+        service.category === categoryFilter;
       const text = [
         service.code,
         service.name,
@@ -410,7 +407,7 @@ export default function SettingsPage() {
             </Field>
             <Field
               label="Categoria"
-              help="Pacotes aparecem nas categorias dos serviços que compõem; não são uma quinta categoria."
+              help="Serviços são vendidos separadamente, sem pacotes."
             >
               <select
                 id="catalog-category"
